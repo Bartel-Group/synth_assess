@@ -7,7 +7,7 @@ import numpy as np
 from pydmclab.core.comp import CompTools
 from pydmclab.utils.handy import read_json, write_json
 from pymatgen.core.periodic_table import Element
-from solidstatesynth.utils import *
+from solidstatesynth.core.utils import *
 # from utils import *
 
 

@@ -33,7 +33,8 @@ GAS_PARTIAL_PRESSURES = {
     "air": {
         "O2": 21200 / PA_TO_ATM_CONV,
         "N2": 79033 / PA_TO_ATM_CONV,
-        "CO2": 4050 / PA_TO_ATM_CONV,
+        "CO2": 40.50 / PA_TO_ATM_CONV,
+        #check with Nathan
         "H2O": 2300 / PA_TO_ATM_CONV,
         "H3N": 16 / PA_TO_ATM_CONV,
         "NO": 0.1 / PA_TO_ATM_CONV
@@ -47,6 +48,7 @@ GAS_PARTIAL_PRESSURES = {
         "NO": 0.1 / PA_TO_ATM_CONV
     }
 }
+#check with chris about inert values
 
 
 #boltzmann constant
@@ -74,12 +76,15 @@ class MetricsCalculator():
             precursors (Iterable[str]): Formula Strings of all the precursors that can be used in the reactions; precursors must span the whole chemical system besides Oxygen.
             targets (Iterable[str]): Formula Strings of all the targets to generate reactions for in the chemical system.
         """
-        self._precursors = [Composition(i).reduced_formula for i in precursors]
         self._targets = [Composition(i).reduced_formula for i in targets]
+        if precursors:
+            self._precursors = [Composition(i).reduced_formula for i in precursors]
+            elements = list(set([i for j in self._precursors+self._targets+["O2"] for i in Composition(j).chemical_system_set]))
 
-        
-        #Find the chemical system to get query the MP entries from
-        elements = list(set([i for j in self._precursors+self._targets+["O2"] for i in Composition(j).chemical_system_set]))
+        else:
+            self._precursors = []
+            elements = list(set([i for j in self._targets+["O2"] for i in Composition(j).chemical_system_set]))
+
         elements.sort()
         self._chemsys = "-".join(elements)
 
@@ -89,6 +94,7 @@ class MetricsCalculator():
 
 
         self._build_calculator()
+        return
 
 
 
@@ -104,48 +110,25 @@ class MetricsCalculator():
             mp_entries = mpr.get_entries_in_chemsys(self._chemsys)
 
 
-        #Get the NIST entries for the allowed gases in the chemical system:
-
-        #First determine which gases should be present in the system
-        #Reaction Networks does not use a NIST entry for O2, so it is not necessary to include that here
-        allowed_gases = [i for i in set(GAS_PARTIAL_PRESSURES["air"].keys())-{"O2"} if Composition(i).chemical_system_set <= set(self._chemsys.split("-"))]
-        
-        #Get all the entries (including NIST) as a GibbsEntrySet, then filter to only the gases
-        nist_entries = GibbsEntrySet.from_computed_entries(mp_entries, temperature=300, apply_atmospheric_co2_correction=False)
-        nist_entries = [nist_entries.get_min_entry_by_formula(i) for i in allowed_gases]
-
-
-        #Create a GibbsEntrySet from the ComputedStructureEntries @ 300K, without any NIST data or CO2 corrections (added later)
-        self.entries = GibbsEntrySet.from_computed_entries(mp_entries, temperature=300, include_nist_data=False, apply_atmospheric_co2_correction=False)
-        
-        #Remove any entries that are gases because they are not from NIST
-        entries_to_remove = []
-        for i in self.entries:
-            if i.reduced_formula in allowed_gases:
-                entries_to_remove.append(i)
-
-        for i in entries_to_remove:
-            self.entries.discard(i)
-
-        #Add back the NIST entries to the GibbsEntrySet
-        self.entries.update(nist_entries)
+        #Create a GibbsEntrySet from the ComputedStructureEntries @ 300K
+        self.entries = GibbsEntrySet.from_computed_entries(mp_entries, temperature=300, include_nist_data=True, apply_atmospheric_co2_correction=False)
         
         
         #Filter out any unstable phases 50 meV/atom above the hull
         self.entries = self.entries.filter_by_stability(0.05)        
 
         #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
-        self.rxns = BasicEnumerator(precursors=self._precursors, exclusive_precursors=True).enumerate(self.entries)
-        self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], precursors=self._precursors, exclusive_precursors=True).enumerate(self.entries))
+        self.rxns = BasicEnumerator(precursors=self._precursors).enumerate(self.entries)
+        self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], precursors=self._precursors).enumerate(self.entries))
 
         #Filter out duplicate reactions
         self.rxns = self.rxns.filter_duplicates()
 
-
+        return
 
     def calculate_metrics_at_temp_env(
         self,
-        temp: float = 800,
+        temp: float = 1073,
         env: str = "air"
     ) -> list[dict[str, ComputedReaction | float]]:
         """

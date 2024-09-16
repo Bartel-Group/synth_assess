@@ -5,8 +5,9 @@ from pymatgen.ext.matproj import MPRester
 from pymatgen.analysis import interface_reactions
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 # from rxn_network.costs import calculators
-from solidstatesynth.utils import *
-from solidstatesynth.competitions import *
+from solidstatesynth.core.utils import *
+# from solidstatesynth.competitions import *
+from solidstatesynth.rxn_generation.metrics_calculation import *
 
 DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
@@ -59,13 +60,21 @@ def get_textmined_precursors(new_db,remake = False):
             prec = entry['common']['precursors']
             for p in prec:
                 try:
-                    p = CompTools(p).clean 
-                    if p not in precursors:
-                        precursors.append(p)
+                    p = CompTools(p).clean
+                    els = CompTools(p).els
+                    if any(el in ['C','P','S','Si','H'] for el in els):
+                        if len(els)<4:
+                            if p not in precursors:
+                                precursors.append(p)
+                    else:
+                        if len(els)<3:
+                            if p not in precursors:
+                                precursors.append(p)
                 except:
                     # cantclean += 1
                     pass
     # print(cantclean)
+    # phosphates,sulfates,carbonates, silicates, hydroxide
     prec_new = []
     for p in precursors:
         prec_data = MPRester().summary.search(formula = p, fields = ['material_id','energy_above_hull'])
@@ -116,9 +125,10 @@ def get_target_reactions(target,textmined_precursors,filtered_precs = True):
         relevant_precs = get_relevant_precursors(target,textmined_precursors)
     else:
         relevant_precs = None
+    mc = MetricsCalculator(target,relevant_precs)
     data_by_temp = {str(temp):[] for temp in temps} 
     for temp in temps:
-        data_by_temp[str(temp)]=get_competition_data(target,precursors=relevant_precs,temperature=temp, environment = 'air',open = True)
+        data_by_temp[str(temp)]= mc.calculate_metrics_at_temp_env(temperature=temp, environment = 'air')
     rxns = [d for d in data_by_temp['300']]
     useful_rxns = []
     for rxn in rxns:
@@ -161,9 +171,12 @@ def get_filtered_target_reactions(target, textmined_precursors,filtered_precs = 
 def get_icsd_formulas_reduced(icsd_formulas):
     icsd_formulas_reduced = []
     for formula in icsd_formulas:
-        if CompTools(formula).n_els==3:
-            if all(el not in ['Tc', 'Pa', 'Xe', 'Pm', 'Kr'] for el in CompTools(formula).els):
+        if all(el not in ['Tc', 'Pa', 'Xe', 'Pm', 'Kr'] for el in CompTools(formula).els):
+            if CompTools(formula).n_els==3:
                 icsd_formulas_reduced.append(formula)
+            elif CompTools(formula).n_els == 4:
+                if any(el in ['O','H','C','P','S','Si'] for el in CompTools(formula).els):
+                    icsd_formulas_reduced.append(formula)
     return icsd_formulas_reduced
 
 def get_icsd_targets_by_chemsys(icsd_formulas_reduced):
@@ -176,7 +189,7 @@ def get_icsd_targets_by_chemsys(icsd_formulas_reduced):
             icsd_targets[chemsys].append(formula)
     return icsd_targets
 
-def get_precursors_by_chemsys(icsd_targets_by_chemsys,tm_precursors,remake=False):
+def get_precursors_by_chemsys(icsd_targets_by_chemsys,tm_precursors,remake=True):
     fjson = os.path.join(DATA_DIR, "240910_chemsys_precursors.json")
     if os.path.exists(fjson) and not remake:
         return read_json(fjson)
@@ -200,13 +213,6 @@ def get_optimum_reactions(icsd_formula,textmined_precursors):
         except:
             print('alternative error',icsd_formula)
             filtered_reactions = {}
-    # except AttributeError as e:
-    #     print('attribute error',icsd_formula)
-    #     filtered_reactions = get_filtered_target_reactions(icsd_formula,textmined_precursors,filtered_precs = False)
-    # except KeyError as e:
-    #     print('key error',icsd_formula)
-    #     filtered_reactions = {}
-        # filtered_reactions = {}
     return {icsd_formula:filtered_reactions}
 
 def get_optimum_reactions_for_all_icsd_targets(icsd_formulas_reduced,textmined_precursors,n_procs = 4, remake = True):

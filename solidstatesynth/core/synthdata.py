@@ -5,8 +5,8 @@ from pydmclab.core.query import MPQuery
 from pymatgen.analysis import interface_reactions
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 # from rxn_network.costs import calculators
-from solidstatesynth.utils import *
-from solidstatesynth.competitions import *
+from solidstatesynth.core.utils import *
+from solidstatesynth.rxn_generation.metrics_calculation import *
 
 class PositiveEntry(object):
     def __init__(self, entry, mp_data, gases_data, new_db, interpolation_data = None,):
@@ -211,7 +211,7 @@ class PositiveEntry(object):
         return dG_rxn, rxn
     
     # @property
-    def competitions(self, use_prec = True, open = True):
+    def competitions_dict(self, use_prec = True):
         entry = self.entry
         target = str(CompTools(entry['positive']['target']).clean)
         temperature = entry['common']['temperature']
@@ -226,10 +226,10 @@ class PositiveEntry(object):
         # print('target:',target)
         # print('precursors:',prec)
         # print('temperature:',temperature)
-        comp_data = get_competition_data(target, prec, temperature, environment, open)
+        comp_data = MetricsCalculator(target,prec).calculate_metrics_at_temp_env(temperature,environment)
         # if len(comp_data)>1:
         #     comp_data = get_target_reaction(precursors,comp_data)
-        return (comp_data[0]['c1'], comp_data[0]['c2'])
+        return comp_data
 
 class ChemsysEntry(object):
     def __init__(self, chemsys, mp_data, gases_data, new_db, interpolation_data=None):
