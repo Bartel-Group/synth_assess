@@ -19,6 +19,7 @@ from pymatgen.core.composition import Element
 from pymatgen.entries.computed_entries import ConstantEnergyAdjustment
 from pymatgen.entries.entry_tools import EntrySet
 from tqdm import tqdm
+from pydmclab.data.thermochem import gas_thermo_data
 
 from rxn_network.core import Composition
 from rxn_network.data import PATH_TO_NIST
@@ -35,6 +36,7 @@ logger = get_logger(__name__)
 
 #  prefer computed data for solids with high melting points (T >= 1500 ºC)
 IGNORE_NIST_SOLIDS = loadfn(PATH_TO_NIST / "ignore_solids.json")
+gasses = list(gas_thermo_data().keys())
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -402,11 +404,12 @@ class GibbsEntrySet(collections.abc.MutableSet, MSONable):
             new_entries = []
             new_entry = None
             if include_nist_data:
-                new_entry = cls._check_for_experimental(
-                    formula, "nist", temperature, ignore_nist_solids, apply_atmospheric_co2_correction
-                )
-                if new_entry:
-                    new_entries.append(new_entry)
+                if formula not in gasses:
+                    new_entry = cls._check_for_experimental(
+                        formula, "nist", temperature, ignore_nist_solids, apply_atmospheric_co2_correction
+                    )
+                    if new_entry:
+                        new_entries.append(new_entry)
 
             if include_freed_data:
                 new_entry = cls._check_for_experimental(
