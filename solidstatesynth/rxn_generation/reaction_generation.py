@@ -114,7 +114,7 @@ def get_relevant_precursors(target,tm_precursors):
     return precs
 #add oxygen to chemical space
 
-def get_target_reactions(target,textmined_precursors,filtered_precs = True):
+def get_target_reactions(target,textmined_precursors,filtered_precs = False):
     # prec_sets = []
     # if 'P' in CompTools(target).els and 'O' in CompTools(target).els:
     #     temps = [300,900,1200]
@@ -123,6 +123,8 @@ def get_target_reactions(target,textmined_precursors,filtered_precs = True):
     # temps = [300,900]
     if filtered_precs:
         relevant_precs = get_relevant_precursors(target,textmined_precursors)
+        print(relevant_precs)
+        print([Composition(p) for p in relevant_precs])    
     else:
         relevant_precs = None
     mc = MetricsCalculator(target,relevant_precs)

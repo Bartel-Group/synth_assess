@@ -78,6 +78,7 @@ class MetricsCalculator():
         """
         self._targets = [Composition(i).reduced_formula for i in targets]
         if precursors:
+            print(precursors)
             self._precursors = [Composition(i).reduced_formula for i in precursors]
             elements = list(set([i for j in self._precursors+self._targets+["O2"] for i in Composition(j).chemical_system_set]))
 
