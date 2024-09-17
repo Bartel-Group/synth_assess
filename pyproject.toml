@@ -12,6 +12,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
+dependencies = ["pydmclab","reaction-network == 8.3.0"]
 
 [project.urls]
 Source = "https://github.com/bartel-group/SolidStateSynth"
