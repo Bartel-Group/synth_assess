@@ -1,0 +1,31 @@
+[project]
+name = "pydmc_ml"
+version = "0.1.0"
+description = "A Python package to facilitate rapid structural optimization and fine-tuning of deep learning models."
+authors = [{name = "Chris Bartel", email = "cbartel@umn.edu"}, {name = "Kyle Noordhoek", email = "noord014@umn.edu"}]
+requires-python = ">=3.10"
+readme = "README.md"
+license = {text = "MIT"}
+dependencies = ["chgnet>=0.3.0"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+[project.urls]
+Source = "https://github.com/Bartel-Group/pydmc-ml"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["pydmc_ml"]
+
+[build-system]
+requires = ["setuptools>=65.0.0", "wheel >= 0.38"]
+build-backend = "setuptools.build_meta"

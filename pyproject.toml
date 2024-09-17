@@ -1,0 +1,24 @@
+[project]
+name = "solidstatesynth"
+version = "0.0.1"
+description = "A Python package to parse and characterize text-mined solid-state synthesis reactions."
+authors = [{name = "Jane Schlesinger", email = "schle759@umn.edu"}]
+requires-python = ">=3.6.0"
+readme = "README.md"
+license = {text = "MIT"}
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+[project.urls]
+Source = "https://github.com/bartel-group/SolidStateSynth"
+
+[tool.setuptools.packages.find]
+include = ["solidstatesynth"]
+
+[build-system]
+requires = ["setuptools>=65.0.0", "wheel >= 0.38"]
+build-backend = "setuptools.build_meta"
