@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from numpy import ndarray
     from pymatgen.core.composition import Element
 
-    from rxn_network.core import Composition
+    from solidstatesynth.rxn_network.core import Composition
 
 
 class Reaction(MSONable, metaclass=ABCMeta):

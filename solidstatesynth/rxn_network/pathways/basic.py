@@ -6,10 +6,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rxn_network.pathways.base import Pathway
+from solidstatesynth.rxn_network.pathways.base import Pathway
 
 if TYPE_CHECKING:
-    from rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.reactions.base import Reaction
 
 
 class BasicPathway(Pathway):

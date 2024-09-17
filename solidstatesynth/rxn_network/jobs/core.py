@@ -11,38 +11,38 @@ from jobflow import SETTINGS, Maker, job
 from pymatgen.core.composition import Element
 from tqdm import tqdm
 
-from rxn_network.core import Composition
-from rxn_network.costs.calculators import (
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.costs.calculators import (
     ChempotDistanceCalculator,
     PrimaryCompetitionCalculator,
     SecondaryCompetitionCalculator,
 )
-from rxn_network.costs.functions import Softplus
-from rxn_network.entries.utils import get_all_entries_in_chemsys, process_entries
-from rxn_network.enumerators.utils import get_computed_rxn, run_enumerators
-from rxn_network.jobs.schema import (
+from solidstatesynth.rxn_network.costs.functions import Softplus
+from solidstatesynth.rxn_network.entries.utils import get_all_entries_in_chemsys, process_entries
+from solidstatesynth.rxn_network.enumerators.utils import get_computed_rxn, run_enumerators
+from solidstatesynth.rxn_network.jobs.schema import (
     CompetitionTaskDocument,
     EntrySetDocument,
     EnumeratorTaskDocument,
     NetworkTaskDocument,
     PathwaySolverTaskDocument,
 )
-from rxn_network.jobs.utils import get_added_elem_data
-from rxn_network.network.network import ReactionNetwork
-from rxn_network.pathways.solver import PathwaySolver
-from rxn_network.reactions.basic import BasicReaction
-from rxn_network.reactions.hull import InterfaceReactionHull
-from rxn_network.reactions.reaction_set import ReactionSet
-from rxn_network.utils.funcs import get_logger, grouper
-from rxn_network.utils.ray import initialize_ray, to_iterator
+from solidstatesynth.rxn_network.jobs.utils import get_added_elem_data
+from solidstatesynth.rxn_network.network.network import ReactionNetwork
+from solidstatesynth.rxn_network.pathways.solver import PathwaySolver
+from solidstatesynth.rxn_network.reactions.basic import BasicReaction
+from solidstatesynth.rxn_network.reactions.hull import InterfaceReactionHull
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.utils.funcs import get_logger, grouper
+from solidstatesynth.rxn_network.utils.ray import initialize_ray, to_iterator
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from rxn_network.costs.base import CostFunction
-    from rxn_network.entries.entry_set import GibbsEntrySet
-    from rxn_network.enumerators.base import Enumerator
-    from rxn_network.pathways.pathway_set import PathwaySet
+    from solidstatesynth.rxn_network.costs.base import CostFunction
+    from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+    from solidstatesynth.rxn_network.enumerators.base import Enumerator
+    from solidstatesynth.rxn_network.pathways.pathway_set import PathwaySet
 
 logger = get_logger(__name__)
 

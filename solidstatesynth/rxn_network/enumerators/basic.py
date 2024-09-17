@@ -11,14 +11,14 @@ import ray
 from pymatgen.analysis.phase_diagram import GrandPotentialPhaseDiagram, PhaseDiagram
 from tqdm import tqdm
 
-from rxn_network.entries.entry_set import GibbsEntrySet
-from rxn_network.entries.utils import initialize_entry
-from rxn_network.enumerators.base import Enumerator
-from rxn_network.enumerators.utils import group_by_chemsys
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.reaction_set import ReactionSet
-from rxn_network.utils.funcs import get_logger, grouper, limited_powerset
-from rxn_network.utils.ray import initialize_ray, to_iterator
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.entries.utils import initialize_entry
+from solidstatesynth.rxn_network.enumerators.base import Enumerator
+from solidstatesynth.rxn_network.enumerators.utils import group_by_chemsys
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.utils.funcs import get_logger, grouper, limited_powerset
+from solidstatesynth.rxn_network.utils.ray import initialize_ray, to_iterator
 
 if TYPE_CHECKING:
     from pymatgen.entries.computed_entries import ComputedEntry

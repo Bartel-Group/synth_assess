@@ -11,8 +11,8 @@ from monty.json import MSONable
 from plotly.graph_objs import Figure
 from scipy.spatial import ConvexHull
 
-from rxn_network.core import Composition
-from rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
 
 
 class InterfaceReactionHull(MSONable):

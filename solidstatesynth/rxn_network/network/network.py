@@ -9,22 +9,22 @@ import rustworkx as rx
 from pymatgen.entries import Entry
 from tqdm import tqdm
 
-from rxn_network.costs.functions import Softplus
-from rxn_network.entries.experimental import ExperimentalReferenceEntry
-from rxn_network.network.base import Graph, Network
-from rxn_network.network.entry import NetworkEntry, NetworkEntryType
-from rxn_network.pathways.basic import BasicPathway
-from rxn_network.pathways.pathway_set import PathwaySet
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.open import OpenComputedReaction
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.costs.functions import Softplus
+from solidstatesynth.rxn_network.entries.experimental import ExperimentalReferenceEntry
+from solidstatesynth.rxn_network.network.base import Graph, Network
+from solidstatesynth.rxn_network.network.entry import NetworkEntry, NetworkEntryType
+from solidstatesynth.rxn_network.pathways.basic import BasicPathway
+from solidstatesynth.rxn_network.pathways.pathway_set import PathwaySet
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.open import OpenComputedReaction
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from rxn_network.costs.base import CostFunction
-    from rxn_network.reactions.base import Reaction
-    from rxn_network.reactions.reaction_set import ReactionSet
+    from solidstatesynth.rxn_network.costs.base import CostFunction
+    from solidstatesynth.rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
 
 logger = get_logger(__name__)
 

@@ -8,16 +8,16 @@ from typing import TYPE_CHECKING
 from monty.json import MontyDecoder, MSONable
 from rustworkx import PyDiGraph
 
-from rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from pymatgen.entries import Entry
 
-    from rxn_network.costs.base import CostFunction
-    from rxn_network.pathways.base import Pathway
-    from rxn_network.reactions.reaction_set import ReactionSet
+    from solidstatesynth.rxn_network.costs.base import CostFunction
+    from solidstatesynth.rxn_network.pathways.base import Pathway
+    from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
 
 
 class Network(MSONable, metaclass=ABCMeta):

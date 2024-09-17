@@ -12,7 +12,7 @@ from pymatgen.analysis.chempot_diagram import ChemicalPotentialDiagram as Chempo
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 from scipy.spatial import HalfspaceIntersection, KDTree
 
-from rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
 
 if TYPE_CHECKING:
     from pymatgen.analysis.phase_diagram import PDEntry

@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from rxn_network.pathways.basic import BasicPathway
-from rxn_network.utils.funcs import limited_powerset
+from solidstatesynth.rxn_network.pathways.basic import BasicPathway
+from solidstatesynth.rxn_network.utils.funcs import limited_powerset
 
 if TYPE_CHECKING:
-    from rxn_network.core import Composition
-    from rxn_network.pathways.base import Pathway
-    from rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.core import Composition
+    from solidstatesynth.rxn_network.pathways.base import Pathway
+    from solidstatesynth.rxn_network.reactions.base import Reaction
 
 
 class BalancedPathway(BasicPathway):

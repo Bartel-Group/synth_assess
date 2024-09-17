@@ -6,7 +6,7 @@ import os
 
 import ray
 
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 logger = get_logger(__name__)
 

@@ -10,8 +10,8 @@ from monty.json import MSONable
 if TYPE_CHECKING:
     from pymatgen.entries.computed_entries import ComputedEntry
 
-    from rxn_network.core import Composition
-    from rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.core import Composition
+    from solidstatesynth.rxn_network.reactions.base import Reaction
 
 
 class Pathway(MSONable, metaclass=ABCMeta):

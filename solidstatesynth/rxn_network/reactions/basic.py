@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 from monty.fractions import gcd_float
 
-from rxn_network.core import Composition
-from rxn_network.data import COMMON_GASES
-from rxn_network.reactions.base import Reaction
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.data import COMMON_GASES
+from solidstatesynth.rxn_network.reactions.base import Reaction
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING
 
 from monty.json import MSONable
 
-from rxn_network.pathways.balanced import BalancedPathway
-from rxn_network.pathways.basic import BasicPathway
-from rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.pathways.balanced import BalancedPathway
+from solidstatesynth.rxn_network.pathways.basic import BasicPathway
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
 
 if TYPE_CHECKING:
     import numpy as np
 
-    from rxn_network.pathways.base import Pathway
+    from solidstatesynth.rxn_network.pathways.base import Pathway
 
 
 class PathwaySet(MSONable):

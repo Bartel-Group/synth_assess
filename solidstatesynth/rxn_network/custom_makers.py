@@ -1,22 +1,22 @@
-from rxn_network.jobs.core import CalculateCompetitionMaker
-from rxn_network.jobs.core import GetEntrySetMaker
-from rxn_network.jobs.schema import CompetitionTaskDocument
-from rxn_network.jobs.schema import EntrySetDocument
+from solidstatesynth.rxn_network.jobs.core import CalculateCompetitionMaker
+from solidstatesynth.rxn_network.jobs.core import GetEntrySetMaker
+from solidstatesynth.rxn_network.jobs.schema import CompetitionTaskDocument
+from solidstatesynth.rxn_network.jobs.schema import EntrySetDocument
 import ray
-from rxn_network.jobs.utils import get_added_elem_data
-from rxn_network.reactions.reaction_set import ReactionSet
-from rxn_network.utils.ray import initialize_ray
-from rxn_network.entries.entry_set import GibbsEntrySet
-from rxn_network.core import Composition
+from solidstatesynth.rxn_network.jobs.utils import get_added_elem_data
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.utils.ray import initialize_ray
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.core import Composition
 from jobflow import SETTINGS, Maker, job
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 from pymatgen.core.composition import Element
 
 from collections.abc import Iterable
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry
 from copy import deepcopy
-from rxn_network.entries.utils import initialize_entry
+from solidstatesynth.rxn_network.entries.utils import initialize_entry
 
 logger = get_logger(__name__)
 

@@ -6,13 +6,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from rxn_network.data import PATH_TO_FREED, load_experimental_data
-from rxn_network.entries.experimental import ExperimentalReferenceEntry
+from solidstatesynth.rxn_network.data import PATH_TO_FREED, load_experimental_data
+from solidstatesynth.rxn_network.entries.experimental import ExperimentalReferenceEntry
 
 if TYPE_CHECKING:
     from pymatgen.entries.computed_entries import EnergyAdjustment
 
-    from rxn_network.core import Composition
+    from solidstatesynth.rxn_network.core import Composition
 
 G_COMPOUNDS = load_experimental_data(PATH_TO_FREED / "compounds.json.gz")
 

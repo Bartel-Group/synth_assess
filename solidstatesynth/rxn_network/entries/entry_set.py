@@ -21,16 +21,16 @@ from pymatgen.entries.entry_tools import EntrySet
 from tqdm import tqdm
 from pydmclab.data.thermochem import gas_thermo_data
 
-from rxn_network.core import Composition
-from rxn_network.data import PATH_TO_NIST
-from rxn_network.entries.corrections import CarbonateCorrection, CarbonDioxideAtmosphericCorrection
-from rxn_network.entries.experimental import ExperimentalReferenceEntry
-from rxn_network.entries.freed import FREEDReferenceEntry
-from rxn_network.entries.gibbs import GibbsComputedEntry
-from rxn_network.entries.interpolated import InterpolatedEntry
-from rxn_network.entries.nist import NISTReferenceEntry
-from rxn_network.thermo.utils import expand_pd
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.data import PATH_TO_NIST
+from solidstatesynth.rxn_network.entries.corrections import CarbonateCorrection, CarbonDioxideAtmosphericCorrection
+from solidstatesynth.rxn_network.entries.experimental import ExperimentalReferenceEntry
+from solidstatesynth.rxn_network.entries.freed import FREEDReferenceEntry
+from solidstatesynth.rxn_network.entries.gibbs import GibbsComputedEntry
+from solidstatesynth.rxn_network.entries.interpolated import InterpolatedEntry
+from solidstatesynth.rxn_network.entries.nist import NISTReferenceEntry
+from solidstatesynth.rxn_network.thermo.utils import expand_pd
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 logger = get_logger(__name__)
 

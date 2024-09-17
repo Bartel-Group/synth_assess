@@ -16,22 +16,22 @@ from numba import jit
 from pymatgen.core.composition import Element
 from tqdm import tqdm
 
-from rxn_network.core import Composition
-from rxn_network.entries.entry_set import GibbsEntrySet
-from rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
-from rxn_network.enumerators.minimize import MinimizeGibbsEnumerator, MinimizeGrandPotentialEnumerator
-from rxn_network.pathways.balanced import BalancedPathway
-from rxn_network.pathways.pathway_set import PathwaySet
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.open import OpenComputedReaction
-from rxn_network.reactions.reaction_set import ReactionSet
-from rxn_network.utils.funcs import get_logger, grouper
-from rxn_network.utils.ray import initialize_ray, to_iterator
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
+from solidstatesynth.rxn_network.enumerators.minimize import MinimizeGibbsEnumerator, MinimizeGrandPotentialEnumerator
+from solidstatesynth.rxn_network.pathways.balanced import BalancedPathway
+from solidstatesynth.rxn_network.pathways.pathway_set import PathwaySet
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.open import OpenComputedReaction
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.utils.funcs import get_logger, grouper
+from solidstatesynth.rxn_network.utils.ray import initialize_ray, to_iterator
 
 if TYPE_CHECKING:
-    from rxn_network.costs.base import CostFunction
-    from rxn_network.pathways.base import Pathway
-    from rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.costs.base import CostFunction
+    from solidstatesynth.rxn_network.pathways.base import Pathway
+    from solidstatesynth.rxn_network.reactions.base import Reaction
 
 logger = get_logger(__name__)
 

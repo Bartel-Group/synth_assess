@@ -11,13 +11,13 @@ from typing import TYPE_CHECKING
 from pymatgen.analysis.phase_diagram import GrandPotPDEntry
 from pymatgen.core.composition import Element
 
-from rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
 
 if TYPE_CHECKING:
     import numpy as np
     from pymatgen.entries.computed_entries import ComputedEntry
 
-    from rxn_network.core import Composition
+    from solidstatesynth.rxn_network.core import Composition
 
 
 class OpenComputedReaction(ComputedReaction):

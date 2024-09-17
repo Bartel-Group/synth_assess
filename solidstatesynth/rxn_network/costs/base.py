@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from monty.json import MSONable
 
 if TYPE_CHECKING:
-    from rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.reactions.base import Reaction
 
 
 class Calculator(MSONable, metaclass=ABCMeta):

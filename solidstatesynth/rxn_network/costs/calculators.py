@@ -7,16 +7,16 @@ from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
-from rxn_network.costs.base import Calculator
-from rxn_network.thermo.chempot_diagram import ChemicalPotentialDiagram
+from solidstatesynth.rxn_network.costs.base import Calculator
+from solidstatesynth.rxn_network.thermo.chempot_diagram import ChemicalPotentialDiagram
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from pymatgen.analysis.phase_diagram import PDEntry
 
-    from rxn_network.reactions.computed import ComputedReaction
-    from rxn_network.reactions.hull import InterfaceReactionHull
+    from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+    from solidstatesynth.rxn_network.reactions.hull import InterfaceReactionHull
 
 
 class ChempotDistanceCalculator(Calculator):

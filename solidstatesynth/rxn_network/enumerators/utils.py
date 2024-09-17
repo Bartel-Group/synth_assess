@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 from pymatgen.analysis.interface_reactions import GrandPotentialInterfacialReactivity, InterfacialReactivity
 from pymatgen.entries.computed_entries import ComputedEntry
 
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.open import OpenComputedReaction
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.open import OpenComputedReaction
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -18,10 +18,10 @@ if TYPE_CHECKING:
     from pymatgen.core.periodic_table import Element
     from pymatgen.entries.computed_entries import Entry
 
-    from rxn_network.core import Composition
-    from rxn_network.entries.entry_set import GibbsEntrySet
-    from rxn_network.enumerators.base import Enumerator
-    from rxn_network.reactions.base import Reaction
+    from solidstatesynth.rxn_network.core import Composition
+    from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+    from solidstatesynth.rxn_network.enumerators.base import Enumerator
+    from solidstatesynth.rxn_network.reactions.base import Reaction
 
 logger = get_logger(__name__)
 

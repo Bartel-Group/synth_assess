@@ -8,7 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from pymatgen.analysis.chempot_diagram import plotly_layouts
 
-from rxn_network.costs.pareto import get_pareto_front
+from solidstatesynth.rxn_network.costs.pareto import get_pareto_front
 
 if TYPE_CHECKING:
     from pandas import DataFrame

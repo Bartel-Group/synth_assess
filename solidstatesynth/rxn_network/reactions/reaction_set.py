@@ -15,18 +15,18 @@ from pandas import DataFrame
 from pymatgen.core.composition import Element
 from tqdm import tqdm
 
-from rxn_network.core import Composition
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.open import OpenComputedReaction
-from rxn_network.utils.funcs import get_logger, grouper
-from rxn_network.utils.ray import initialize_ray, to_iterator
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.open import OpenComputedReaction
+from solidstatesynth.rxn_network.utils.funcs import get_logger, grouper
+from solidstatesynth.rxn_network.utils.ray import initialize_ray, to_iterator
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
     from pymatgen.entries.computed_entries import ComputedEntry
 
-    from rxn_network.costs.base import CostFunction
+    from solidstatesynth.rxn_network.costs.base import CostFunction
 
 logger = get_logger(__name__)
 

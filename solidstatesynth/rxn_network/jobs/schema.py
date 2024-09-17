@@ -5,14 +5,14 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 from pymatgen.core.composition import Element
 
-from rxn_network.entries.entry_set import GibbsEntrySet
-from rxn_network.enumerators.base import Enumerator
-from rxn_network.network.base import Network
-from rxn_network.pathways.pathway_set import PathwaySet
-from rxn_network.pathways.solver import Solver
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.reaction_set import ReactionSet
-from rxn_network.utils.funcs import datetime_str
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.enumerators.base import Enumerator
+from solidstatesynth.rxn_network.network.base import Network
+from solidstatesynth.rxn_network.pathways.pathway_set import PathwaySet
+from solidstatesynth.rxn_network.pathways.solver import Solver
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.utils.funcs import datetime_str
 
 
 class EntrySetDocument(BaseModel):

@@ -10,13 +10,13 @@ from typing import TYPE_CHECKING
 import numpy as np
 from uncertainties import ufloat
 
-from rxn_network.reactions.basic import BasicReaction
+from solidstatesynth.rxn_network.reactions.basic import BasicReaction
 
 if TYPE_CHECKING:
     from pymatgen.core.composition import Element
     from pymatgen.entries.computed_entries import ComputedEntry
 
-    from rxn_network.core import Composition
+    from solidstatesynth.rxn_network.core import Composition
 
 
 class ComputedReaction(BasicReaction):

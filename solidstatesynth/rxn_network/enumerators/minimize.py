@@ -8,9 +8,9 @@ from itertools import product
 
 from pymatgen.core.composition import Element
 
-from rxn_network.core import Composition
-from rxn_network.enumerators.basic import BasicEnumerator
-from rxn_network.enumerators.utils import react_interface
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.enumerators.basic import BasicEnumerator
+from solidstatesynth.rxn_network.enumerators.utils import react_interface
 
 
 class MinimizeGibbsEnumerator(BasicEnumerator):

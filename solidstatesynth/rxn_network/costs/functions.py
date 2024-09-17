@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from rxn_network.costs.base import CostFunction
+from solidstatesynth.rxn_network.costs.base import CostFunction
 
 if TYPE_CHECKING:
-    from rxn_network.reactions.computed import ComputedReaction
+    from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
 
 
 class Softplus(CostFunction):

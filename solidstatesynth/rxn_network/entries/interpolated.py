@@ -8,8 +8,8 @@ import numpy as np
 from pymatgen.analysis.phase_diagram import GrandPotPDEntry
 from pymatgen.entries.computed_entries import ComputedEntry
 
-from rxn_network.core import Composition
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 logger = get_logger(__name__)
 

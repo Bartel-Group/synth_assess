@@ -11,8 +11,8 @@ from monty.json import MSONable
 if TYPE_CHECKING:
     from collections.abc import Collection
 
-    from rxn_network.core import Composition
-    from rxn_network.entries.entry_set import GibbsEntrySet
+    from solidstatesynth.rxn_network.core import Composition
+    from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
 
 
 class Enumerator(MSONable, metaclass=ABCMeta):

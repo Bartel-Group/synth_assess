@@ -5,8 +5,8 @@ from __future__ import annotations
 from jobflow import SETTINGS
 from monty.json import MontyDecoder
 
-from rxn_network.core import Composition
-from rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
 
 
 def get_rxns_from_db(

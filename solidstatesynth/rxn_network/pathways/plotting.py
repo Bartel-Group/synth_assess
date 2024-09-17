@@ -11,8 +11,8 @@ from pymatgen.analysis.phase_diagram import PhaseDiagram
 from scipy.ndimage import median_filter
 from tqdm import tqdm
 
-from rxn_network.core import Composition
-from rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
 
 if TYPE_CHECKING:
     from pymatgen.core.periodic_table import Element

@@ -8,22 +8,22 @@ from typing import TYPE_CHECKING
 from jobflow import Flow, Maker
 from pymatgen.core.composition import Element
 
-from rxn_network.core import Composition
-from rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
-from rxn_network.enumerators.minimize import MinimizeGibbsEnumerator, MinimizeGrandPotentialEnumerator
-from rxn_network.jobs.core import (
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
+from solidstatesynth.rxn_network.enumerators.minimize import MinimizeGibbsEnumerator, MinimizeGrandPotentialEnumerator
+from solidstatesynth.rxn_network.jobs.core import (
     CalculateCompetitionMaker,
     GetEntrySetMaker,
     NetworkMaker,
     PathwaySolverMaker,
     ReactionEnumerationMaker,
 )
-from rxn_network.utils.funcs import get_logger
+from solidstatesynth.rxn_network.utils.funcs import get_logger
 
 if TYPE_CHECKING:
     from collections.abc import Collection, Iterable
 
-    from rxn_network.entries.entry_set import GibbsEntrySet
+    from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
 
 logger = get_logger(__name__)
 

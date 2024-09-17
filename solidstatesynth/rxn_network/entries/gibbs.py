@@ -15,8 +15,8 @@ from pymatgen.analysis.phase_diagram import GrandPotPDEntry
 from pymatgen.entries.computed_entries import ComputedEntry, ConstantEnergyAdjustment
 from scipy.interpolate import interp1d
 
-from rxn_network.core import Composition
-from rxn_network.data import G_ELEMS
+from solidstatesynth.rxn_network.core import Composition
+from solidstatesynth.rxn_network.data import G_ELEMS
 
 if TYPE_CHECKING:
     from pymatgen.core.periodic_table import Element
