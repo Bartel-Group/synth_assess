@@ -4,9 +4,9 @@ from pydmclab.data.thermochem import gas_thermo_data
 from pydmclab.core.energies import ReactionEnergy
 from pydmclab.core.query import MPRester
 from pydmclab.hpc.helpers import get_query
-from rxn_network.reactions.hull import InterfaceReactionHull as IRH
-from rxn_network.reactions.computed import ComputedReaction as CR
-from rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.reactions.hull import InterfaceReactionHull as IRH
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction as CR
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
 from pymatgen.entries.computed_entries import ComputedEntry, ComputedStructureEntry,GibbsComputedStructureEntry
 from pymatgen.core.composition import Composition
 from pymatgen.core.structure import Structure

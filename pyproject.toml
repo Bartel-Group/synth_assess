@@ -17,7 +17,7 @@ classifiers = [
 Source = "https://github.com/bartel-group/SolidStateSynth"
 
 [tool.setuptools.packages.find]
-include = ["solidstatesynth"]
+include = ["solidstatesynth*"]
 
 [build-system]
 requires = ["setuptools>=65.0.0", "wheel >= 0.38"]
