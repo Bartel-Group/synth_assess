@@ -127,10 +127,10 @@ def get_target_reactions(target,textmined_precursors,filtered_precs = False):
         print([Composition(p) for p in relevant_precs])    
     else:
         relevant_precs = None
-    mc = MetricsCalculator(target,relevant_precs)
+    mc = MetricsCalculator(targets=[target],precursors=relevant_precs)
     data_by_temp = {str(temp):[] for temp in temps} 
     for temp in temps:
-        data_by_temp[str(temp)]= mc.calculate_metrics_at_temp_env(temperature=temp, environment = 'air')
+        data_by_temp[str(temp)]= mc.calculate_metrics_at_temp_env(temp=temp, env = 'air')
     rxns = [d for d in data_by_temp['300']]
     useful_rxns = []
     for rxn in rxns:

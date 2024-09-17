@@ -2,28 +2,28 @@ import os
 from pydmclab.utils.handy import read_json, write_json
 from pydmclab.core.comp import CompTools
 
-from rxn_network.core import Composition
+from solidstatesynth.rxn_network.core import Composition
 from pymatgen.core import Composition as PymatgenComposition
-from rxn_network.entries.entry_set import GibbsEntrySet
-from rxn_network.reactions.reaction_set import ReactionSet
-from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.reactions.open import OpenComputedReaction
+from solidstatesynth.rxn_network.entries.entry_set import GibbsEntrySet
+from solidstatesynth.rxn_network.reactions.reaction_set import ReactionSet
+from solidstatesynth.rxn_network.reactions.computed import ComputedReaction
+from solidstatesynth.rxn_network.reactions.open import OpenComputedReaction
 
 from pymatgen.entries.computed_entries import ComputedStructureEntry
 
 from mp_api.client import MPRester
 
-from rxn_network.enumerators.basic import BasicEnumerator
-from rxn_network.enumerators.basic import BasicOpenEnumerator
-from rxn_network.reactions.hull import InterfaceReactionHull
+from solidstatesynth.rxn_network.enumerators.basic import BasicEnumerator
+from solidstatesynth.rxn_network.enumerators.basic import BasicOpenEnumerator
+from solidstatesynth.rxn_network.reactions.hull import InterfaceReactionHull
 from collections.abc import Iterable
 
 from pydmclab.data.thermochem import gas_thermo_data
 
 from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
 import math
-from rxn_network.entries.gibbs import GibbsComputedEntry
-from rxn_network.entries.nist import NISTReferenceEntry
+from solidstatesynth.rxn_network.entries.gibbs import GibbsComputedEntry
+from solidstatesynth.rxn_network.entries.nist import NISTReferenceEntry
 from pymatgen.entries.computed_entries import ComputedEntry
 
 #Gas partial pressures in atm for different environments
@@ -76,6 +76,7 @@ class MetricsCalculator():
             precursors (Iterable[str]): Formula Strings of all the precursors that can be used in the reactions; precursors must span the whole chemical system besides Oxygen.
             targets (Iterable[str]): Formula Strings of all the targets to generate reactions for in the chemical system.
         """
+        print('targets', targets)
         self._targets = [Composition(i).reduced_formula for i in targets]
         if precursors:
             print(precursors)
