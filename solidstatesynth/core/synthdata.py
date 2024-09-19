@@ -6,7 +6,7 @@ from pymatgen.analysis import interface_reactions
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 # from rxn_network.costs import calculators
 from solidstatesynth.core.utils import *
-from solidstatesynth.rxn_generation.metrics_calculation import *
+from solidstatesynth.core.competitions import *
 
 class PositiveEntry(object):
     def __init__(self, entry, mp_data, gases_data, new_db, interpolation_data = None,):
@@ -223,12 +223,7 @@ class PositiveEntry(object):
             prec = None
         if not temperature:
             temperature = 1073
-        # print('target:',target)
-        # print('precursors:',prec)
-        # print('temperature:',temperature)
-        comp_data = MetricsCalculator(target,prec).calculate_metrics_at_temp_env(temperature,environment)
-        # if len(comp_data)>1:
-        #     comp_data = get_target_reaction(precursors,comp_data)
+        comp_data = get_competition_data(target,prec,temperature,environment)
         return comp_data
 
 class ChemsysEntry(object):

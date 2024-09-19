@@ -6,8 +6,8 @@ from pymatgen.analysis import interface_reactions
 from pymatgen.analysis.phase_diagram import PhaseDiagram
 # from rxn_network.costs import calculators
 from solidstatesynth.core.utils import *
-# from solidstatesynth.competitions import *
-from solidstatesynth.rxn_generation.metrics_calculation import *
+from solidstatesynth.core.competitions import *
+# from solidstatesynth.rxn_generation.metrics_calculation import *
 
 DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
@@ -127,10 +127,9 @@ def get_target_reactions(target,textmined_precursors,filtered_precs = False):
         print([Composition(p) for p in relevant_precs])    
     else:
         relevant_precs = None
-    mc = MetricsCalculator(targets=[target],precursors=relevant_precs)
-    data_by_temp = {str(temp):[] for temp in temps} 
+    data_by_temp = {str(temp):[] for temp in temps}
     for temp in temps:
-        data_by_temp[str(temp)]= mc.calculate_metrics_at_temp_env(temp=temp, env = 'air')
+        data_by_temp[str(temp)]= get_competition_data(target, relevant_precs,temperature=temp, environment='air')
     rxns = [d for d in data_by_temp['300']]
     useful_rxns = []
     for rxn in rxns:
