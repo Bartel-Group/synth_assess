@@ -20,19 +20,19 @@ class BuildRxn():
         self.target = target
         self.temp = temp
         self.env = env
-        self.with_theoretical = with_theoretical
+        self.mp_experimental = read_json(os.path.join(DATADIR, '240926_mp_experimental.json'))
         self.stability_filter = 0.1
         if with_theoretical:
             self.mp_data = read_json(os.path.join(DATADIR, '240925_mp_ground_data.json'))
         else:
-            self.mp_data = read_json(os.path.join(DATADIR, '240926_mp_experimental.json'))
+            self.mp_data = self.mp_experimental
 
 
     def get_precursors(self):
         precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = True)
         balanceable = AnalyzeRxn(precursors=precursors,target=self.target, temperature=self.temp, atmosphere = self.env).balanceable
         if not balanceable:
-            precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = False, with_theoretical = self.with_theoretical)
+            precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = False)
         return precursors
 
     def build_target_rxns(self, precursors = None, open = True):

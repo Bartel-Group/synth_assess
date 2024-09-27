@@ -137,7 +137,7 @@ class AnalyzeTarget(AnalyzeCompound):
         else:
             return []
 
-    def possible_precursors(self, restrict_to_tm=True, with_theoretical=False):
+    def possible_precursors(self, restrict_to_tm=True):
         """
         Args:
             restrict_to_tm (bool) : restrict to text-mined precursors if True
@@ -155,10 +155,7 @@ class AnalyzeTarget(AnalyzeCompound):
         if restrict_to_tm:
             precursors = self.tm_precursors
         else:
-            if with_theoretical:
-                data = self.gd_MP
-            else:
-                data = self.mp_experimental
+            data = self.mp_experimental
             precursors = list(data.keys())
         
 
