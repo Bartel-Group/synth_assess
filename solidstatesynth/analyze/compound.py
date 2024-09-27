@@ -7,17 +7,13 @@ Goal: make it easy to analyze a given target
     could come from text-mined data, MP, or elsewhere
 """
 import os
-# from solidstatesynth.data.tm import (
-#     get_tm_precursors,
-#     get_tm_targets,
-#     get_mp_cmpds,
-# )
 from pydmclab.core.comp import CompTools
 from pydmclab.utils.handy import read_json
 from itertools import combinations
 from pymatgen.ext.matproj import MPRester
 
 DATADIR = "../data"
+DATADIR_cemsbartel = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 
 class AnalyzeCompound(object):
@@ -35,7 +31,9 @@ class AnalyzeCompound(object):
         self.formula = CompTools(formula).clean
         self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
         self.tm_targets = read_json(os.path.join(DATADIR, 'tm_targets.json'))['data']
-        self.mp_icsd_cmpds = read_json(os.path.join(DATADIR, 'mp_icsd_cmpds.json'))
+        self.gd_MP = read_json(os.path.join(DATADIR_cemsbartel, '240925_mp_ground_data.json'))
+        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '240926_mp_experimental.json'))
+
 
     @property
     def in_mp(self):
@@ -43,7 +41,7 @@ class AnalyzeCompound(object):
         Returns:
             True if the target is in MP else False
         """
-        return True if self.formula in self.mp_cmpds else False
+        return True if self.formula in self.gd_MP else False
     
     @property
     def in_icsd(self):
@@ -51,23 +49,7 @@ class AnalyzeCompound(object):
         Returns:
             True if the target is in the ICSD database
         """
-        return True if self.formula in self.mp_icsd_cmpds else False
-    
-    @property
-    def in_tm(self):
-        """
-        Returns:
-            True if the target is in the text-mined dataset (and MP) else Fasle
-        """
-        return True if self.formula in self.tm_targets else False
-    
-    @property
-    def is_NIST_gas(self):
-        """
-        Returns:
-            True if the target is a NIST gas
-        """
-        return True if self.formula in ['C1O2','H2O1','O1','H1'] else False
+        return True if self.formula in self.mp_experimental else False
     
     @property
     def is_oxide(self):
@@ -76,9 +58,29 @@ class AnalyzeCompound(object):
             True if the target has oxygen
         """
         return True if "O" in CompTools(self.target).els else False
+    
+    @property
+    def is_gas(self):
+        """
+        Returns:
+            True if the target is a gas
+        """
+        return True if self.formula in ['C1O2','H2O1','O1','H1'] else False
+
+    @property
+    def in_tm(self):
+        """
+        Returns:
+            True if the formula is in the text-mined dataset (prec or target) (and MP) else False
+        """
+        if self.formula in self.tm_targets:
+            return True
+        if self.formula in self.tm_precursors:
+            return True
+        return False
 
 class AnalyzeTarget(AnalyzeCompound):
-    def __init__(self, target):
+    def __init__(self,target):
         """
         Args:
             target (str) : target compound
@@ -89,19 +91,8 @@ class AnalyzeTarget(AnalyzeCompound):
             tm_targets (list) : list of targets in the text-mined dataset that are also in MP
             mp_cmpds (list) : list of compounds in MP
         """
+        super().__init__(target)
         self.target = CompTools(target).clean
-        self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
-        self.tm_targets = read_json(os.path.join(DATADIR, 'tm_targets.json'))['data']
-        self.mp_icsd_cmpds = read_json(os.path.join(DATADIR, 'mp_icsd_cmpds.json'))['formulas']
-
-
-    @property
-    def in_tm(self):
-        """
-        Returns:
-            True if the target is in the text-mined dataset (and MP) else Fasle
-        """
-        return True if self.target in self.tm_targets else False
 
     @property
     def chemsys(self):
@@ -112,13 +103,16 @@ class AnalyzeTarget(AnalyzeCompound):
         return CompTools(self.target).chemsys
     
     @property
-    def chemsys_targets(self):
+    def chemsys_targets(self, with_theoretical=False):
         """
         Returns:
             list of targets in the same chemical system
         """
-        chemsys_targets = [t for t in self.tm_targets if CompTools(t).chemsys == self.chemsys]
-        chemsys_targets.extend([t for t in self.mp_icsd_cmpds if CompTools(t).chemsys == self.chemsys])
+        if not with_theoretical:
+            mp_formulas = self.mp_experimental
+        else:
+            mp_formulas = self.gd_MP
+        chemsys_targets = [t for t in mp_formulas if CompTools(t).chemsys == self.chemsys]
         return list(set(chemsys_targets))
 
     @property
@@ -143,7 +137,7 @@ class AnalyzeTarget(AnalyzeCompound):
         else:
             return []
 
-    def possible_precursors(self, restrict_to_tm=True):
+    def possible_precursors(self, restrict_to_tm=True, with_theoretical=False):
         """
         Args:
             restrict_to_tm (bool) : restrict to text-mined precursors if True
@@ -161,7 +155,12 @@ class AnalyzeTarget(AnalyzeCompound):
         if restrict_to_tm:
             precursors = self.tm_precursors
         else:
-            precursors = self.mp_icsd_cmpds
+            if with_theoretical:
+                data = self.gd_MP
+            else:
+                data = self.mp_experimental
+            precursors = list(data.keys())
+        
 
         # what elements are in the target
         target_els = CompTools(self.target).els
@@ -178,8 +177,7 @@ class AnalyzeTarget(AnalyzeCompound):
         for n in range(1, nary):
             allowed_els.extend(list(combinations(target_els, n)))
 
-        ## now incorporating our "flexible elements" (basically adding carbonates and hydroxides)
-        flexible_els = self.flexible_els
+        # now incorporating our "flexible elements" (basically adding carbonates and hydroxides)
         new_allowed_els = []
         for el in flexible_els:
             for el_combo in allowed_els:
@@ -189,12 +187,8 @@ class AnalyzeTarget(AnalyzeCompound):
                     el_combo = tuple(sorted(el_combo))
                     new_allowed_els.append(el_combo)
         allowed_els = set(allowed_els + new_allowed_els)
-        allowed_el_list = target_els
-        if 'O' in target_els:
-            allowed_el_list.extend(['C','H'])
         # filter our big list of precursors down to those that we deemed "possible"
         precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
-        precursors.extend(allowed_el_list)
         return list(set(precursors))
 
 

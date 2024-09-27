@@ -7,41 +7,45 @@ import numpy as np
 from pydmclab.core.comp import CompTools
 from pydmclab.utils.handy import read_json, write_json
 from pymatgen.core.periodic_table import Element
-from solidstatesynth.gen.build_rxn_utils import setup_flow, parse_flow,run_flow
 from solidstatesynth.analyze.rxn import AnalyzeRxn, AnalyzeRxnString
 from solidstatesynth.analyze.compound import AnalyzeTarget
 from solidstatesynth.gen.metrics_calculation import MetricsCalculator
+from solidstatesynth.extract.mp import get_mp_experimental
 # from solidstatesynth.analyze.compound import AnalyzeTarget
 # from utils import *
-
+DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 class BuildRxn():
-    def __init__(self, target, temp, env):
+    def __init__(self, target, temp=300, env='air', with_theoretical=False):
         self.target = target
         self.temp = temp
         self.env = env
+        self.with_theoretical = with_theoretical
+        self.stability_filter = 0.1
+        if with_theoretical:
+            self.mp_data = read_json(os.path.join(DATADIR, '240925_mp_ground_data.json'))
+        else:
+            self.mp_data = read_json(os.path.join(DATADIR, '240926_mp_experimental.json'))
+
 
     def get_precursors(self):
         precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = True)
         balanceable = AnalyzeRxn(precursors=precursors,target=self.target, temperature=self.temp, atmosphere = self.env).balanceable
         if not balanceable:
-            precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = False)
+            precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = False, with_theoretical = self.with_theoretical)
         return precursors
 
     def build_target_rxns(self, precursors = None, open = True):
-        fjson = "/Users/schle759/Mydrive/phd/research/flow_output.json"
         # note: to query, you need to add your API_KEY to ~/.pmgrc.yaml (PMG_MAPI_KEY: < your API key >)
         if not precursors:
             precursors = self.get_precursors()
-        rxns_and_metrics = MetricsCalculator(precursors=precursors,targets = [self.target]).metrics_at_temp_env(temp = self.temp, env = self.env)
-
-        # flow = setup_flow(self.target,temp = self.temp, env = self.env,open=open, precursors = precursors)
-        # names = parse_flow(flow)
-        # output = run_flow(flow, fjson=fjson)
-        # keys_to_get = ['rxn','c1','c2','energy','gamma']
-        # reactions = []
-        # for r in output["rxns"]:
-        #     reactions.append({k: r[k] for k in keys_to_get})
+        print('precursors determined')
+        target = self.target
+        stability_filter = self.stability_filter
+        with_theoretical = self.with_theoretical
+        mc = MetricsCalculator(precursors=precursors,target = target, with_theoretical = with_theoretical, stability_filter=stability_filter)
+        rxns_and_metrics =mc.metrics_at_temp_env(temp = self.temp, env = self.env)
+        print('metrics calculated')
         return rxns_and_metrics
     
 
@@ -49,11 +53,11 @@ class BuildRxn():
         desired_target = self.target
         # print(target)
         reactions = self.build_target_rxns(precursors, open)
+        print('reactions built')
         filtered_rxns = []
         for r in reactions:
             ars = AnalyzeRxnString(rxn=r['rxn'], atmosphere=self.env)
             if ars.is_useful_reaction(desired_target):
-                # if desired_target in ars.products:
                 filtered_rxns.append(r)
         return filtered_rxns
     

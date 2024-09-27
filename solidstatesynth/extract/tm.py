@@ -8,11 +8,10 @@ Don't worry about any thermo stuff here since this all gets taken care of in rxn
 
 import os
 from pydmclab.utils.handy import read_json, write_json
-# from solidstatesynth.core.utils import in_icsd
 from pydmclab.core.query import MPRester
 
-DATA_DIR_paperdict = "/Volumes/cems_bartel/projects/negative-examples/data"
-DATA_DIR_MP = "/Volumes/cems_bartel/projects/mp-stability/data"
+DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+
 
 
 def get_updated_textmined_data():
@@ -23,54 +22,18 @@ def get_updated_textmined_data():
     "target": target, "dG_rxn": dG_rxn}}
     with each item associated with an entry in "thermo" (a single reaction)
     """
-    fjson = os.path.join(DATA_DIR_paperdict, "240626_no_corrections.json")
+    fjson = os.path.join(DATA_DIR, "240626_no_corrections.json")
     newdb = read_json(fjson)
     return newdb["data"]
-
-
-def get_mp_data():
-    """
-    Returns:
-        { T (int) :
-            {cmpd (str) :
-                {thermo info from MP}}}
-    """
-    fjson = os.path.join(DATA_DIR_MP, "230608_mp_stability.json")
-    return read_json(fjson)
-
-def get_mp_ids():
-    """
-    Returns:
-        list of all materials IDs in MP (as of 230608)
-    """
-    mp_data = get_mp_data()
-    mp_cmpds = get_mp_cmpds()
-    mp_ids = [mp_data["0"][cmpd]["mpid"] for cmpd in mp_cmpds]
-    return mp_ids
-
 
 def get_mp_cmpds():
     """
     Returns:
-        list of all compounds (str) in MP (as of 230608)
+        list of compounds in MP
     """
-    d = get_mp_data()
-    return list(d["0"].keys())
-
-
-
-def get_mp_icsd_cmpds(remake=False):
-    """
-    Returns:
-        list of all compounds (str) in MP (as of 230608) with an ICSD ID
-    """
-    if os.path.exists(os.path.join("../data/mp_icsd_cmpds.json")) and remake==False:
-        return read_json(os.path.join("../data/mp_icsd_cmpds.json"))["formulas"]
-    d = get_mp_ids()
-    data = MPRester().materials.summary.search(theoretical=False, fields=["formula_pretty"])
-    formulas ={'formulas':[entry.formula_pretty for entry in data]}
-    # data = {'data':MPRester().materials.summary.search(material_ids = d, theoretical=False)}
-    return write_json(formulas, os.path.join("../data/mp_icsd_cmpds.json"))
+    fjson = os.path.join(DATA_DIR, "240925_mp_ground_data.json")
+    mp = read_json(fjson)['data']
+    return list(mp.keys())
 
 
 def get_tm_rxns(d, mp_cmpds, fjson=os.path.join("../data/tm_rxns.json"), remake=False):
@@ -248,10 +211,9 @@ def main():
     tm_precursors = get_tm_precursors(tm_rxns, mp_cmpds, remake=False)
     tm_targets = get_tm_targets(tm_rxns, mp_cmpds, remake=False)
     tm_rxns_in_mp = get_mp_computable_tm_rxns(tm_rxns)
-    mp_icsd_cmpds = get_mp_icsd_cmpds()['formulas']
     check()
-    return d, tm_rxns, tm_precursors, tm_targets, mp_icsd_cmpds
+    return d, tm_rxns, tm_precursors, tm_targets, tm_rxns_in_mp
 
 
 if __name__ == "__main__":
-    d, tm_rxns, tm_precursors, tm_targets, mp_icsd_cmpds = main()
+    d, tm_rxns, tm_precursors, tm_targets, tm_rxns_in_mp = main()

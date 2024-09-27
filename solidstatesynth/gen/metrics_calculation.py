@@ -25,6 +25,7 @@ import math
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.nist import NISTReferenceEntry
 from pymatgen.entries.computed_entries import ComputedEntry
+from solidstatesynth.gen.build_entry import BuildGibbsEntrySet
 
 #Gas partial pressures in atm for different environments
 PA_TO_ATM_CONV = 101300
@@ -66,7 +67,10 @@ class MetricsCalculator():
     def __init__(
         self,
         precursors: Iterable[str],
-        targets: Iterable[str]
+        target: Iterable[str],
+        temperature: float = 300,
+        with_theoretical: bool = False,
+        stability_filter: float = 0.1
     ):
         """
         Initialize the calculator with the specified precursors and targets
@@ -74,14 +78,17 @@ class MetricsCalculator():
             precursors (Iterable[str]): Formula Strings of all the precursors that can be used in the reactions; precursors must span the whole chemical system besides Oxygen.
             targets (Iterable[str]): Formula Strings of all the targets to generate reactions for in the chemical system.
         """
-        self._precursors = [Composition(i).reduced_formula for i in precursors]
-        self._targets = [Composition(i).reduced_formula for i in targets]
+        self._precursors = [Composition(precursors) for precursors in precursors]
+        self._target = target
+        self._temperature = temperature
+        self.with_theoretical = with_theoretical
+        self.stability_filter = stability_filter
 
         
         #Find the chemical system to get query the MP entries from
-        elements = list(set([i for j in self._precursors+self._targets+["O2"] for i in Composition(j).chemical_system_set]))
-        elements.sort()
-        self._chemsys = "-".join(elements)
+        # elements = list(set([i for j in self._precursors+self._target+["O2"] for i in Composition(j).chemical_system_set]))
+        # elements.sort()
+        # self._chemsys = "-".join(elements)
 
         #Initialize the entries and reactions to None
         self.entries = None
@@ -92,47 +99,12 @@ class MetricsCalculator():
 
 
     def _get_entries(self) -> GibbsEntrySet:
-        with MPRester() as mpr:
-            mp_entries = mpr.get_entries_in_chemsys(self._chemsys)
-
-
-        #Get the NIST entries for the allowed gases in the chemical system:
-
-        #First determine which gases should be present in the system
-        #Reaction Networks does not use a NIST entry for O2, so it is not necessary to include that here
-        allowed_gases = [i for i in set(GAS_PARTIAL_PRESSURES["air"].keys())-{"O2"} if Composition(i).chemical_system_set <= set(self._chemsys.split("-"))]
-        
-        #Get all the entries (including NIST) as a GibbsEntrySet, then filter to only the gases
-        nist_entries = GibbsEntrySet.from_computed_entries(mp_entries, temperature=300, apply_atmospheric_co2_correction=False)
-        nist_entries = [nist_entries.get_min_entry_by_formula(i) for i in allowed_gases]
-
-
-        #Create a GibbsEntrySet from the ComputedStructureEntries @ 300K, without any NIST data or CO2 corrections (added later)
-        self.entries = GibbsEntrySet.from_computed_entries(mp_entries, temperature=300, include_nist_data=False, apply_atmospheric_co2_correction=False)
-        
-        #Remove any entries that are gases because they are not from NIST
-        entries_to_remove = []
-        for i in self.entries:
-            if i.reduced_formula in allowed_gases:
-                entries_to_remove.append(i)
-
-        for i in entries_to_remove:
-            self.entries.discard(i)
-
-        #Add back the NIST entries to the GibbsEntrySet
-        self.entries.update(nist_entries)
-        
-        
-        #Filter out any unstable phases 50 meV/atom above the hull
-        filtered_entries = self.entries.filter_by_stability(0.05)        
-
-        #Ensure that all the precursors and targets are in the entry set:
-        for i in self._precursors + self._targets:
-            if i not in filtered_entries.min_entries_by_formula:
-                filtered_entries.add(self.entries.get_min_entry_by_formula(i))
-
-        self.entries = filtered_entries
-        return self.entries
+        target = self._target
+        temp = self._temperature
+        with_theoretical = self.with_theoretical
+        stability_filter = self.stability_filter
+        entry_set = BuildGibbsEntrySet(target=target,with_theoretical=with_theoretical,stability_filter=stability_filter).build_entry_set(temp)
+        return entry_set
 
 
 
@@ -141,11 +113,14 @@ class MetricsCalculator():
         Build the calculator by getting the entries and enumerating the reactions
         """
         self.entries = self._get_entries()
+        print('entries obtained')
         #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
         self.rxns = BasicEnumerator(precursors=self._precursors, exclusive_precursors=True).enumerate(self.entries)
+        print('rxns enumerated')
         self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], precursors=self._precursors, exclusive_precursors=True).enumerate(self.entries))
         #Filter out duplicate reactions
         self.rxns = self.rxns.filter_duplicates()
+        print('rxn duplicates filtered')
         return self.rxns
 
 
@@ -178,6 +153,7 @@ class MetricsCalculator():
         for rxn in reactions:
             if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
                 target_rxns.append(rxn)
+        print('target rxns found')
 
         return target_rxns
     
@@ -234,6 +210,7 @@ class MetricsCalculator():
 
         #Set the reactions to the new temperature
         new_rxns = self.rxns.set_new_temperature(new_temp=temp)
+        print('rxns set to new temp')
 
         #For inert environment, remove all reactions that contain O2 as a reactant
         if env == "inert":
@@ -273,43 +250,44 @@ class MetricsCalculator():
 
         #Initialize the metrics data
         metrics = []
+        target = self._target
 
         #Loop through all the targets to calculate metrics for all the precursors combinations to make each target.
-        for target in self._targets:
+        # for target in self._targets:
             #Find the reactions that make the target without any byproducts - will calculate metrics for each reaction
-            target_rxns = self._find_target_rxns(target, rxns_at_temp)
+        target_rxns = self._find_target_rxns(target, rxns_at_temp)
 
-            for rxn in target_rxns:
+        for rxn in target_rxns:
 
-                #Get the precursors for the reaction - besides O2 if there are 2 solid precursors
-                rxn_prec = set([i.reduced_composition for i in rxn.reactants])
-                if len(rxn_prec) == 3 and Composition("O2") in rxn_prec:
-                    rxn_prec.remove(Composition("O2"))
+            #Get the precursors for the reaction - besides O2 if there are 2 solid precursors
+            rxn_prec = set([i.reduced_composition for i in rxn.reactants])
+            if len(rxn_prec) == 3 and Composition("O2") in rxn_prec:
+                rxn_prec.remove(Composition("O2"))
 
-                #Get the filtered reactions for the InterfaceReactionHull that only contain the precursors in this reaction
-                #In air, O2 is allowed as a reactant
-                #In excess inert, O2 is not allowed as a reactant
-                
-                if env == "air":
-                    filtered_rxns = list(rxns_at_temp.get_rxns_by_reactants([i.formula for i in rxn_prec]+["O2"]))
-                else:
-                    filtered_rxns = list(rxns_at_temp.get_rxns_by_reactants([i.formula for i in rxn_prec]))
+            #Get the filtered reactions for the InterfaceReactionHull that only contain the precursors in this reaction
+            #In air, O2 is allowed as a reactant
+            #In excess inert, O2 is not allowed as a reactant
+            
+            if env == "air":
+                filtered_rxns = list(rxns_at_temp.get_rxns_by_reactants([i.formula for i in rxn_prec]+["O2"]))
+            else:
+                filtered_rxns = list(rxns_at_temp.get_rxns_by_reactants([i.formula for i in rxn_prec]))
 
-                #Build the InterfaceReactionHull from the precursors and filtered reactions
-                irh = InterfaceReactionHull(*rxn_prec, filtered_rxns)
+            #Build the InterfaceReactionHull from the precursors and filtered reactions
+            irh = InterfaceReactionHull(*rxn_prec, filtered_rxns)
 
-                #Calculate the competition metrics for the reaction and store them
-                rxn_data = {}
-                rxn_data["rxn"] = str(rxn)
-                rxn_data["energy"] = rxn.energy_per_atom
-                rxn_data["c1"] = irh.get_primary_competition(rxn)
-                rxn_data["c2"] = irh.get_secondary_competition(rxn)
-                rxn_data["gamma"] = 0.1 * rxn_data["energy"] + 0.45 * rxn_data["c1"] + 0.45 * rxn_data["c2"]
-                
-                #Useful for debugging:
-                #rxn_data["competing_rxns"] = [str(i)+" dG="+str(i.energy_per_atom) for i in filtered_rxns]
+            #Calculate the competition metrics for the reaction and store them
+            rxn_data = {}
+            rxn_data["rxn"] = str(rxn)
+            rxn_data["energy"] = rxn.energy_per_atom
+            rxn_data["c1"] = irh.get_primary_competition(rxn)
+            rxn_data["c2"] = irh.get_secondary_competition(rxn)
+            rxn_data["gamma"] = 0.1 * rxn_data["energy"] + 0.45 * rxn_data["c1"] + 0.45 * rxn_data["c2"]
+            
+            #Useful for debugging:
+            #rxn_data["competing_rxns"] = [str(i)+" dG="+str(i.energy_per_atom) for i in filtered_rxns]
 
-                metrics.append(rxn_data)
+            metrics.append(rxn_data)
 
 
         return metrics
@@ -322,12 +300,12 @@ class MetricsCalculator():
     @property
     def targets(self) -> list[str]:
         """Targets in the chemical system for the competition metrics"""
-        return self._targets
+        return self._target
     
-    @property
-    def chemsys(self) -> str:
-        """Chemical system for the competition metrics"""
-        return self._chemsys
+    # @property
+    # def chemsys(self) -> str:
+    #     """Chemical system for the competition metrics"""
+    #     return self._chemsys
     
     
 

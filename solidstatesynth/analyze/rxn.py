@@ -17,7 +17,9 @@ from solidstatesynth.analyze.compound import AnalyzeCompound, AnalyzeTarget
 from solidstatesynth.analyze.thermo import AnalyzeThermo
 from solidstatesynth.core.utils import get_reaction_dict_from_string, get_balanced_reaction_coefficients
 from rxn_network.entries.entry_set import GibbsEntrySet
+from rxn_network.reactions.basic import BasicReaction
 DATADIR = "../data"
+DATADIR_cemsbartel = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 class AnalyzeRxn(object):
     def __init__(self, precursors, target, temperature, atmosphere):
@@ -39,18 +41,16 @@ class AnalyzeRxn(object):
         Returns:
             (additionally)
             tm_precursors (list) : list of precursors in the text-mined dataset that are also in MP
-            tm_targets (list) : list of targets in the text-mined dataset that are also in MP
+            experimental materials project formulas (dict) : dict with targets as keys for all targets also found in ICSD
 
 
         """
-        print('precursors', precursors)
-        print('target', target)
         self.precursors = [CompTools(p).clean for p in precursors]
         self.target = CompTools(target).clean
         self.temperature = temperature
         self.atmosphere = atmosphere
         self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
-        self.mp_icsd_cmpds = read_json(os.path.join(DATADIR, 'mp_icsd_cmpds.json'))
+        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '240926_mp_experimental.json'))['data']
         # self.tm_targets = get_tm_targets(None, None)
 
     @property
@@ -167,35 +167,15 @@ class AnalyzeRxn(object):
             return True 
         return False
     
-    def reaction_entry_set(self, manual_stability_filter = 0.05):
-        #all phases in chemical system
-        """
-        Returns:
-            entry set for the reaction
-        """
-        entry_set = []
-        chemsys_targets = AnalyzeTarget(self.target).chemsys_targets
-        species = chemsys_targets + self.precursors
-        for spec in species:
-            if AnalyzeCompound(spec).is_NIST_gas and len(CompTools(spec).els) > 1:
-                entry_set.append(AnalyzeThermo().gas_GibbsComputedEntry_at_temp(spec, self.temperature))
-            else:
-                if spec != self.target:
-                    stability_filter = manual_stability_filter
-                else:
-                    stability_filter = None
-                entry_set.append(AnalyzeThermo().ground_GibbsComputedEntry_at_temp(spec, temp=self.temperature, stability_filter=stability_filter))
-        return GibbsEntrySet([entry for entry in entry_set if entry is not None])
     
 class AnalyzeRxnString(AnalyzeRxn):
-    def __init__(self,rxn, atmosphere, temperature = 1000):
-        self.rxn = rxn
-        self.temperature = temperature
-        self.atmosphere = atmosphere
-        rxn_dict = get_reaction_dict_from_string(rxn)
+    def __init__(self,rxn_dict):
+        self.rxn_dict = rxn_dict
         self.products = rxn_dict['products']
         self.n_products = len(self.products)
         self.precursors = rxn_dict['reactants']
+
+    
 
     @property
     def has_gaseous_precursor(self):
@@ -208,7 +188,7 @@ class AnalyzeRxnString(AnalyzeRxn):
         """
         precursors = self.precursors
         for p in precursors:
-            if AnalyzeCompound(p).is_NIST_gas:
+            if AnalyzeCompound(p).is_gas:
                 return True
         return False
 
@@ -223,17 +203,17 @@ class AnalyzeRxnString(AnalyzeRxn):
         """
         products = self.products
         for p in products:
-            if AnalyzeCompound(p).is_NIST_gas:
+            if AnalyzeCompound(p).is_gas:
                 return True
         return False
 
 
-    def is_useful_reaction(self,desired_target):
+    def is_useful_reaction(self,desired_target,atmosphere = "air"):
         # use rxn string for specific precursors rather than a general list and to account for byproducts
         if desired_target in self.products:
             if self.n_products <3:
                 if self.n_products < 2 or self.has_gaseous_byproduct:
-                    if self.atmosphere != "inert" or not self.has_gaseous_precursor:
+                    if atmosphere != "inert" or not self.has_gaseous_precursor:
                         return True  
         return False
     
