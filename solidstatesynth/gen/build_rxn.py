@@ -10,7 +10,7 @@ from pymatgen.core.periodic_table import Element
 from solidstatesynth.analyze.rxn import AnalyzeRxn, AnalyzeRxnString
 from solidstatesynth.analyze.compound import AnalyzeTarget
 from solidstatesynth.gen.metrics_calculation import MetricsCalculator
-from solidstatesynth.extract.mp import get_mp_experimental
+from solidstatesynth.extract.mp import get_useful_mp_data
 # from solidstatesynth.analyze.compound import AnalyzeTarget
 # from utils import *
 DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
@@ -20,12 +20,15 @@ class BuildRxn():
         self.target = target
         self.temp = temp
         self.env = env
-        self.mp_experimental = read_json(os.path.join(DATADIR, '240926_mp_experimental.json'))
-        self.stability_filter = 0.1
+        self.mp_experimental = read_json(os.path.join(DATADIR, '240926_mp_experimental.json'))['data']
+        self.stability_filter = 0.05
+        self.with_theoretical = with_theoretical
         if with_theoretical:
-            self.mp_data = read_json(os.path.join(DATADIR, '240925_mp_ground_data.json'))
+            self.mp_data = read_json(os.path.join(DATADIR, '240925_mp_ground_data.json'))['data']
         else:
             self.mp_data = self.mp_experimental
+        self.useful_mp_data = get_useful_mp_data(self.mp_data)
+        
 
 
     def get_precursors(self):
@@ -35,24 +38,25 @@ class BuildRxn():
             precursors = AnalyzeTarget(self.target).possible_precursors(restrict_to_tm = False)
         return precursors
 
-    def build_target_rxns(self, precursors = None, open = True):
+    def build_target_rxns(self, precursors = None):
         # note: to query, you need to add your API_KEY to ~/.pmgrc.yaml (PMG_MAPI_KEY: < your API key >)
         if not precursors:
             precursors = self.get_precursors()
         print('precursors determined')
         target = self.target
+        temp = self.temp
         stability_filter = self.stability_filter
         with_theoretical = self.with_theoretical
-        mc = MetricsCalculator(precursors=precursors,target = target, with_theoretical = with_theoretical, stability_filter=stability_filter)
-        rxns_and_metrics =mc.metrics_at_temp_env(temp = self.temp, env = self.env)
+        mc = MetricsCalculator(precursors=precursors,target = target, temperature = temp, with_theoretical = with_theoretical, stability_filter=stability_filter)
+        rxns_and_metrics =mc.metrics_at_temp_env(env = self.env)
         print('metrics calculated')
         return rxns_and_metrics
     
 
-    def filtered_rxns(self, precursors = None, open = True):
+    def filtered_rxns(self, precursors = None):
         desired_target = self.target
         # print(target)
-        reactions = self.build_target_rxns(precursors, open)
+        reactions = self.build_target_rxns(precursors)
         print('reactions built')
         filtered_rxns = []
         for r in reactions:

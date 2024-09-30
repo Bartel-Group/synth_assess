@@ -26,6 +26,7 @@ from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.nist import NISTReferenceEntry
 from pymatgen.entries.computed_entries import ComputedEntry
 from solidstatesynth.gen.build_entry import BuildGibbsEntrySet
+from rxn_network.costs.base import CostFunction
 
 #Gas partial pressures in atm for different environments
 PA_TO_ATM_CONV = 101300
@@ -161,7 +162,6 @@ class MetricsCalculator():
     def _get_enironment_correction(
             self,
             formula: str,
-            temp: float,
             environment: str = "air"
         ) -> CompositionEnergyAdjustment:
         """
@@ -174,6 +174,7 @@ class MetricsCalculator():
         Returns:
             CompositionEnergyAdjustment: Environment correction
         """
+        temp = self._temperature
         if environment not in GAS_PARTIAL_PRESSURES:
             return None
 
@@ -193,7 +194,6 @@ class MetricsCalculator():
 
     def get_rxns_at_temp_env(
         self,
-        temp: float = 1073,
         env: str = "air"
     ) -> ReactionSet:
         """
@@ -205,12 +205,12 @@ class MetricsCalculator():
         Returns:
             ReactionSet: Reactions at the specified temperature
         """
+        temp = self._temperature
         #Chemical potential of O at specified temperature and evironment partial pressure
         mu = KB * (temp) * math.log(GAS_PARTIAL_PRESSURES[env]["O2"])
 
         #Set the reactions to the new temperature
-        new_rxns = self.rxns.set_new_temperature(new_temp=temp)
-        print('rxns set to new temp')
+        new_rxns = self.rxns
 
         #For inert environment, remove all reactions that contain O2 as a reactant
         if env == "inert":
@@ -221,7 +221,7 @@ class MetricsCalculator():
         gas_comps = [i.composition for i in self.entries if i.reduced_formula in set(GAS_PARTIAL_PRESSURES["air"].keys())-{"O2"}]
         
         #Get the environment correction for each gas
-        gas_dict = {i: self._get_enironment_correction(i.reduced_formula, temp, env) for i in gas_comps}
+        gas_dict = {i: self._get_enironment_correction(i.reduced_formula, env) for i in gas_comps}
         
         #Add the environment correction to the gas products
         for i in new_rxns.entries:
@@ -233,7 +233,6 @@ class MetricsCalculator():
 
     def metrics_at_temp_env(
         self,
-        temp: float = 1073,
         env: str = "air"
     ) -> list[dict[str, ComputedReaction | float]]:
         """
@@ -246,7 +245,8 @@ class MetricsCalculator():
         """
 
         #Get the reactions at the correct temperature
-        rxns_at_temp = self.get_rxns_at_temp_env(temp=temp, env=env)
+        rxns_at_temp = self.get_rxns_at_temp_env(env=env)
+        # print('rxns at temp,', rxns_at_temp.to_dataframe(cost_function=SoftPlus(CostFunction)))
 
         #Initialize the metrics data
         metrics = []
@@ -256,6 +256,7 @@ class MetricsCalculator():
         # for target in self._targets:
             #Find the reactions that make the target without any byproducts - will calculate metrics for each reaction
         target_rxns = self._find_target_rxns(target, rxns_at_temp)
+        print('target rxns found',target_rxns)
 
         for rxn in target_rxns:
 

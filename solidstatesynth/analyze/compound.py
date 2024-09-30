@@ -31,8 +31,8 @@ class AnalyzeCompound(object):
         self.formula = CompTools(formula).clean
         self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
         self.tm_targets = read_json(os.path.join(DATADIR, 'tm_targets.json'))['data']
-        self.gd_MP = read_json(os.path.join(DATADIR_cemsbartel, '240925_mp_ground_data.json'))
-        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '240926_mp_experimental.json'))
+        self.gd_MP = read_json(os.path.join(DATADIR_cemsbartel, '240925_mp_ground_data.json'))['data']
+        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '240926_mp_experimental.json'))['data']
 
 
     @property

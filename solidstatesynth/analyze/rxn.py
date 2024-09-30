@@ -15,7 +15,7 @@ from pydmclab.core.comp import CompTools
 from pydmclab.utils.handy import read_json,write_json
 from solidstatesynth.analyze.compound import AnalyzeCompound, AnalyzeTarget
 from solidstatesynth.analyze.thermo import AnalyzeThermo
-from solidstatesynth.core.utils import get_reaction_dict_from_string, get_balanced_reaction_coefficients
+from solidstatesynth.core.utils import get_balanced_reaction_coefficients
 from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.reactions.basic import BasicReaction
 DATADIR = "../data"

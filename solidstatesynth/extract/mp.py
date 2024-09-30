@@ -3,6 +3,7 @@ from pydmclab.utils.handy import read_json, write_json
 from pydmclab.core.comp import CompTools
 # from solidstatesynth.core.utils import in_icsd
 from pydmclab.core.query import MPRester
+from pydmclab.data.thermochem import gas_thermo_data
 DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 
@@ -80,10 +81,38 @@ def get_mp_experimental(gd_MP, remake = False):
     exp_MP = write_json(exp_MP, fjson)
     return exp_MP['data']
 
+def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
+    """
+    """
+    MP_stability= {formula: MP[formula] for formula in MP if MP[formula]['energy_above_hull'] < stability_cutoff}
+    MP_els_max = {formula: MP_stability[formula] for formula in MP_stability if len(CompTools(formula).els) <= n_els_max}
+    return MP_els_max
+
+def get_gases_data(remake=False):
+    """
+    Returns: dictionary of the form {temperature: {gas: {Ef: dG in eV/atom}}}
+    from pre-existing gas thermo data from pydmclab. Note that the gas thermo
+    data provides the most accurate energies for gasses. Some gas data can be
+    found in materials project as well as in gas thermo data, so any formula
+    must be checked to see if it is in this dictionary before checking the
+    materials project data (see get_dGf_from_source below).
+    """
+    g = gas_thermo_data()
+    gasses = ["H2O1", "C1O2"]
+    new_gas = {'H2O1': 'H2O', 'C1O2': 'CO2'}
+    temperatures = [int(key) for key in g["C1O2"]]
+    g_new = {
+        new_gas[j]: {k: (g[j][str(k)]) / (96.485 * CompTools(j).n_atoms) for k in temperatures}
+        for j in gasses
+    }
+    # reformatting the gasses dictionary to match the format of the materials project data
+    return g_new
+
+
 def main():
-   MP =  get_MP_data(remake=False)
-   gd_MP = get_gd_state_MP(MP,remake=True)
-   exp_MP = get_mp_experimental(gd_MP,remake=True)
+   MP =  get_MP_data(remake=False)['data']
+   gd_MP = get_gd_state_MP(MP,remake=False)['data']
+   exp_MP = get_mp_experimental(gd_MP,remake=False)['data']
    return MP, gd_MP, exp_MP
 
 if __name__ == '__main__':
