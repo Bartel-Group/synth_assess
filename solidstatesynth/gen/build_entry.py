@@ -38,57 +38,32 @@ class BuildGibbsEntry:
     def is_NIST_gas(self):
         """
         Returns:
-            True if the target is a NIST gas
+            True if the target is a NIST gas (accounting for )
         """
-        return True if self.formula in ['CO2','H2O','C1O2','H2O1'] else False
-
-    # def get_temperature_interpolated_entry(self,temp,energies):
-    #     upper_T = math.ceil(temp / 100) * 100
-    #     lower_T = upper_T - 100
-    #     if temp >= 2000:
-    #         lower_T = 1900
-    #         upper_T = 2000
-    #     if temp <= 300:
-    #         lower_T = 300
-    #         upper_T = 400
-
-    #     temperatures_to_grab = [str(lower_T), str(upper_T)]
-    #     dGfs = [energies[t]['Ef'] for t in temperatures_to_grab]
-    #     if not dGfs:
-    #         return None
-    #     if dGfs[0] == None or dGfs[1] == None:
-    #         return None
-    #     slope = (dGfs[1] - dGfs[0]) / (
-    #         float(temperatures_to_grab[1]) - float(temperatures_to_grab[0])
-    #     )
-    #     # interpolation-- difference in dGf divided by difference in temperature
-    #     return dGfs[0] + slope * (temp - float(temperatures_to_grab[0]))
+        return True if self.formula in ['C1O2','H2O1'] else False
         
     def gas_ExperimentalReferenceEntry_at_temp(self, temp = 300):
+        """
+        Returns entry set for a gas at a temperature of interest. Note that the structure
+        of this entry does not allow for modification at different temperatures (because
+        temperatures are experimentally determined and G(T) cannot be extrapolated). The data
+        used here in references is NIST experimental data for H2O and CO2 at different temperatures.
+        NOTE THAT the functionality of this code requires that H2O and CO2 be written as such rather
+        than clean formulas H2O1 and C1O2. The get_gases_data function in extract/mp.py is written
+        such that keys are in this format as well. Note that temperature keys are ints (not strings)
+        """
         formula = self.formula
         refs = self.gas_data
         ExperimentalReferenceEntry.REFERENCES = refs
-        # print('refs',ExperimentalReferenceEntry.REFERENCES)
         exp_entry = ExperimentalReferenceEntry(composition=Composition(formula), temperature = temp)
         return exp_entry
 
-    # def gas_ComputedEntry_at_temp(self, temp):
-    #     """
-    #     Returns:
-    #         GibbsComputedStructureEntry for H2O at 300 K
-    #     """
-    #     formula = self.formula
-    #     energies = self.gas_data[self.formula]
-    #     dGf = self.get_temperature_interpolated_entry(temp,energies)
-    #     return ComputedEntry(composition=Composition(formula), energy = dGf)
-    
-    # @property
     def ground_GibbsComputedEntry_at_temp(self,formula, temp=300):
         """
         Args:
             formula (str) : formula
         Returns:
-            GibbsComputedStructureEntry for ground state polymorph at 300 K at a temperature of interest
+            GibbsComputedEntry for ground state polymorph at 300 K at a temperature of interest
         """
         if type(formula) == dict:
             mp_data = formula
@@ -104,7 +79,15 @@ class BuildGibbsEntry:
     
     
 class BuildGibbsEntrySet():
-    def __init__(self,target, with_theoretical = False, stability_filter = 0.05):
+    """
+    Builds an EntrySet for formulas associated with a target of interest. This entry set is comprised
+    of GibbsComputedEntries for ground state polymorphs and ExperimentalReferenceEntries for gases.
+    Note that initialization requires a determination of whether hypothetical compounds may be accounted for 
+    (with theoretical) and a stability filter (for energy above the hull)
+    Depending on the with_theoretical initialization, MP with or without theoretical compounds may be employed 
+    """
+    def __init__(self,target, with_theoretical = True, stability_filter = 0.05):
+
         self.target = target
         self.with_theoretical = with_theoretical
         self.stability_filter = stability_filter
@@ -116,12 +99,14 @@ class BuildGibbsEntrySet():
         self.mp_formulas = list(mp_data_new.keys())
         target_els = CompTools(target).els
         target_els.extend(AnalyzeTarget(target).flexible_els)
+        # should H, C be included for competing reactions? I would imagine yes?
         self.target_els = target_els
 
     def is_competing_formula(self,mp_formula):
         
         """
-        mp_entry (dict) : entry from MP data of the form {'formula': str, 'energy_above_hull': float,...}
+        Returns:
+            True if the formula is in the chemical system (or sub chemical system) of the target
         """
         target_els = self.target_els
         formula_els = CompTools(mp_formula).els
@@ -130,6 +115,10 @@ class BuildGibbsEntrySet():
         return False
 
     def target_competing_formulas(self):
+        """
+        Returns a list of all relevant competing formulas from Materials Project for the target (as defined above)
+        Note that depending on which version of MP is used, this may account only for ground state experimental formulas or all ground state formulas.
+        """
     
         mp_formulas = self.mp_formulas
         formulas = []

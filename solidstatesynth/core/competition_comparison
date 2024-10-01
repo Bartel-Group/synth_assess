@@ -1,0 +1,103 @@
+from solidstatesynth.gen.build_rxn import BuildRxn
+from pydmclab.utils.handy import read_json
+from pydmclab.core.comp import CompTools
+import os 
+
+DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+
+def get_reaction_dict_from_string(reaction_string):
+    """
+    Args: reaction string
+    Returns: dictionary with keys 'reactants' and 'products' where
+    the values are lists of the reactants and products in the reaction
+    *** IF CLEANABLE -- otherwise returns None ***
+    Uses: this is the most usable reaction format from which to calculate
+    dG_rxn using the pydmclab ReactionEnergy class-- get_dGrxn_at_T takes
+    a reaction dictionary as an argument
+    """
+    reactant_list = []
+    reactant_coeffs = []
+    product_list = []
+    product_coeffs = []
+    if '->' in reaction_string:
+        reactants, products = reaction_string.split(" -> ")
+        # print(reactants)
+    elif '==' in reaction_string:
+        reactants, products = reaction_string.split(" == ")
+    if "+" in reactants:
+        reactants = reactants.split(" + ")
+    else:
+        reactants = [reactants]
+    # print('reactants', reactants)
+    for reactant in reactants:
+        if " " in reactant:
+            if len(reactant.split(" ")) != 1:
+                coefficient, reactant = reactant.split(" ")
+                if float(coefficient) > 0:
+                    try:
+                        CompTools(reactant).clean
+                        reactant_list.append(reactant)
+                        reactant_coeffs.append(coefficient)
+                    except:
+                        return None
+        else:
+            reactant_list.append(reactant)
+            reactant_coeffs.append(1)
+    if "+" in products:
+        products = products.split(" + ")
+    else:
+        products = [products]
+    for product in products:
+        if " " in product:
+            if len(product.split(" ")) != 1:
+                coefficient, product = product.split(" ")
+                if float(coefficient) > 0:
+                    try:
+                        CompTools(product).clean
+                        product_list.append(product)
+                        product_coeffs.append(coefficient)
+                    except:
+                        return None
+        else:
+            product_list.append(product)
+            product_coeffs.append(1)
+    # print(reactant_list,product_list)
+    return {"reactants": reactant_list, "products": product_list, 
+            "reactant_coeffs": reactant_coeffs, "product_coeffs": product_coeffs}
+
+
+def get_competitions():
+    fjson = os.path.join(DATA_DIR, "240705_mcdermott_data.json")
+    competition = read_json(fjson)
+    competitions = [entry for entry in competition['Sheet1'] if 'open' in entry]
+    new_entries = []
+    for entry in competitions:
+        rxn_dict = get_reaction_dict_from_string(entry['reaction'])
+        temp = float(entry['temp_degC']) + 273.15
+        if temp > 2000:
+            temp = 2000
+        entry_new = {'precursors': rxn_dict['reactants'],  'temp': temp}
+        target = [formula for formula in rxn_dict['products'] if CompTools(formula).clean not in ['O1', 'H2O1','C1O2']][0]
+        entry_new['target'] = target
+        new_entries.append(entry_new)
+    return new_entries
+
+def get_rxn_from_comp(competition_entry):
+    target = competition_entry['target']
+    precursors = competition_entry['precursors']
+    temp = competition_entry['temp']
+    opt_rxn = BuildRxn(target = target, temp = temp).optimum_rxn()
+    true_rxn = BuildRxn(target = target, temp = temp).filtered_rxns(precursors=precursors)
+    if true_rxn:
+        true_rxn = true_rxn[0]
+        true_gamma = true_rxn['gamma']
+    else:
+        true_gamma = None
+    return {'opt':opt_rxn['gamma'], 'true':true_gamma}
+
+def get_competition_rxns():
+    competitions = get_competitions()
+    competition_rxns = []
+    for competition in competitions:
+        competition_rxns.append(get_rxn_from_comp(competition))
+    return competition_rxns

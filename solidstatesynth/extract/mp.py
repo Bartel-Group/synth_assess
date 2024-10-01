@@ -8,6 +8,10 @@ DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 
 def get_MP_data(remake = False):
+    """
+    Returns a dicionary of materials project data with formula as key and properties
+    of interest as values (with an additional entry key of 'data')
+    """
     if os.path.exists(os.path.join(DATA_DIR, '240925_mpdata.json')) and remake == False:
         return read_json(os.path.join(DATA_DIR, '240925_mpdata.json'))
     mpr = MPRester()
@@ -36,11 +40,16 @@ def get_MP_data(remake = False):
     return write_json(data, fjson)
 
 def get_mp_formulas(MP):
+    """
+    helper function to get the list of formulas in the materials project data 
+    (for any version of materials project data)
+    """
     mp_formulas = list(set([entry['formula'] for entry in MP['data']]))
     return mp_formulas
 
 def gd_state_formula(MP, formula):
     """
+    helper function to get the ground state formula for a given formula
     
     """
     mp_data = [entry for entry in MP['data'] if entry['formula'] == formula]
@@ -54,7 +63,7 @@ def get_gd_state_MP(MP,remake = False):
     """
     Returns:
         {formula (str) :
-            {thermo info from MP}}
+            {thermo info from MP}} for ground state polymorphs in MP
     """
     if os.path.exists(os.path.join(DATA_DIR, '240925_mp_ground_data.json')) and remake == False:
         return read_json(os.path.join(DATA_DIR, '240925_mp_ground_data.json'))
@@ -83,6 +92,10 @@ def get_mp_experimental(gd_MP, remake = False):
 
 def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
     """
+    Args: materials project data (either as is, including only ground data, and/or including only 
+    experimental data)
+    Returns: a dictionary of materials project by data filtered by energy above the hull and
+    maximum number of elements (for efficiency)
     """
     MP_stability= {formula: MP[formula] for formula in MP if MP[formula]['energy_above_hull'] < stability_cutoff}
     MP_els_max = {formula: MP_stability[formula] for formula in MP_stability if len(CompTools(formula).els) <= n_els_max}
@@ -90,12 +103,15 @@ def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
 
 def get_gases_data(remake=False):
     """
-    Returns: dictionary of the form {temperature: {gas: {Ef: dG in eV/atom}}}
+    Returns: dictionary of the form {temperature: {gas: dG in eV/atom}}}
     from pre-existing gas thermo data from pydmclab. Note that the gas thermo
     data provides the most accurate energies for gasses. Some gas data can be
     found in materials project as well as in gas thermo data, so any formula
     must be checked to see if it is in this dictionary before checking the
     materials project data (see get_dGf_from_source below).
+    NOTE that for functionality with the ReactionNetwork code, CO2 and H2O must be
+    represented as such rather than as C1O2 and H2O1 (clean formulas). Additionally,
+    temperature keys are floats rather than strings
     """
     g = gas_thermo_data()
     gasses = ["H2O1", "C1O2"]

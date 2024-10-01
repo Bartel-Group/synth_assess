@@ -168,14 +168,16 @@ class AnalyzeRxn(object):
         return False
     
     
-class AnalyzeRxnString(AnalyzeRxn):
+class AnalyzeRxnDict(AnalyzeRxn):
+    """
+    This class is for analyzing a reaction dict (from string). This class specifically includes
+    all precursors listed in the reaction and all targets (inlcuding gaseous byproducts/precursors)
+    """
     def __init__(self,rxn_dict):
         self.rxn_dict = rxn_dict
         self.products = rxn_dict['products']
         self.n_products = len(self.products)
         self.precursors = rxn_dict['reactants']
-
-    
 
     @property
     def has_gaseous_precursor(self):
@@ -208,13 +210,15 @@ class AnalyzeRxnString(AnalyzeRxn):
         return False
 
 
-    def is_useful_reaction(self,desired_target,atmosphere = "air"):
+    def is_useful_reaction(self,desired_target):
+        """
+        filters reactions based on requirement of no solid byproducts
+        """
         # use rxn string for specific precursors rather than a general list and to account for byproducts
         if desired_target in self.products:
             if self.n_products <3:
                 if self.n_products < 2 or self.has_gaseous_byproduct:
-                    if atmosphere != "inert" or not self.has_gaseous_precursor:
-                        return True  
+                    return True  
         return False
     
 

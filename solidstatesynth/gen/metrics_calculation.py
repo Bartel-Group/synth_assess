@@ -70,7 +70,7 @@ class MetricsCalculator():
         precursors: Iterable[str],
         target: Iterable[str],
         temperature: float = 300,
-        with_theoretical: bool = False,
+        with_theoretical: bool = True,
         stability_filter: float = 0.1
     ):
         """
