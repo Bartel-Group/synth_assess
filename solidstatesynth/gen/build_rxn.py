@@ -143,19 +143,30 @@ class BuildRxn():
                 filtered_rxns.append(r)
         return filtered_rxns
     
-    def optimum_rxn(self, filter = 'gamma',precursors = None):
+    def optimum_rxn(self, filter = 'gamma',precursors = None, rxns = None):
         """
         Filter is defined as the key in the reaction dictionary that you want to optimize for
         identifying the best reaction. The default optimization filter is gamma.
         """
-        filtered_rxns = self.filtered_rxns(precursors)
+        if not rxns:
+            rxns = self.filtered_rxns(precursors)
         optimized_rxn = None
-        if filtered_rxns:
-            optimized_rxn = filtered_rxns[0]
-            for r in filtered_rxns:
+        if rxns:
+            optimized_rxn = rxns[0]
+            for r in rxns:
                 if r[filter] < optimized_rxn[filter]:
                     optimized_rxn = r
         return optimized_rxn
+
+    def filter_reactions_by_precursors(self, precursors, rxns):
+        precursors = set([CompTools(p).clean for p in precursors])
+        for rxn in rxns:
+            rxn_dict = self.get_reaction_dict_from_string(rxn['rxn'])
+            precs = set([CompTools(r).clean for r in rxn_dict['reactants']])
+            if precursors == precs:
+                return rxn
+        return None
+        
         
                 
 

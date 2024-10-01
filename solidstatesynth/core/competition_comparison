@@ -86,18 +86,31 @@ def get_rxn_from_comp(competition_entry):
     target = competition_entry['target']
     precursors = competition_entry['precursors']
     temp = competition_entry['temp']
-    opt_rxn = BuildRxn(target = target, temp = temp).optimum_rxn()
-    true_rxn = BuildRxn(target = target, temp = temp).filtered_rxns(precursors=precursors)
-    if true_rxn:
-        true_rxn = true_rxn[0]
+    build = BuildRxn(target = target, temp = temp)
+    filtered_rxns = build.filtered_rxns()
+    opt_rxn = build.optimum_rxn()
+    if not opt_rxn:
+        opt_gamma = None
+    else:
+        opt_gamma = opt_rxn['gamma']
+    true_rxn = build.filter_reactions_by_precursors(precursors, filtered_rxns)
+    if len(true_rxn) > 0:
         true_gamma = true_rxn['gamma']
     else:
         true_gamma = None
-    return {'opt':opt_rxn['gamma'], 'true':true_gamma}
+    return {'opt':opt_gamma, 'true':true_gamma}
 
-def get_competition_rxns():
+def get_competition_rxns(length = 200):
     competitions = get_competitions()
     competition_rxns = []
-    for competition in competitions:
+    for i, competition in enumerate(competitions[0:length]):
+        print(i)
         competition_rxns.append(get_rxn_from_comp(competition))
     return competition_rxns
+
+def main():
+    competition_rxns = get_competition_rxns()
+    return competition_rxns
+
+if __name__ == "__main__":
+    competition_rxns = main()
