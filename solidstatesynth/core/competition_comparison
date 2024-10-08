@@ -1,4 +1,5 @@
 from solidstatesynth.gen.build_rxn import BuildRxn, AnalyzeEnumeratedRxns
+from solidstatesynth.gen.metrics_calculation import TargetRxns
 from solidstatesynth.extract.tm import get_updated_textmined_data
 from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
@@ -32,23 +33,35 @@ def get_relevant_textmined():
             relevant_textmined.append(entry)
     return relevant_textmined
 
-def find_opt_for_entry(entry):
+def find_rxns(target,temperature):
     target = entry['positive']['target']
     temperature = entry['common']['temperature']
     if not temperature:
         temperature = 1000  
     rxns = BuildRxn(target=target,temperature=temperature).build_target_rxns()
-    opt = AnalyzeEnumeratedRxns(rxns).optimum_rxn
-    return opt
+    return rxns
 
-def find_actual_for_entry(entry):
-    target = entry['positive']['target']
-    temperature = entry['common']['temperature']
+def find_opt(rxns):
+    optimum = AnalyzeEnumeratedRxns(rxns).optimum_rxn()
+    return optimum
+
+def find_actual_for_entry(rxns,precursors,target,temperature):
     precursors = entry['common']['precursors']
+    actual = TargetRxns(precursors = precursors, target=target,temperature=temperature,reactions = rxns).get_rxns_with_desired_precursors()
+    return actual
+
+
+
+def compare_entry(entry):
+    temperature = entry['common']['temperature']
     if not temperature:
         temperature = 1000
-    rxns = BuildRxn(target=target,temperature=temperature).build_target_rxns(found_precursors=precursors)
-    return rxns
+    precursors = entry['common']['precursors']
+    target = entry['positive']['target']
+    rxns = find_rxns(target,temperature)
+    opt = find_opt(rxns)
+    actual = find_actual_for_entry(rxns,precursors,target,temperature)
+    return opt,actual
 
 def compare(entry):
     opt = find_opt_for_entry(entry)

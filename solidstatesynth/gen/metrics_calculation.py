@@ -29,6 +29,8 @@ from pymatgen.entries.computed_entries import ComputedEntry
 from solidstatesynth.gen.build_entry import BuildGibbsEntrySet,BuildGibbsEntry
 from solidstatesynth.analyze.compound import AnalyzeChemsys
 from rxn_network.costs.base import CostFunction
+import numpy
+import pickle
 
 #Gas partial pressures in atm for different environments
 PA_TO_ATM_CONV = 101300
@@ -80,14 +82,16 @@ class EnumerateRxns():
             precursors (Iterable[str]): Formula Strings of all the precursors that can be used in the reactions; precursors must span the whole chemical system besides Oxygen.
             targets (Iterable[str]): Formula Strings of all the targets to generate reactions for in the chemical system.
         """
-        self.els = els
-        if 'O' in self.els:
-            self.els.extend(['H','C'])
+        if 'O' in els:
+            els.extend(['H','C'])
+        self.els = list(set(els))
         self._temperature = temperature
         self.with_theoretical = with_theoretical
         self.stability_filter = stability_filter
         self.precursors = AnalyzeChemsys(self.els).possible_precursors()
         # self.precursors = 
+
+
         
         #Find the chemical system to get query the MP entries from
         # elements = list(set([i for j in self._precursors+self._target+["O2"] for i in Composition(j).chemical_system_set]))
@@ -98,6 +102,11 @@ class EnumerateRxns():
         self.entries = None
         self.rxns = None
         self._build_calculator()
+        file_name = ''.join(els)+'_rxns.pkl'
+        with open('../data/' + file_name, 'wb') as f:
+            pickle.dump(self.rxns, f)
+
+        # numpy array should go deeper 
 
 
     def _get_entries(self) -> GibbsEntrySet:
@@ -115,14 +124,16 @@ class EnumerateRxns():
         Build the calculator by getting the entries and enumerating the reactions
         """
         self.entries = self._get_entries()
+        entries = self.entries
+        precursors = self.precursors
+
         print('entries obtained')
         #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
         # self.rxns = BasicEnumerator(precursors=self._precursors, exclusive_precursors=True).enumerate(self.entries)
-        self.rxns = BasicEnumerator().enumerate(self.entries)
+        self.rxns = BasicEnumerator(precursors = precursors, exclusive_precursors=True).enumerate(entries)
 
         print('rxns enumerated')
-        precursors = self.precursors
-        self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"]).enumerate(self.entries))
+        self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], precursors = precursors, exclusive_precursors=True).enumerate(entries))
 
         # self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], precursors=self._precursors, exclusive_precursors=True).enumerate(self.entries))
         #Filter out duplicate reactions
@@ -234,7 +245,10 @@ class TargetRxns():
         """
         temperature = self.temperature
         environment = self.environment
-        rxns = self.get_rxns_with_desired_precursors()
+        if self.precursors:
+            rxns = self.get_rxns_with_desired_precursors()
+        else:
+            rxns = self._find_target_rxns()
             #Chemical potential of O at specified temperature and evironment partial pressure
         mu = KB * (temperature) * math.log(GAS_PARTIAL_PRESSURES[environment]["O2"])
 
@@ -243,7 +257,7 @@ class TargetRxns():
         #Determine the allowed gas products to add the correction to
         gas_comps = [i.composition for i in rxns.entries if i.reduced_formula in set(GAS_PARTIAL_PRESSURES["air"].keys())-{"O2"}]
         #Get the environment correction for each gas
-        gas_dict = {i: self._get_environment_correction(i.reduced_formula, temperature = temp_new, environment = environment) for i in gas_comps}
+        gas_dict = {i: self._get_environment_correction(i.reduced_formula) for i in gas_comps}
         
         #Add the environment correction to the gas products
         for i in rxns.entries:

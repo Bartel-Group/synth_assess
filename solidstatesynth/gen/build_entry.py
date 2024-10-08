@@ -61,22 +61,21 @@ class BuildGibbsEntry:
         return exp_entry
 
 
-    def ground_GibbsComputedEntry_at_temp(self,formula, temperature=300):
+    def ground_GibbsComputedEntry_at_temp(self,formula_data, temperature=300):
         """
         Args:
             formula (str) or formula MP entry : formula
         Returns:
             GibbsComputedEntry for ground state polymorph at 300 K at a temperature of interest
         """
-        if type(formula) == dict:
-            mp_data = formula
-        else:
-            mp_data = self.mp_data_for_formula
-        volume_per_atom_calc = mp_data['volume']/mp_data['nsites']
+        # if type(formula) == dict:
+        # else:
+        #     mp_data = self.mp_data_for_formula
+        volume_per_atom_calc = formula_data['volume']/formula_data['nsites']
         gibbs_computed_entry = GibbsComputedEntry(
                                         volume_per_atom = volume_per_atom_calc, 
-                                        formation_energy_per_atom = mp_data['formation_energy_per_atom'], 
-                                        composition=Composition(formula),
+                                        formation_energy_per_atom = formula_data['formation_energy_per_atom'], 
+                                        composition=Composition(formula_data['formula']),
                                         temperature = temperature) 
         return gibbs_computed_entry
     
@@ -122,12 +121,11 @@ class BuildGibbsEntrySet():
         Returns a list of all relevant competing formulas from Materials Project for the target (as defined above)
         Note that depending on which version of MP is used, this may account only for ground state experimental formulas or all ground state formulas.
         """
-    
-        formulas = self.formulas
+        mp_data = self.data
         formulas_new = []
-        for formula in formulas: 
-            if self.is_competing_formula(formula):
-                formulas_new.append(formula)
+        for entry in mp_data: 
+            if self.is_competing_formula(entry['formula']):
+                formulas_new.append(entry)
         return formulas_new
 
     def build_entry_set(self, temperature=300):
@@ -136,14 +134,17 @@ class BuildGibbsEntrySet():
         ground state polymorphs and ExperimentalReferenceEntries for gases. Temperature can be specified.
         """
         competing_formulas = self.chemsys_competing_formulas()
+        print('competing formulas found')
         data = self.data
         entries = []
-        for formula in competing_formulas:
-            GibbsEntry = BuildGibbsEntry(formula, data)
+        for formula_data in competing_formulas:
+            formula_str = formula_data['formula']
+            print('building entry')
+            GibbsEntry = BuildGibbsEntry(formula_str, data)
             if GibbsEntry.is_NIST_gas:
                 entry = GibbsEntry.gas_ExperimentalReferenceEntry_at_temp(temperature)
             else:
-                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula, temperature)
+                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula_data, temperature)
             entries.append(entry)
             print('entry added')
         return GibbsEntrySet(entries)
