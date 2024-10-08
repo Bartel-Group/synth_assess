@@ -13,7 +13,9 @@ Goal: make it easy to filter as needed
 import os
 from pydmclab.core.comp import CompTools
 from pydmclab.utils.handy import read_json,write_json
-from solidstatesynth.analyze.compound import AnalyzeCompound, AnalyzeTarget
+from pymatgen.core.composition import Composition
+from pymatgen.analysis.reaction_calculator import Reaction, ReactionError
+from solidstatesynth.analyze.compound import AnalyzeCompound, AnalyzeChemsys
 from solidstatesynth.analyze.thermo import AnalyzeThermo
 from solidstatesynth.core.utils import get_balanced_reaction_coefficients
 from rxn_network.entries.entry_set import GibbsEntrySet
@@ -21,8 +23,8 @@ from rxn_network.reactions.basic import BasicReaction
 DATADIR = "../data"
 DATADIR_cemsbartel = "/Volumes/cems_bartel/projects/negative-examples/data"
 
-class AnalyzeRxn(object):
-    def __init__(self, precursors, target, temperature, atmosphere):
+class AnalyzeSynthesisRecipe(object):
+    def __init__(self, precursors, target, temperature, environment):
         """
         Args:
             precursors (list):
@@ -35,7 +37,7 @@ class AnalyzeRxn(object):
             temperature (float):
                 temperature of the reaction
 
-            atmosphere (str):
+            environment (str):
                 atmosphere of the reaction
 
         Returns:
@@ -48,9 +50,9 @@ class AnalyzeRxn(object):
         self.precursors = [CompTools(p).clean for p in precursors]
         self.target = CompTools(target).clean
         self.temperature = temperature
-        self.atmosphere = atmosphere
+        self.environment = environment
         self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
-        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '240926_mp_experimental.json'))['data']
+        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '241002_mp_experimental.json'))['data']
         # self.tm_targets = get_tm_targets(None, None)
 
     @property
@@ -76,9 +78,9 @@ class AnalyzeRxn(object):
             we consider systems closed (return: 'closed') if:
                 the taget is not an oxide or the atmosphere is something else (e.g., inert, H2, etc)
         """
-        atmosphere = self.atmosphere
+        environment = self.environment
         if AnalyzeCompound(self.target).is_oxide and (
-            atmosphere in ["air", "oxygen", None]
+            environment in ["air", "oxygen", None]
         ):
             return "open"
         else:
@@ -119,12 +121,12 @@ class AnalyzeRxn(object):
             for air or unspecified atmospheres:
                 pO2 = 21%, pCO2 = 400 ppm, pH2O = 1% (rough estimate)
         """
-        atmosphere = self.atmosphere
+        environment = self.environment
         gases = self.gases_that_get_activity_correction
 
-        if atmosphere in ["air", None]:
+        if environment in ["air", None]:
             conc = {"O2": 0.21, "C1O2": 0.0004, "H2O1": 0.01}
-        elif atmosphere == "oxygen":
+        elif environment == "oxygen":
             conc = {"O2": 1.0}
         else:
             conc = {}
@@ -160,95 +162,44 @@ class AnalyzeRxn(object):
         Returns:
             True if the reaction is balanceable
         """
-        precursors = self.precursors
-        target = self.target
-        reaction = get_balanced_reaction_coefficients(precursors, target)
-        if reaction:
-            return True 
-        return False
-    
-    
-class AnalyzeRxnDict(AnalyzeRxn):
-    """
-    This class is for analyzing a reaction dict (from string). This class specifically includes
-    all precursors listed in the reaction and all targets (inlcuding gaseous byproducts/precursors)
-    """
-    def __init__(self,rxn_dict):
-        self.rxn_dict = rxn_dict
-        self.products = rxn_dict['products']
-        self.n_products = len(self.products)
-        self.precursors = rxn_dict['reactants']
-
-    @property
-    def has_gaseous_precursor(self):
-        """
-        Returns:
-            True if any of the precursors are gases
-
-        Logic:
-            may require special correction
-        """
-        precursors = self.precursors
-        for p in precursors:
-            if AnalyzeCompound(p).is_gas:
-                return True
-        return False
-
-    @property
-    def has_gaseous_byproduct(self):
-        """
-        Returns:
-            True if any of the precursors are gases
-
-        Logic:
-            may require special correction
-        """
-        products = self.products
-        for p in products:
-            if AnalyzeCompound(p).is_gas:
-                return True
-        return False
-
-
-    def is_useful_reaction(self,desired_target):
-        """
-        filters reactions based on requirement of no solid byproducts
-        """
-        # use rxn string for specific precursors rather than a general list and to account for byproducts
-        if desired_target in self.products:
-            if self.n_products <3:
-                if self.n_products < 2 or self.has_gaseous_byproduct:
-                    return True  
-        return False
+        precursors = [Composition(p) for p in self.precursors]
+        targets = [self.target,'C1O2','H2O1','O2']
+        targets = [Composition(t) for t in targets]
+        try:
+            rxn = Reaction(precursors, targets)
+            return True
+        except ReactionError as e:
+            if str(e) == "Reaction cannot be balanced.":
+                return False
     
 
-def check():
-    precursors = ["BaCO3", "TiO2"]
-    target = "BaTiO3"
-    rxn = "BaCO3 + TiO2 -> BaTiO3 + CO2"
-    atmosphere = "air"
-    temperature = 1000
+# def check():
+#     precursors = ["BaCO3", "TiO2"]
+#     target = "BaTiO3"
+#     rxn = "BaCO3 + TiO2 -> BaTiO3 + CO2"
+#     environment = "air"
+#     temperature = 1000
 
-    ar = AnalyzeRxn(
-        precursors=precursors,
-        target=target,
-        rxn=rxn,
-        temperature=temperature,
-        atmosphere=atmosphere,
-    )
+#     ar = AnalyzeRxn(
+#         precursors=precursors,
+#         target=target,
+#         rxn=rxn,
+#         temperature=temperature,
+#         environment=environment,
+#     )
 
-    print("has carbonate precursor:", ar.has_carbonate_precursor)
-    print("gas concentrations:", ar.gas_concentrations)
-    print("system treatment:", ar.system_treatment)
-    print("precursors in mp and tm:", ar.precursors_in_mp_and_tm)
-    return ar
+#     print("has carbonate precursor:", ar.has_carbonate_precursor)
+#     print("gas concentrations:", ar.gas_concentrations)
+#     print("system treatment:", ar.system_treatment)
+#     print("precursors in mp and tm:", ar.precursors_in_mp_and_tm)
+#     return ar
 
 
 def main():
 
-    ar = check()
-    return ar
+    # ar = check()
+    return 
 
 
 if __name__ == "__main__":
-    ar = main()
+   main()

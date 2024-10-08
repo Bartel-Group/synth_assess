@@ -9,11 +9,11 @@ DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 def get_MP_data(remake = False):
     """
-    Returns a dicionary of materials project data with formula as key and properties
-    of interest as values (with an additional entry key of 'data')
+    Returns a list of dictionar5ies for materials project data with properties
+    of interest (the json file is of the form {'data': [entries]} an additional entry key of 'data')
     """
-    if os.path.exists(os.path.join(DATA_DIR, '240925_mpdata.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, '240925_mpdata.json'))
+    if os.path.exists(os.path.join(DATA_DIR, '241002_mpdata.json')) and remake == False:
+        return read_json(os.path.join(DATA_DIR, '241002_mpdata.json'))
     mpr = MPRester()
     entries = []
     docs = mpr.materials.summary.search(fields=["formula_pretty",
@@ -22,10 +22,13 @@ def get_MP_data(remake = False):
                                                     "energy_per_atom",
                                                     "energy_above_hull",
                                                     "theoretical",
-                                                    "nsites"])
+                                                    "nsites",
+                                                    "material_id"],
+                                                    )
     print(len(docs))
     for entry in docs:
         entry_new = {}
+        entry_new['material_id'] = entry.material_id
         entry_new['formula']= entry.formula_pretty
         entry_new['energy_per_atom'] = entry.energy_per_atom
         entry_new['volume'] = entry.volume
@@ -36,70 +39,82 @@ def get_MP_data(remake = False):
         if entry_new['formation_energy_per_atom'] is not None:
             entries.append(entry_new)
     data = {'data': entries}
-    fjson = os.path.join(DATA_DIR, '240925_mpdata.json')
-    return write_json(data, fjson)
+    fjson = os.path.join(DATA_DIR, '241002_mpdata.json')
+    mp = write_json(data, fjson)
+    return mp
+
+    # add material id as key to regrab from MP
 
 def get_mp_formulas(MP):
     """
     helper function to get the list of formulas in the materials project data 
     (for any version of materials project data)
     """
-    mp_formulas = list(set([entry['formula'] for entry in MP['data']]))
-    return mp_formulas
+    # print(MP.keys())
+    mp_formulas = [entry['formula'] for entry in MP]
+    return list(set(mp_formulas))
 
 def gd_state_formula(MP, formula):
     """
-    helper function to get the ground state formula for a given formula
+    helper function to get the ground state formula for a given formula.
+    Returns the dictionary entry for the ground state of a given formula
     
     """
-    mp_data = [entry for entry in MP['data'] if entry['formula'] == formula]
+    mp_data = [entry for entry in MP if entry['formula'] == formula]
     gd_state_entry = mp_data[0]
     for entry in mp_data:
         if entry['formation_energy_per_atom'] < gd_state_entry['formation_energy_per_atom']:
             gd_state_entry = entry
     return gd_state_entry
 
-def get_gd_state_MP(MP,remake = False):
+def get_gd_state_MP(data,with_theoretical, remake = False):
     """
     Returns:
-        {formula (str) :
-            {thermo info from MP}} for ground state polymorphs in MP
+        [{thermo info from MP} for ground state polyjorphs in MP]
     """
-    if os.path.exists(os.path.join(DATA_DIR, '240925_mp_ground_data.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, '240925_mp_ground_data.json'))
-    mp_formulas = get_mp_formulas(MP)
-    gd_state_MP = {}
+    if with_theoretical == False:
+        filename = '241002_mp_experimental_gd.json'
+    else:
+        filename = '241002_mp_gd.json'
+    if os.path.exists(os.path.join(DATA_DIR, filename)) and remake == False:
+        return read_json(os.path.join(DATA_DIR, filename))
+    mp_formulas = get_mp_formulas(data)
+    gd_state_MP = []
     for formula in mp_formulas:
-        formula_gd = gd_state_formula(MP, formula)
+        formula_gd = gd_state_formula(data, formula)
         if formula_gd:
-            gd_state_MP[CompTools(formula).clean]=formula_gd
+            gd_state_MP.append(formula_gd)
     gd_MP = {'data': gd_state_MP}
-    fjson = os.path.join(DATA_DIR, '240925_mp_ground_data.json')
+    fjson = os.path.join(DATA_DIR, filename)
     gd_mp = write_json(gd_MP, fjson)
-    return gd_mp['data']
+    return gd_mp
 
-def get_mp_experimental(gd_MP, remake = False):
-    if os.path.exists(os.path.join(DATA_DIR, '240926_mp_experimental.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, '240926_mp_experimental.json'))
-    entries = {}
-    for formula in gd_MP:
-        if not gd_MP[formula]['theoretical']:
-            entries[formula] = gd_MP[formula]
+def get_mp_experimental(MP, remake = False):
+    """
+    Returns a list of MP entries where the data has key 'theoretical' set to False
+    (the json file is of the form {'data': [entries]} with an additional entry key of 'data')
+    """
+    if os.path.exists(os.path.join(DATA_DIR, '241002_mp_experimental.json')) and remake == False:
+        return read_json(os.path.join(DATA_DIR, '241002_mp_experimental.json'))
+    entries = []
+    for entry in MP:
+        if not entry['theoretical']:
+            entries.append(entry)
     exp_MP = {'data': entries}
-    fjson = os.path.join(DATA_DIR, '240926_mp_experimental.json')
+    fjson = os.path.join(DATA_DIR, '241002_mp_experimental.json')
     exp_MP = write_json(exp_MP, fjson)
-    return exp_MP['data']
+    return exp_MP
 
-def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
-    """
-    Args: materials project data (either as is, including only ground data, and/or including only 
-    experimental data)
-    Returns: a dictionary of materials project by data filtered by energy above the hull and
-    maximum number of elements (for efficiency)
-    """
-    MP_stability= {formula: MP[formula] for formula in MP if MP[formula]['energy_above_hull'] < stability_cutoff}
-    MP_els_max = {formula: MP_stability[formula] for formula in MP_stability if len(CompTools(formula).els) <= n_els_max}
-    return MP_els_max
+# def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
+#     """
+#     Args: materials project data (either as is, including only ground data, and/or including only 
+#     experimental data)
+#     Returns: a dictionary of materials project by data filtered by energy above the hull and
+#     maximum number of elements (for efficiency)
+#     """
+#     MP_stability= {formula: MP[formula] for formula in MP if MP[formula]['energy_above_hull'] < stability_cutoff}
+#     MP_els_max = {formula: MP_stability[formula] for formula in MP_stability if len(CompTools(formula).els) <= n_els_max}
+#     return MP_els_max
 
 def get_gases_data(remake=False):
     """
@@ -127,9 +142,13 @@ def get_gases_data(remake=False):
 
 def main():
    MP =  get_MP_data(remake=False)['data']
-   gd_MP = get_gd_state_MP(MP,remake=False)['data']
-   exp_MP = get_mp_experimental(gd_MP,remake=False)['data']
-   return MP, gd_MP, exp_MP
+   MP_exp = get_mp_experimental(MP,remake=True)['data']
+   gd_MP = get_gd_state_MP(MP,with_theoretical = True,remake=True)['data']
+   gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, remake=True)['data']
+   # use only experimental data to identify the ground state so that we idenitfy the
+   # experimental ground state and don't miss experimentally-observed formulas
+   return MP, MP_exp, gd_MP, gd_MP_exp
+
 
 if __name__ == '__main__':
-    MP, gd_MP, exp_MP = main()
+    MP, MP_exp,gd_MP, gd_MP_exp = main()

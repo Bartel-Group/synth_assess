@@ -1,9 +1,59 @@
-from solidstatesynth.gen.build_rxn import BuildRxn
+from solidstatesynth.gen.build_rxn import BuildRxn, AnalyzeEnumeratedRxns
+from solidstatesynth.extract.tm import get_updated_textmined_data
 from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
 import os 
 
 DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+
+def relevant_entry(entry):
+    if 'positive' not in entry:
+        return False
+    if len(entry['common']['precursors']) > 3:
+        return False
+    if len(entry['common']['precursors']) == 3:
+        if any(CompTools(precursor).clean in ['O1', 'H2O1','C1O2'] for precursor in entry['common']['precursors']):
+            return True
+        else:
+            return False
+    target_els = CompTools(entry['positive']['target']).els
+    if 'O' in target_els:
+        if len(target_els) <= 4:
+            return True
+    elif len(target_els) <= 3:
+        return True
+    return False
+
+def get_relevant_textmined():
+    textmined = get_updated_textmined_data()
+    relevant_textmined = []
+    for entry in textmined:
+        if relevant_entry(entry):
+            relevant_textmined.append(entry)
+    return relevant_textmined
+
+def find_opt_for_entry(entry):
+    target = entry['positive']['target']
+    temperature = entry['common']['temperature']
+    if not temperature:
+        temperature = 1000  
+    rxns = BuildRxn(target=target,temperature=temperature).build_target_rxns()
+    opt = AnalyzeEnumeratedRxns(rxns).optimum_rxn
+    return opt
+
+def find_actual_for_entry(entry):
+    target = entry['positive']['target']
+    temperature = entry['common']['temperature']
+    precursors = entry['common']['precursors']
+    if not temperature:
+        temperature = 1000
+    rxns = BuildRxn(target=target,temperature=temperature).build_target_rxns(found_precursors=precursors)
+    return rxns
+
+def compare(entry):
+    opt = find_opt_for_entry(entry)
+    actual = find_actual_for_entry(entry)
+    return {'opt':opt, 'actual':actual}
 
 def get_reaction_dict_from_string(reaction_string):
     """
@@ -94,7 +144,7 @@ def get_rxn_from_comp(competition_entry):
     else:
         opt_gamma = opt_rxn['gamma']
     true_rxn = build.filter_reactions_by_precursors(precursors, filtered_rxns)
-    if len(true_rxn) > 0:
+    if true_rxn:
         true_gamma = true_rxn['gamma']
     else:
         true_gamma = None
@@ -109,8 +159,8 @@ def get_competition_rxns(length = 200):
     return competition_rxns
 
 def main():
-    competition_rxns = get_competition_rxns()
-    return competition_rxns
+    tm = get_relevant_textmined()
+    return tm
 
 if __name__ == "__main__":
-    competition_rxns = main()
+    tm = main()

@@ -11,6 +11,7 @@ from pydmclab.core.comp import CompTools
 from pydmclab.utils.handy import read_json
 from itertools import combinations
 from pymatgen.ext.matproj import MPRester
+from solidstatesynth.gen.build_entry import BuildGibbsEntrySet
 
 DATADIR = "../data"
 DATADIR_cemsbartel = "/Volumes/cems_bartel/projects/negative-examples/data"
@@ -29,10 +30,11 @@ class AnalyzeCompound(object):
             mp_cmpds (list) : list of compounds in MP
         """
         self.formula = CompTools(formula).clean
+        # any checks on the formula should be compared to the "clean" formula as the input formula is always cleaned
         self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
         self.tm_targets = read_json(os.path.join(DATADIR, 'tm_targets.json'))['data']
-        self.gd_MP = read_json(os.path.join(DATADIR_cemsbartel, '240925_mp_ground_data.json'))['data']
-        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '240926_mp_experimental.json'))['data']
+        self.gd_MP = read_json(os.path.join(DATADIR_cemsbartel, '241002_mp_gd.json'))['data']
+        self.mp_experimental = read_json(os.path.join(DATADIR_cemsbartel, '241002_mp_experimental.json'))['data']
 
 
     @property
@@ -57,7 +59,7 @@ class AnalyzeCompound(object):
         Returns:
             True if the target has oxygen
         """
-        return True if "O" in CompTools(self.target).els else False
+        return True if "O" in CompTools(self.formula).els else False
     
     @property
     def is_gas(self):
@@ -79,11 +81,17 @@ class AnalyzeCompound(object):
             return True
         return False
 
-class AnalyzeTarget(AnalyzeCompound):
-    def __init__(self,target):
+    @property
+    def els(self):
         """
-        Args:
-            target (str) : target compound
+        Returns:
+            list of elements in the formula
+        """
+        return CompTools(self.formula).els
+
+class AnalyzeChemsys():
+    def __init__(self, els):
+        """
 
         Returns:
             (additionally)
@@ -91,38 +99,11 @@ class AnalyzeTarget(AnalyzeCompound):
             tm_targets (list) : list of targets in the text-mined dataset that are also in MP
             mp_cmpds (list) : list of compounds in MP
         """
-        super().__init__(target)
-        self.target = CompTools(target).clean
-
-    @property
-    def chemsys(self):
-        """
-        Returns:
-            the chemical system (str, el1-el2-...)
-        """
-        return CompTools(self.target).chemsys
+        self.els = els
+        # els can easily be extracted from a targeet of interest
+        self.tm_precursors = read_json(os.path.join(DATADIR, 'tm_precursors.json'))['data']
+        self.mp_data = read_json(os.path.join(DATADIR_cemsbartel, '241002_mp_experimental.json'))['data']
     
-    @property
-    def chemsys_targets(self, with_theoretical=False):
-        """
-        Returns:
-            list of targets in the same chemical system
-        """
-        if not with_theoretical:
-            mp_formulas = self.mp_experimental
-        else:
-            mp_formulas = self.gd_MP
-        chemsys_targets = [t for t in mp_formulas if CompTools(t).chemsys == self.chemsys]
-        return list(set(chemsys_targets))
-
-    @property
-    def n_els_in_target(self):
-        """
-        Returns:
-            the number of elements in the target (int)
-        """
-        return CompTools(self.target).n_els
-
     @property
     def flexible_els(self):
         """
@@ -132,7 +113,7 @@ class AnalyzeTarget(AnalyzeCompound):
         Logic:
             if the target is an oxide, we want to consider carbonates and hydroxides as possible precursors
         """
-        if self.is_oxide:
+        if 'O' in self.els:
             return ["H", "C"]
         else:
             return []
@@ -155,12 +136,11 @@ class AnalyzeTarget(AnalyzeCompound):
         if restrict_to_tm:
             precursors = self.tm_precursors
         else:
-            data = self.mp_experimental
+            data = self.mp_data
             precursors = list(data.keys())
-        
 
         # what elements are in the target
-        target_els = CompTools(self.target).els
+        target_els = self.els
 
         # do we have additional elements to consider
         flexible_els = self.flexible_els
@@ -189,19 +169,18 @@ class AnalyzeTarget(AnalyzeCompound):
         return list(set(precursors))
 
 
-def check():
-    target = "BaTiO3"
-    at = AnalyzeTarget(target)
-    possible_precursors = at.possible_precursors(restrict_to_tm=True)
-    print("Target = %s" % target)
-    print("Possible precursors = %s" % possible_precursors)
-    return at
+# def check():
+    # target = "BaTiO3"
+    # at = AnalyzeTarget(target)
+    # possible_precursors = at.possible_precursors(restrict_to_tm=True)
+    # print("Target = %s" % target)
+    # print("Possible precursors = %s" % possible_precursors)
+    # return at
 
 
-def main():
-    check()
-    return
+# def main():
+#     return
 
 
-if __name__ == "__main__":
-    at = main()
+# if __name__ == "__main__":
+#     main()

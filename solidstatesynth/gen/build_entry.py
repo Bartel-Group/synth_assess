@@ -7,10 +7,9 @@ from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.nist import NISTReferenceEntry
 from pymatgen.core.composition import Composition
 from pymatgen.entries.computed_entries import ComputedEntry
-from solidstatesynth.analyze.compound import AnalyzeCompound, AnalyzeTarget
 from pydmclab.core.comp import CompTools
 from pydmclab.data.thermochem import gas_thermo_data
-from solidstatesynth.extract.mp import get_useful_mp_data, get_gases_data
+from solidstatesynth.extract.mp import get_gases_data
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
 
 
@@ -31,7 +30,10 @@ class BuildGibbsEntry:
         """
         mp_data = self.mp_data
         formula = self.formula
-        return mp_data[formula]
+        formula_data = [entry for entry in mp_data if CompTools(entry['formula']).clean == formula]
+        if formula_data:
+            return formula_data[0]
+        return None
        
     
     @property
@@ -42,7 +44,7 @@ class BuildGibbsEntry:
         """
         return True if self.formula in ['C1O2','H2O1'] else False
         
-    def gas_ExperimentalReferenceEntry_at_temp(self, temp = 300):
+    def gas_ExperimentalReferenceEntry_at_temp(self, temperature = 300):
         """
         Returns entry set for a gas at a temperature of interest. Note that the structure
         of this entry does not allow for modification at different temperatures (because
@@ -55,13 +57,14 @@ class BuildGibbsEntry:
         formula = self.formula
         refs = self.gas_data
         ExperimentalReferenceEntry.REFERENCES = refs
-        exp_entry = ExperimentalReferenceEntry(composition=Composition(formula), temperature = temp)
+        exp_entry = ExperimentalReferenceEntry(composition=Composition(formula), temperature = temperature)
         return exp_entry
 
-    def ground_GibbsComputedEntry_at_temp(self,formula, temp=300):
+
+    def ground_GibbsComputedEntry_at_temp(self,formula, temperature=300):
         """
         Args:
-            formula (str) : formula
+            formula (str) or formula MP entry : formula
         Returns:
             GibbsComputedEntry for ground state polymorph at 300 K at a temperature of interest
         """
@@ -74,7 +77,7 @@ class BuildGibbsEntry:
                                         volume_per_atom = volume_per_atom_calc, 
                                         formation_energy_per_atom = mp_data['formation_energy_per_atom'], 
                                         composition=Composition(formula),
-                                        temperature = temp) 
+                                        temperature = temperature) 
         return gibbs_computed_entry
     
     
@@ -86,21 +89,19 @@ class BuildGibbsEntrySet():
     (with theoretical) and a stability filter (for energy above the hull)
     Depending on the with_theoretical initialization, MP with or without theoretical compounds may be employed 
     """
-    def __init__(self,target, with_theoretical = True, stability_filter = 0.05):
+    def __init__(self,els, with_theoretical = True, stability_filter = 0.05, formulas = None):
 
-        self.target = target
         self.with_theoretical = with_theoretical
         self.stability_filter = stability_filter
-        if not with_theoretical:
-            self.mp_data = read_json(os.path.join(DATADIR, '240926_mp_experimental.json'))['data']
+        if formulas:
+            self.formulas = formulas
         else:
-            self.mp_data = read_json(os.path.join(DATADIR, '240925_mp_ground_data.json'))['data']
-        mp_data_new = get_useful_mp_data(self.mp_data,n_els_max = CompTools(target).n_els)
-        self.mp_formulas = list(mp_data_new.keys())
-        target_els = CompTools(target).els
-        target_els.extend(AnalyzeTarget(target).flexible_els)
-        # should H, C be included for competing reactions? I would imagine yes?
-        self.target_els = target_els
+            if not with_theoretical:
+                self.data = read_json(os.path.join(DATADIR, '241002_mp_experimental.json'))['data']
+            else:
+                self.data = read_json(os.path.join(DATADIR, '241002_mp_gd.json'))['data']
+            self.formulas = [entry['formula'] for entry in self.data]
+        self.target_els = els
 
     def is_competing_formula(self,mp_formula):
         
@@ -109,39 +110,40 @@ class BuildGibbsEntrySet():
             True if the formula is in the chemical system (or sub chemical system) of the target
         """
         target_els = self.target_els
+        if 'O' in target_els:
+            target_els.extend(['C','H'])
         formula_els = CompTools(mp_formula).els
         if all([el in target_els for el in formula_els]):
             return True
         return False
 
-    def target_competing_formulas(self):
+    def chemsys_competing_formulas(self):
         """
         Returns a list of all relevant competing formulas from Materials Project for the target (as defined above)
         Note that depending on which version of MP is used, this may account only for ground state experimental formulas or all ground state formulas.
         """
     
-        mp_formulas = self.mp_formulas
-        formulas = []
-        for formula in mp_formulas: 
-            # print('formula',formula)
+        formulas = self.formulas
+        formulas_new = []
+        for formula in formulas: 
             if self.is_competing_formula(formula):
-                print('competing formula')
-                formulas.append(formula)
-        return formulas
+                formulas_new.append(formula)
+        return formulas_new
 
-    def build_entry_set(self, temp):
-        competing_formulas = self.target_competing_formulas()
-        print('competing formulas',len(competing_formulas))
-        mp_data = self.mp_data
+    def build_entry_set(self, temperature=300):
+        """
+        Builds an entry set for the chemical space of interest. This entry set is comprised of GibbsComputedEntries for 
+        ground state polymorphs and ExperimentalReferenceEntries for gases. Temperature can be specified.
+        """
+        competing_formulas = self.chemsys_competing_formulas()
+        data = self.data
         entries = []
         for formula in competing_formulas:
-            print('formula',formula)
-            GibbsEntry = BuildGibbsEntry(formula, mp_data)
+            GibbsEntry = BuildGibbsEntry(formula, data)
             if GibbsEntry.is_NIST_gas:
-                entry = GibbsEntry.gas_ExperimentalReferenceEntry_at_temp(temp)
-                print(entry)
+                entry = GibbsEntry.gas_ExperimentalReferenceEntry_at_temp(temperature)
             else:
-                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula, temp)
+                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula, temperature)
             entries.append(entry)
             print('entry added')
         return GibbsEntrySet(entries)
