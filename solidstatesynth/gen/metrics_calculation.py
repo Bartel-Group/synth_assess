@@ -64,7 +64,6 @@ class EnumerateRxns():
     Class for calculating competition metrics for single-step reactions in a single chemical system.
     Uses the reaction-networks package for calculating reaction energy, primary and secondary competition, and the gamma cost function.
     Can be utilized by imnputting select precursors, targets, and temperature, and will output the competition metrics for each reaction.
-
     INSERT CREDIT TO MATT MCDERMOTT + maybe others???
     
     """
@@ -182,7 +181,7 @@ class TargetRxns():
             if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
                 target_rxns.append(rxn)
         print('target rxns found')
-        print(type(target_rxns))
+        print(target_rxns)
 
         return ReactionSet.from_rxns(target_rxns)
 
@@ -245,13 +244,13 @@ class TargetRxns():
         """
         temperature = self.temperature
         environment = self.environment
-        if self.precursors:
-            rxns = self.get_rxns_with_desired_precursors()
-        else:
-            rxns = self._find_target_rxns()
+        # if self.precursors:
+        # rxns = self.get_rxns_with_desired_precursors()
+        # else:
+        #     rxns = self._find_target_rxns()
             #Chemical potential of O at specified temperature and evironment partial pressure
         mu = KB * (temperature) * math.log(GAS_PARTIAL_PRESSURES[environment]["O2"])
-
+        rxns = self.reactions
         #Set the reactions to the new temperature
         #For inert environment, remove all reactions that contain O2 as a reactant
         #Determine the allowed gas products to add the correction to
@@ -300,6 +299,9 @@ class TargetRxns():
             #Find the reactions that make the target without any byproducts - will calculate metrics for each reaction
         print(len(rxns_at_temp))
         for rxn in rxns_at_temp:
+            reactants = rxn.reactants
+            if len(reactants) == 1:
+                continue
             print('rxn',rxn)
             #Get the precursors for the reaction - besides O2 if there are 2 solid precursors
             rxn_prec = set([i.reduced_composition for i in rxn.reactants])
@@ -313,7 +315,8 @@ class TargetRxns():
                 filtered_rxns = list(rxns_at_temp.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]+["O2"]))
             else:
                 filtered_rxns = list(rxns_at_temp.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]))
-
+            # print(*rxn_prec,filtered_rxns)
+            filtered_rxns = [i for i in filtered_rxns if len(i.reactants) > 1]
             #Build the InterfaceReactionHull from the precursors and filtered reactions
             irh = InterfaceReactionHull(*rxn_prec, filtered_rxns)
 

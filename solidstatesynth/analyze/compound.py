@@ -147,26 +147,38 @@ class AnalyzeChemsys():
 
         # how many elements in the target (binary, ternary, etc.)
         nary = len(target_els)
+        print(nary)
 
         # determine allowed chemical systems for precursors
         ## first, just consider (n-1)ary systems that are subsets of the target chemical system
         allowed_els = []
         for n in range(1, nary):
             allowed_els.extend(list(combinations(target_els, n)))
+        print(allowed_els)
 
         # now incorporating our "flexible elements" (basically adding carbonates and hydroxides)
         new_allowed_els = []
         for el in flexible_els:
             for el_combo in allowed_els:
                 el_combo = list(el_combo)
+                print(el_combo)
                 if ("O" in el_combo) and (el not in el_combo) and (len(el_combo) > 1):
                     el_combo.append(el)
                     el_combo = tuple(sorted(el_combo))
                     new_allowed_els.append(el_combo)
+        print(new_allowed_els)
         allowed_els = set(allowed_els + new_allowed_els)
+        print(allowed_els)
         # filter our big list of precursors down to those that we deemed "possible"
-        precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
-        return list(set(precursors))
+        # precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
+        precs_new = []
+        # target_els.extend(flexible_els)
+        for p in precursors:
+            if tuple(CompTools(p).els) in allowed_els:
+                precs_new.append(p)
+            elif all([el in target_els for el in CompTools(p).els]):
+                precs_new.append(p)
+        return list(set(precs_new))
 
 
 # def check():

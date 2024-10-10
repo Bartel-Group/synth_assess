@@ -11,6 +11,7 @@ from pydmclab.core.comp import CompTools
 from pydmclab.data.thermochem import gas_thermo_data
 from solidstatesynth.extract.mp import get_gases_data
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
+from itertools import combinations
 
 
 DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
@@ -85,8 +86,9 @@ class BuildGibbsEntrySet():
     Builds an EntrySet for formulas associated with a target of interest. This entry set is comprised
     of GibbsComputedEntries for ground state polymorphs and ExperimentalReferenceEntries for gases.
     Note that initialization requires a determination of whether hypothetical compounds may be accounted for 
-    (with theoretical) and a stability filter (for energy above the hull)
-    Depending on the with_theoretical initialization, MP with or without theoretical compounds may be employed 
+    (with theoretical) and a stability filter (for energy above the hull)Depending on the with_theoretical initialization, 
+    MP with or without theoretical compounds may be employed 
+
     """
     def __init__(self,els, with_theoretical = True, stability_filter = 0.05, formulas = None):
 
@@ -109,10 +111,29 @@ class BuildGibbsEntrySet():
             True if the formula is in the chemical system (or sub chemical system) of the target
         """
         target_els = self.target_els
+        allowed_els = []
+        new_allowed_els = []
+        for n in range(1, len(target_els)):
+            allowed_els.extend(list(combinations(target_els, n)))
         if 'O' in target_els:
-            target_els.extend(['C','H'])
+            flexible_els = ['C','H']
+        for el in flexible_els:
+            for el_combo in allowed_els:
+                el_combo = list(el_combo)
+                print(el_combo)
+                if ("O" in el_combo) and (el not in el_combo) and (len(el_combo) > 1):
+                    el_combo.append(el)
+                    el_combo = tuple(sorted(el_combo))
+                    new_allowed_els.append(el_combo)
+        print(new_allowed_els)
+        allowed_els = set(allowed_els + new_allowed_els)
+        print(allowed_els)
+        # filter our big list of precursors down to those that we deemed "possible"
+        # precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
         formula_els = CompTools(mp_formula).els
-        if all([el in target_els for el in formula_els]):
+        if tuple(CompTools(mp_formula).els) in allowed_els:
+                return True
+        elif all([el in target_els for el in formula_els]):
             return True
         return False
 
@@ -123,9 +144,13 @@ class BuildGibbsEntrySet():
         """
         mp_data = self.data
         formulas_new = []
+        formula_strings = []
         for entry in mp_data: 
-            if self.is_competing_formula(entry['formula']):
-                formulas_new.append(entry)
+            formula_str = entry['formula']
+            if formula_str not in formula_strings:
+                if self.is_competing_formula(formula_str):
+                    formulas_new.append(entry)
+                    formula_strings.append(formula_str)
         return formulas_new
 
     def build_entry_set(self, temperature=300):
