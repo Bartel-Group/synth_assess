@@ -111,6 +111,8 @@ class BuildGibbsEntrySet():
             True if the formula is in the chemical system (or sub chemical system) of the target
         """
         target_els = self.target_els
+        if all([el in target_els for el in formula_els]):
+            return True
         allowed_els = []
         new_allowed_els = []
         for n in range(1, len(target_els)):
@@ -133,8 +135,6 @@ class BuildGibbsEntrySet():
         formula_els = CompTools(mp_formula).els
         if tuple(CompTools(mp_formula).els) in allowed_els:
                 return True
-        elif all([el in target_els for el in formula_els]):
-            return True
         return False
 
     def chemsys_competing_formulas(self):
