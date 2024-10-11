@@ -155,7 +155,8 @@ class TargetRxns():
 
 
     def _find_target_rxns(
-            self   
+            self,
+            reactions = None   
         ) -> list[ComputedReaction]:
         """
         Helper method to find all the reactions that make the specified target without any byproducts (besides balancing gases)
@@ -165,7 +166,10 @@ class TargetRxns():
         Returns:
             list[ComputedReaction]: List of all the reactions that make the target without any byproducts
         """
-        reactions = self.reactions
+        if not reactions:
+            reactions = self.reactions
+        else:
+            reactions = reactions
         target = self.target
         
         target_rxns = []
@@ -247,10 +251,9 @@ class TargetRxns():
         # if self.precursors:
         # rxns = self.get_rxns_with_desired_precursors()
         # else:
-        #     rxns = self._find_target_rxns()
+        rxns = self.reactions
             #Chemical potential of O at specified temperature and evironment partial pressure
         mu = KB * (temperature) * math.log(GAS_PARTIAL_PRESSURES[environment]["O2"])
-        rxns = self.reactions
         #Set the reactions to the new temperature
         #For inert environment, remove all reactions that contain O2 as a reactant
         #Determine the allowed gas products to add the correction to
@@ -285,10 +288,7 @@ class TargetRxns():
         if not rxns:
             print('generating')
             rxns_at_temp = self.get_rxns_at_temp_env()
-        else:
-            print('using')
-            rxns_at_temp = rxns
-        print('rxns', rxns_at_temp)
+        target_rxns_at_temp = self._find_target_rxns(reactions = rxns_at_temp)
         
 
         #Initialize the metrics data
@@ -297,8 +297,8 @@ class TargetRxns():
         #Loop through all the targets to calculate metrics for all the precursors combinations to make each target.
         # for target in self._targets:
             #Find the reactions that make the target without any byproducts - will calculate metrics for each reaction
-        print(len(rxns_at_temp))
-        for rxn in rxns_at_temp:
+        # print(len(rxns_at_temp))
+        for rxn in target_rxns_at_temp:
             reactants = rxn.reactants
             if len(reactants) == 1:
                 continue

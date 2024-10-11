@@ -104,13 +104,13 @@ class BuildGibbsEntrySet():
             self.formulas = [entry['formula'] for entry in self.data]
         self.target_els = els
 
-    def is_competing_formula(self,mp_formula):
+    def is_competing_formula(self,mp_formula, target_els):
         
         """
         Returns:
             True if the formula is in the chemical system (or sub chemical system) of the target
         """
-        target_els = self.target_els
+        formula_els = CompTools(mp_formula).els
         if all([el in target_els for el in formula_els]):
             return True
         allowed_els = []
@@ -122,17 +122,17 @@ class BuildGibbsEntrySet():
         for el in flexible_els:
             for el_combo in allowed_els:
                 el_combo = list(el_combo)
-                print(el_combo)
+                # print(el_combo)
                 if ("O" in el_combo) and (el not in el_combo) and (len(el_combo) > 1):
                     el_combo.append(el)
                     el_combo = tuple(sorted(el_combo))
                     new_allowed_els.append(el_combo)
-        print(new_allowed_els)
+        # print(new_allowed_els)
         allowed_els = set(allowed_els + new_allowed_els)
-        print(allowed_els)
+        # print(allowed_els)
         # filter our big list of precursors down to those that we deemed "possible"
         # precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
-        formula_els = CompTools(mp_formula).els
+
         if tuple(CompTools(mp_formula).els) in allowed_els:
                 return True
         return False
@@ -142,13 +142,14 @@ class BuildGibbsEntrySet():
         Returns a list of all relevant competing formulas from Materials Project for the target (as defined above)
         Note that depending on which version of MP is used, this may account only for ground state experimental formulas or all ground state formulas.
         """
+        target_els = self.target_els
         mp_data = self.data
         formulas_new = []
         formula_strings = []
         for entry in mp_data: 
             formula_str = entry['formula']
             if formula_str not in formula_strings:
-                if self.is_competing_formula(formula_str):
+                if self.is_competing_formula(formula_str,target_els):
                     formulas_new.append(entry)
                     formula_strings.append(formula_str)
         return formulas_new
