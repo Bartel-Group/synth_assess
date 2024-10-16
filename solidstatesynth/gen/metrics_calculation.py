@@ -85,26 +85,30 @@ class EnumerateRxns():
         if 'O' in els:
             els.extend(['H','C'])
         self.els = list(set(els))
-        self._temperature = temperature
-        self.with_theoretical = with_theoretical
-        self.stability_filter = stability_filter
-        self.precursors = AnalyzeChemsys(self.els).possible_precursors()
-        # self.precursors = 
-
-
-        
-        #Find the chemical system to get query the MP entries from
-        # elements = list(set([i for j in self._precursors+self._target+["O2"] for i in Composition(j).chemical_system_set]))
-        # elements.sort()
-        # self._chemsys = "-".join(elements)
-
-        #Initialize the entries and reactions to None
-        self.entries = None
-        self.rxns = None
-        self._build_calculator()
         file_name = ''.join(els)+'_rxns.pkl'
-        with open('../data/' + file_name, 'wb') as f:
-            pickle.dump(self.rxns, f)
+        if os.path.exists(os.path.join('../data/', file_name)) and remake == False:
+            file = open('../data/' + file_name, 'rb')
+            self.rxns = pickle.load(file)
+        else:
+            self._temperature = temperature
+            self.with_theoretical = with_theoretical
+            self.stability_filter = stability_filter
+            self.precursors = AnalyzeChemsys(self.els).possible_precursors()
+            # self.precursors = 
+
+
+            
+            #Find the chemical system to get query the MP entries from
+            # elements = list(set([i for j in self._precursors+self._target+["O2"] for i in Composition(j).chemical_system_set]))
+            # elements.sort()
+            # self._chemsys = "-".join(elements)
+
+            #Initialize the entries and reactions to None
+            self.entries = None
+            self.rxns = None
+            self._build_calculator()
+            with open('../data/' + file_name, 'wb') as f:
+                pickle.dump(self.rxns, f)
 
         # numpy array should go deeper 
 
