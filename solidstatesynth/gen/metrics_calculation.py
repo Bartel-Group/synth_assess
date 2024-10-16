@@ -74,6 +74,7 @@ class EnumerateRxns():
         temperature: float = 300,
         with_theoretical: bool = True,
         stability_filter: float = 0.05
+        remake: bool = False
     ):
         """
         Initialize the calculator with the specified elements and temperature

@@ -9,7 +9,7 @@ from solidstatesynth.extract.tm import get_updated_textmined_data
 from pydmclab.utils.handy import read_json, write_json
 from pymatgen.core.periodic_table import Element
 from solidstatesynth.analyze.rxn import AnalyzeSynthesisRecipe
-from solidstatesynth.analyze.compound import AnalyzeChemsys
+from solidstatesynth.analyze.compound import AnalyzeCompound,AnalyzeChemsys
 from solidstatesynth.gen.metrics_calculation import EnumerateRxns, TargetRxns
 
 # from solidstatesynth.analyze.compound import AnalyzeTarget
@@ -94,37 +94,38 @@ class AnalyzeRxnString():
             sides = list(rxn_string.split(" -> "))
         elif '==' in rxn_string:
             sides = list(rxn_string.split(" == "))
-            for i in range(2): 
-                x = sides[i]
-                entry_list = []   
-                if "+" in x:
-                    x = x.split(" + ")
+        for i in range(2): 
+            x = sides[i]
+            entry_list = []   
+            if "+" in x:
+                x = x.split(" + ")
+            else:
+                x = [x]
+            for entry in x:
+                if " " in entry:
+                    if len(entry.split(" ")) != 1:
+                        coefficient, entry = entry.split(" ")
+                        if float(coefficient) > 0:
+                            try:
+                                CompTools(entry).clean
+                                entry_list.append(entry)
+                            except:
+                                return None
                 else:
-                    x = [x]
-                for entry in x:
-                    if " " in entry:
-                        if len(entry.split(" ")) != 1:
-                            coefficient, entry = entry.split(" ")
-                            if float(coefficient) > 0:
-                                try:
-                                    CompTools(entry).clean
-                                    entry_list.append(entry)
-                                except:
-                                    return None
-                    else:
-                        entry_list.append(entry)
-                if i == 0:
-                    rxn_dict['precursors'] = entry_list
-                else:
-                    rxn_dict['products'] = entry_list
+                    entry_list.append(entry)
+            if i == 0:
+                rxn_dict['precursors'] = entry_list
+            else:
+                rxn_dict['products'] = entry_list
         return rxn_dict
 
     @property
     def products(self):
-        return self.reaction_dict['products']
+        return self.rxn_dict['products']
 
+    @property
     def precursors(self):
-        return self.reaction_dict['precursors']
+        return self.rxn_dict['precursors']
 
     @property
     def has_gaseous_byproduct(self):
@@ -152,9 +153,19 @@ class AnalyzeRxnString():
 
 
     def has_specified_precursors(self, desired_precursors):
-        precursors = self.precursors
-        desired_precursors = set([CompTools(p).clean for p in precursors])
+        precursors = [CompTools(p).clean for p in self.precursors]
+        desired_precursors = list(set([CompTools(p).clean for p in desired_precursors]))
         if all(p in desired_precursors for p in precursors):
+            return True
+        return False
+
+    def has_specified_target(self,target):
+        """
+        Returns:
+            True if the target is in the reaction
+        """
+        products = [CompTools(p).clean for p in self.products]
+        if CompTools(target).clean in products:
             return True
         return False
 
@@ -164,7 +175,7 @@ class AnalyzeRxnString():
         """
         products = self.products
         # use rxn string for specific precursors rather than a general list and to account for byproducts
-        if desired_target in products:
+        if self.has_specified_target(desired_target):
             if len(products) <3:
                 if len(products) < 2 or self.has_gaseous_byproduct:
                     return True  
@@ -183,29 +194,30 @@ class AnalyzeEnumeratedRxns():
     def rxn_list(self):
         return [r['rxn'] for r in self.enumerated_rxns]
 
-    def filtered_rxns(self, desired_target):
-        """
-        Filters the reactions for those that are useful for the target as defined in the AnalyzeRxnString class
-        """
-        rxns = self.rxn_list
-        filtered_rxns = []
-        for r in rxns:
-            if AnalyzeRxnString(r).is_useful_reaction(desired_target):
-                filtered_rxns.append(r)
-        return filtered_rxns
+    # def filtered_rxns(self, desired_target):
+    #     """
+    #     Filters the reactions for those that are useful for the target as defined in the AnalyzeRxnString class
+    #     """
+    #     rxns = self.rxn_list
+    #     filtered_rxns = []
+    #     for r in rxns:
+    #         if AnalyzeRxnString(r).is_useful_reaction(desired_target):
+    #             filtered_rxns.append(r)
+    #     return filtered_rxns
     
     
-    def optimum_rxn(self, filter = 'gamma'):
+    def optimum_rxn(self, desired_target, filter = 'gamma'):
         """
         Filter is defined as the key in the reaction dictionary that you want to optimize for
         identifying the best reaction. The default optimization filter is gamma.
         """
-        rxns = self.enumerated_rxns
-        if rxns:
-            optimum_rxn = rxns[0]
-            for r in rxns:
-                if r[filter] < optimum_rxn[filter]:
-                    optimum_rxn = r
+        rxns = [entry for entry in self.enumerated_rxns if AnalyzeRxnString(entry['rxn']).is_useful_reaction(desired_target)]
+        if not rxns:
+            return None
+        optimum_rxn = rxns[0]
+        for r in rxns:
+            if r[filter] < optimum_rxn[filter]:
+                optimum_rxn = r
         return optimum_rxn
         
         

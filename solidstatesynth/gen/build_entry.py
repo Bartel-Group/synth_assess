@@ -111,6 +111,10 @@ class BuildGibbsEntrySet():
             True if the formula is in the chemical system (or sub chemical system) of the target
         """
         formula_els = CompTools(mp_formula).els
+        if list(set(formula_els)) == list(set(['C','H'])):
+            return False
+        if list(set(formula_els)) == list(set(['C','H','O'])):
+            return False
         if all([el in target_els for el in formula_els]):
             return True
         allowed_els = []
@@ -132,6 +136,7 @@ class BuildGibbsEntrySet():
         # print(allowed_els)
         # filter our big list of precursors down to those that we deemed "possible"
         # precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
+
 
         if tuple(CompTools(mp_formula).els) in allowed_els:
                 return True
