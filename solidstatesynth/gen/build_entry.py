@@ -59,24 +59,29 @@ class BuildGibbsEntry:
         refs = self.gas_data
         ExperimentalReferenceEntry.REFERENCES = refs
         exp_entry = ExperimentalReferenceEntry(composition=Composition(formula), temperature = temperature)
+        print(exp_entry)
         return exp_entry
 
 
     def ground_GibbsComputedEntry_at_temp(self,formula_data, temperature=300):
         """
         Args:
-            formula (str) or formula MP entry : formula
+            formula MP entry : formula
         Returns:
             GibbsComputedEntry for ground state polymorph at 300 K at a temperature of interest
         """
-        # if type(formula) == dict:
-        # else:
-        #     mp_data = self.mp_data_for_formula
+        formula = formula_data['formula']
         volume_per_atom_calc = formula_data['volume']/formula_data['nsites']
+        formation_energy_per_atom = formula_data['formation_energy_per_atom']
+        formula_amts = CompTools(formula).amts
+        if 'C' in formula_amts and 'O' in formula_amts:
+            if formula_amts['O']/formula_amts['C'] == 3:
+                formation_energy_per_atom = (formation_energy_per_atom * CompTools(formula).n_atoms + (0.830*formula_amts['C']))/CompTools(formula).n_atoms
+        print(formula, formation_energy_per_atom)
         gibbs_computed_entry = GibbsComputedEntry(
                                         volume_per_atom = volume_per_atom_calc, 
-                                        formation_energy_per_atom = formula_data['formation_energy_per_atom'], 
-                                        composition=Composition(formula_data['formula']),
+                                        formation_energy_per_atom = formation_energy_per_atom, 
+                                        composition=Composition(formula),
                                         temperature = temperature) 
         return gibbs_computed_entry
     
@@ -90,9 +95,10 @@ class BuildGibbsEntrySet():
     MP with or without theoretical compounds may be employed 
 
     """
-    def __init__(self,els, with_theoretical = True, stability_filter = 0.05, formulas = None):
+    def __init__(self,els, temperature, with_theoretical = True, stability_filter = 0.05, formulas = None):
 
         self.with_theoretical = with_theoretical
+        self.temperature = temperature
         self.stability_filter = stability_filter
         if formulas:
             self.formulas = formulas
@@ -159,26 +165,32 @@ class BuildGibbsEntrySet():
                     formula_strings.append(formula_str)
         return formulas_new
 
-    def build_entry_set(self, temperature=300):
+    def build_entry_set(self):
         """
         Builds an entry set for the chemical space of interest. This entry set is comprised of GibbsComputedEntries for 
         ground state polymorphs and ExperimentalReferenceEntries for gases. Temperature can be specified.
         """
+        temperature = self.temperature
         competing_formulas = self.chemsys_competing_formulas()
         print('competing formulas found')
         data = self.data
         entries = []
         for formula_data in competing_formulas:
             formula_str = formula_data['formula']
+            print(formula_data['material_id'])
             print('building entry')
             GibbsEntry = BuildGibbsEntry(formula_str, data)
             if GibbsEntry.is_NIST_gas:
                 entry = GibbsEntry.gas_ExperimentalReferenceEntry_at_temp(temperature)
             else:
                 entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula_data, temperature)
+            # print(entry)
             entries.append(entry)
+            # print(entries)
             print('entry added')
+        print('entries', entries)
         return GibbsEntrySet(entries)
+
 
 def main():
     return

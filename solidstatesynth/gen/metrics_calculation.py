@@ -73,8 +73,8 @@ class EnumerateRxns():
         els: Iterable[str],
         temperature: float = 300,
         with_theoretical: bool = True,
-        stability_filter: float = 0.05
-        remake: bool = False
+        stability_filter: float = 0.05,
+        remake: bool = True
     ):
         """
         Initialize the calculator with the specified elements and temperature
@@ -118,7 +118,8 @@ class EnumerateRxns():
         temperature = self._temperature
         with_theoretical = self.with_theoretical
         stability_filter = self.stability_filter
-        entry_set = BuildGibbsEntrySet(els = els,with_theoretical=with_theoretical,stability_filter=stability_filter).build_entry_set(temperature)
+        entry_set = BuildGibbsEntrySet(els = els,temperature = temperature, with_theoretical=with_theoretical,stability_filter=stability_filter).build_entry_set()
+        print('entry set',entry_set.entries)
         return entry_set
 
 
@@ -187,8 +188,9 @@ class TargetRxns():
         #These are already filtered by the correct atmosphere - if it is open to air, O2 can be a reactant
 
         for rxn in reactions:
-            if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
-                target_rxns.append(rxn)
+            if CompTools(target).clean in [CompTools(i).clean for i in rxn.products]:
+                if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
+                    target_rxns.append(rxn)
         print('target rxns found')
         print(target_rxns)
 
@@ -231,7 +233,7 @@ class TargetRxns():
         # print(math.log(GAS_PARTIAL_PRESSURES[environment][formula]))
         #Calculate the environment correction for the gas on a per atom basis
         adjustment_per_atom = KB * math.log(GAS_PARTIAL_PRESSURES[environment][formula])*float(temperature)/comp_formula.n_atoms
-        
+        print('adjustment per atom', formula, adjustment_per_atom)
         #Set a useful name for the correction - This is important because the correction does not automatically chenge with temperature
         name = f"{formula} {environment} correction @ {temperature}K"
         
@@ -266,10 +268,11 @@ class TargetRxns():
         #Get the environment correction for each gas
         gas_dict = {i: self._get_environment_correction(i.reduced_formula) for i in gas_comps}
         
-        #Add the environment correction to the gas products
+        # #Add the environment correction to the gas products
         for i in rxns.entries:
             if Composition(i.composition) in gas_comps:
                 i.energy_adjustments.append(gas_dict[Composition(i.composition)])
+                print(i.composition, i.energy_adjustments)
 
         #Finally set O as an open element with the calculated chemical potential from partial pressure
         return rxns.set_chempot(open_el="O", chempot=mu)

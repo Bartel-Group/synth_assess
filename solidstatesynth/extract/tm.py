@@ -22,7 +22,7 @@ def get_updated_textmined_data():
     "target": target, "dG_rxn": dG_rxn}}
     with each item associated with an entry in "thermo" (a single reaction)
     """
-    fjson = os.path.join(DATA_DIR, "240626_no_corrections.json")
+    fjson = os.path.join(DATA_DIR, "240701_corrections.json")
     newdb = read_json(fjson)
     return newdb["data"]
 
@@ -31,7 +31,7 @@ def get_mp_cmpds():
     Returns:
         list of compounds in MP
     """
-    fjson = os.path.join(DATA_DIR, "240925_mp_ground_data.json")
+    fjson = os.path.join(DATA_DIR, "241002_mp_ground_data.json")
     mp = read_json(fjson)['data']
     return list(mp.keys())
 

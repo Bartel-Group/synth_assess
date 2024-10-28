@@ -133,7 +133,8 @@ def get_gases_data(remake=False):
     new_gas = {'H2O1': 'H2O', 'C1O2': 'CO2'}
     temperatures = [int(key) for key in g["C1O2"]]
     g_new = {
-        new_gas[j]: {k: (g[j][str(k)]) / (96.485 * CompTools(j).n_atoms) for k in temperatures}
+        new_gas[j]: {k: (g[j][str(k)]) / (96.485) for k in temperatures}
+        # new_gas[j]: {k: (g[j][str(k)]) / (96.485 * CompTools(j).n_atoms) for k in temperatures}
         for j in gasses
     }
     # reformatting the gasses dictionary to match the format of the materials project data

@@ -4,7 +4,7 @@ from pydmclab.core.comp import CompTools
 from solidstatesynth.analyze.compound import AnalyzeCompound, AnalyzeChemsys
 from solidstatesynth.gen.metrics_calculation import EnumerateRxns
 
-DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/dsi/data"
 common_chemsystems = ['Bi-Fe-O', 'Li-O-Ti', 'Li-Mn-O', 'Co-Li-O', 'O-Sr-Ti', 'Ba-O-Ti', 'Al-O-Y']
 
 def tm_rxns():
