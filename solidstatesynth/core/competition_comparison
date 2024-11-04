@@ -59,7 +59,7 @@ def compare_entry(entry):
     precursors = entry['common']['precursors']
     target = entry['positive']['target']
     rxns = find_rxns(target,temperature)
-    opt = find_opt(rxns)
+    # opt = find_opt(rxns)
     actual = find_actual_for_entry(rxns,precursors,target,temperature)
     return opt,actual
 
@@ -139,7 +139,7 @@ def get_competitions():
         temp = float(entry['temp_degC']) + 273.15
         if temp > 2000:
             temp = 2000
-        entry_new = {'precursors': rxn_dict['reactants'],  'temp': temp}
+        entry_new = {'precursors': rxn_dict['reactants'],  'temp': temp, 'energy': entry['energy']}
         target = [formula for formula in rxn_dict['products'] if CompTools(formula).clean not in ['O1', 'H2O1','C1O2']][0]
         entry_new['target'] = target
         new_entries.append(entry_new)
@@ -148,27 +148,29 @@ def get_competitions():
 def get_rxn_from_comp(competition_entry):
     target = competition_entry['target']
     precursors = competition_entry['precursors']
-    temp = competition_entry['temp']
-    build = BuildRxn(target = target, temp = temp)
-    filtered_rxns = build.filtered_rxns()
-    opt_rxn = build.optimum_rxn()
-    if not opt_rxn:
-        opt_gamma = None
-    else:
-        opt_gamma = opt_rxn['gamma']
-    true_rxn = build.filter_reactions_by_precursors(precursors, filtered_rxns)
+    temp= competition_entry['temp']
+    build = BuildRxn(target = target, temperature = temp)
+    true_rxn = build.build_target_rxns(found_precursors=precursors)
+    # # opt_rxn = build.optimum_rxn()
+    # # if not opt_rxn:
+    # #     opt_gamma = None
+    # # else:
+    # #     opt_gamma = opt_rxn['gamma']
+    # true_rxn = build.filter_reactions_by_precursors(precursors, filtered_rxns)
     if true_rxn:
-        true_gamma = true_rxn['gamma']
+        if true_rxn[0]:
+            true_energy = true_rxn[0]['energy']
     else:
-        true_gamma = None
-    return {'opt':opt_gamma, 'true':true_gamma}
+        true_energy = None
+    return {'true':competition_entry['energy'],'calc':true_energy, 'target':target, 'temperature':temp}
 
 def get_competition_rxns(length = 200):
     competitions = get_competitions()
     competition_rxns = []
     for i, competition in enumerate(competitions[0:length]):
-        print(i)
-        competition_rxns.append(get_rxn_from_comp(competition))
+        r =get_rxn_from_comp(competition)
+        print(r)
+        competition_rxns.append(r)
     return competition_rxns
 
 def main():

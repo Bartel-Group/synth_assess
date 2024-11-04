@@ -6,12 +6,16 @@ from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.nist import NISTReferenceEntry
 from pymatgen.core.composition import Composition
-from pymatgen.entries.computed_entries import ComputedEntry
+from pymatgen.entries.computed_entries import ComputedEntry, ConstantEnergyAdjustment
+from pymatgen.ext.matproj import MPRester
+from pymatgen.entries import computed_entries
 from pydmclab.core.comp import CompTools
 from pydmclab.data.thermochem import gas_thermo_data
 from solidstatesynth.extract.mp import get_gases_data
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
 from itertools import combinations
+import numpy as np
+
 
 
 DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
@@ -63,7 +67,7 @@ class BuildGibbsEntry:
         return exp_entry
 
 
-    def ground_GibbsComputedEntry_at_temp(self,formula_data, temperature=300):
+    def ground_GibbsComputedEntry_at_temp(self,formula_data, temperature=300, energies_at_300 = True):
         """
         Args:
             formula MP entry : formula
@@ -71,19 +75,38 @@ class BuildGibbsEntry:
             GibbsComputedEntry for ground state polymorph at 300 K at a temperature of interest
         """
         formula = formula_data['formula']
+        print(formula)
         volume_per_atom_calc = formula_data['volume']/formula_data['nsites']
-        formation_energy_per_atom = formula_data['formation_energy_per_atom']
-        formula_amts = CompTools(formula).amts
-        if 'C' in formula_amts and 'O' in formula_amts:
-            if formula_amts['O']/formula_amts['C'] == 3:
-                formation_energy_per_atom = (formation_energy_per_atom * CompTools(formula).n_atoms + (0.830*formula_amts['C']))/CompTools(formula).n_atoms
-        print(formula, formation_energy_per_atom)
+        if not energies_at_300:
+            energy = formula_data['formation_energy_per_atom']
+            formula_amts = CompTools(formula).amts
+            if 'C' in formula_amts and 'O' in formula_amts:
+                if formula_amts['O']/formula_amts['C'] == 3:
+                    energy = (energy * CompTools(formula).n_atoms + (0.830*formula_amts['C']))/CompTools(formula).n_atoms
+        # print(formula, formation_energy_per_atom)
+        else:
+            mpr_entry = MPRester().get_entries_in_chemsys(CompTools(formula).els)
+        # mpr_entry_els = MPRester().get_entries([el for el in CompTools(formula).els])
+        # mpr_entry.extend(mpr_entry_els)
+        # print(mpr_entry)
+
+        # mpr_entry = MPRester().get_entries([formula_data['material-id']]+[el for el in CompTools(formula).els])
+            G_entry = computed_entries.GibbsComputedStructureEntry.from_entries(mpr_entry, temp=300)
+        # print(G_entry)
+        # print([f.composition.reduced_formula for f in G_entry])
+            formula_entries = [f.energy_per_atom for f in G_entry if CompTools(f.composition.reduced_formula).clean == CompTools(formula).clean]
+            print(formula_entries)
+            energy = min(formula_entries)
+
+
         gibbs_computed_entry = GibbsComputedEntry(
                                         volume_per_atom = volume_per_atom_calc, 
-                                        formation_energy_per_atom = formation_energy_per_atom, 
+                                        formation_energy_per_atom = energy, 
                                         composition=Composition(formula),
-                                        temperature = temperature) 
+                                        temperature = temperature,
+                                        ) 
         return gibbs_computed_entry
+
     
     
 class BuildGibbsEntrySet():
@@ -95,11 +118,12 @@ class BuildGibbsEntrySet():
     MP with or without theoretical compounds may be employed 
 
     """
-    def __init__(self,els, temperature, with_theoretical = True, stability_filter = 0.05, formulas = None):
+    def __init__(self,els, temperature, with_theoretical = True, stability_filter = 0.05, formulas = None, energies_at_300 = True):
 
         self.with_theoretical = with_theoretical
         self.temperature = temperature
         self.stability_filter = stability_filter
+        self.energies_at_300 = energies_at_300
         if formulas:
             self.formulas = formulas
         else:
@@ -170,6 +194,7 @@ class BuildGibbsEntrySet():
         Builds an entry set for the chemical space of interest. This entry set is comprised of GibbsComputedEntries for 
         ground state polymorphs and ExperimentalReferenceEntries for gases. Temperature can be specified.
         """
+        at_300 = self.energies_at_300
         temperature = self.temperature
         competing_formulas = self.chemsys_competing_formulas()
         print('competing formulas found')
@@ -183,7 +208,7 @@ class BuildGibbsEntrySet():
             if GibbsEntry.is_NIST_gas:
                 entry = GibbsEntry.gas_ExperimentalReferenceEntry_at_temp(temperature)
             else:
-                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula_data, temperature)
+                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(formula_data, temperature, energies_at_300 = at_300)
             # print(entry)
             entries.append(entry)
             # print(entries)
