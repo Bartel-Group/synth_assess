@@ -23,7 +23,9 @@ class Gibbs:
     def __init__(
         self,
         formula,
-        solids_data=get_MP_data()["data"],
+        solids_data=read_json(os.path.join(DATADIR, "241002_mp_experimental.json"))[
+            "data"
+        ],
         gases_data=get_gases_data(),
         temperature=300,
         use_carbonate_correction=True,
@@ -175,132 +177,211 @@ class Gibbs:
         return self.entry.formation_energy_per_atom
 
 
-class BuildGibbsEntrySet:
-    """
-    Builds an EntrySet for formulas associated with a target of interest. This entry set is comprised
-    of GibbsComputedEntries for ground state polymorphs and ExperimentalReferenceEntries for gases.
-    Note that initialization requires a determination of whether hypothetical compounds may be accounted for
-    (with theoretical) and a stability filter (for energy above the hull)Depending on the with_theoretical initialization,
-    MP with or without theoretical compounds may be employed
-
-    """
-
+class FormulaChecker:
     def __init__(
-        self,
-        els,
-        temperature,
-        with_theoretical=True,
-        stability_filter=0.05,
-        formulas=None,
-        energies_at_300=True,
+        self, formula, chemsys, extend_with_hydroxides=True, extend_with_carbonates=True
     ):
-
-        self.with_theoretical = with_theoretical
-        self.temperature = temperature
-        self.stability_filter = stability_filter
-        self.energies_at_300 = energies_at_300
-        if formulas:
-            self.formulas = formulas
-        else:
-            if not with_theoretical:
-                self.data = read_json(
-                    os.path.join(DATADIR, "241002_mp_experimental.json")
-                )["data"]
-            else:
-                self.data = read_json(os.path.join(DATADIR, "241002_mp_gd.json"))[
-                    "data"
-                ]
-            self.formulas = [entry["formula"] for entry in self.data]
-        self.target_els = els
-
-    def is_competing_formula(self, mp_formula, target_els):
         """
-        Returns:
-            True if the formula is in the chemical system (or sub chemical system) of the target
+        Args:
+            formula (str): formula to check
+            chemsys (str): el1-el2-el3-...
+            extend_with_hydroxides (bool): whether to include hydroxides as additional compounds in *chemsys*
+            extend_with_carbonates (bool): whether to include carbonates as additional compounds in *chemsys*
         """
-        formula_els = CompTools(mp_formula).els
-        if list(set(formula_els)) == list(set(["C", "H"])):
-            return False
-        if list(set(formula_els)) == list(set(["C", "H", "O"])):
-            return False
-        if all([el in target_els for el in formula_els]):
-            return True
-        allowed_els = []
-        new_allowed_els = []
-        for n in range(1, len(target_els)):
-            allowed_els.extend(list(combinations(target_els, n)))
-        if "O" in target_els:
-            flexible_els = ["C", "H"]
-        for el in flexible_els:
-            for el_combo in allowed_els:
-                el_combo = list(el_combo)
-                # print(el_combo)
-                if ("O" in el_combo) and (el not in el_combo) and (len(el_combo) > 1):
-                    el_combo.append(el)
-                    el_combo = tuple(sorted(el_combo))
-                    new_allowed_els.append(el_combo)
-        # print(new_allowed_els)
-        allowed_els = set(allowed_els + new_allowed_els)
-        # print(allowed_els)
-        # filter our big list of precursors down to those that we deemed "possible"
-        # precursors = [p for p in precursors if tuple(CompTools(p).els) in allowed_els]
+        self.formula = formula
+        self.chemsys = chemsys
+        self.extend_with_hydroxides = extend_with_hydroxides
+        self.extend_with_carbonates = extend_with_carbonates
+        self.els = sorted(chemsys.split("-"))
 
-        if tuple(CompTools(mp_formula).els) in allowed_els:
+    @property
+    def els_to_check(self):
+        return CompTools(self.formula).els
+
+    @property
+    def same_chemsys(self):
+        return self.els_to_check == self.els
+
+    @property
+    def sub_chemsys(self):
+        return set(self.els_to_check).issubset(set(self.els))
+
+    @property
+    def is_hydroxide(self):
+        els_to_check = self.els_to_check
+        if ("O" in els_to_check) and ("H" in els_to_check):
             return True
         return False
 
-    def chemsys_competing_formulas(self):
-        """
-        Returns a list of all relevant competing formulas from Materials Project for the target (as defined above)
-        Note that depending on which version of MP is used, this may account only for ground state experimental formulas or all ground state formulas.
-        """
-        target_els = self.target_els
-        mp_data = self.data
-        formulas_new = []
-        formula_strings = []
-        for entry in mp_data:
-            formula_str = entry["formula"]
-            if formula_str not in formula_strings:
-                if self.is_competing_formula(formula_str, target_els):
-                    formulas_new.append(entry)
-                    formula_strings.append(formula_str)
-        return formulas_new
+    @property
+    def is_carbonate(self):
+        els_to_check = self.els_to_check
+        if ("O" in els_to_check) and ("C" in els_to_check):
+            return True
+        return False
 
-    def build_entry_set(self):
+    @property
+    def is_relevant(self):
         """
-        Builds an entry set for the chemical space of interest. This entry set is comprised of GibbsComputedEntries for
-        ground state polymorphs and ExperimentalReferenceEntries for gases. Temperature can be specified.
+        Returns:
+            True if formula of interest is in the chemical system or subsystem
         """
-        at_300 = self.energies_at_300
+        if self.same_chemsys:
+            return True
+        if self.sub_chemsys:
+            return True
+        els_to_check = self.els_to_check
+        els = self.els
+        if self.extend_with_carbonates and self.is_carbonate:
+            non_CO_els = [el for el in els_to_check if el not in ["C", "O"]]
+            if set(non_CO_els).issubset(set(els)):
+                return True
+        if self.extend_with_hydroxides and self.is_hydroxide:
+            non_OH_els = [el for el in els_to_check if el not in ["O", "H"]]
+            if set(non_OH_els).issubset(set(els)):
+                return True
+        return False
+
+
+class GibbsSet:
+    def __init__(
+        self,
+        chemsys,
+        solids_data=read_json(os.path.join(DATADIR, "241002_mp_experimental.json"))[
+            "data"
+        ],
+        gases_data=get_gases_data(),
+        temperature=300,
+        use_carbonate_correction=True,
+        extend_with_hydroxides=True,
+        extend_with_carbonates=True,
+        stability_threshold=0.05,
+        include_only_these_formulas=[],
+        exclude_these_formulas=[],
+        add_these_formulas=[],
+    ):
+        """
+        Args:
+            chemsys (str): 'el1-el2-el3-...'
+            solids_data (list): list of dictionaries containing data to use for solids having that formula
+                each dict must have the following keys:
+                    {'formula' : <clean formula (CompTools(formula).clean)> (str),
+                     'volume' : <volume of calculated structure> (float),
+                     'nsites' : <number of sites in calculated structure> (int),
+                     'formation_energy_per_atom' : <formation enthalpy per atom at 0 K> (float, eV/at),
+                     'energy_above_hull' : <energy above hull> (float, eV/at)}
+                ideally:
+                    - only ground state entries
+                    - all formulas are clean
+                note:
+                    - this might not be the best default dictionary
+                    - instead of having a flag "include_theoretical", I gather it might be easier to just pass the "solids_data" you want to use
+            gases_data (dict): dictionary of dictionaries containing data to use for gases having that formula (from experiment)
+                {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
+            temperature (int): temperature of interest
+            use_carbonate_correction (bool) : whether to use carbonate correction for carbonates
+            extend_with_hydroxides (bool): whether to include hydroxides as additional compounds in *chemsys*
+            extend_with_carbonates (bool): whether to include carbonates as additional compounds in *chemsys*
+            stability_threshold (float): maximum energy above hull for a compound to be considered as "relevant"
+            include_only_these_formulas (list): list of formulas to include (if you want to specify them)
+            exclude_these_formulas (list): list of formulas to exclude (if you don't want them included)
+            add_these_formulas (list): list of formulas to add (if you want to augment list with some)
+
+        """
+
+        self.gases_data = gases_data
+        self.temperature = temperature
+        self.use_carbonate_correction = use_carbonate_correction
+        self.extend_with_hydroxides = extend_with_hydroxides
+        self.extend_with_carbonates = extend_with_carbonates
+        self.stability_threshold = stability_threshold
+        self.include_only_these_formulas = include_only_these_formulas
+        self.exclude_these_formulas = exclude_these_formulas
+        self.add_these_formulas = add_these_formulas
+        self.els = sorted(chemsys.split("-"))
+        self.chemsys = chemsys
+
+        # this is an easy filter so best to do this right away
+        if stability_threshold:
+            solids_data = [
+                e for e in solids_data if e["energy_above_hull"] < stability_threshold
+            ]
+        self.solids_data = solids_data
+
+    @property
+    def formulas(self):
+        """
+        Returns:
+            list of formulas to include in the entry set
+        """
+        if self.include_only_these_formulas:
+            return self.include_only_these_formulas
+
+        solids_data = self.solids_data
+        all_formulas = list(set([e["formula"] for e in solids_data]))
+        chemsys = self.chemsys
+        extend_with_hydroxides, extend_with_carbonates = (
+            self.extend_with_hydroxides,
+            self.extend_with_carbonates,
+        )
+
+        formulas = [
+            f
+            for f in all_formulas
+            if FormulaChecker(
+                formula=f,
+                chemsys=chemsys,
+                extend_with_carbonates=extend_with_carbonates,
+                extend_with_hydroxides=extend_with_hydroxides,
+            ).is_relevant
+        ]
+
+        if self.exclude_these_formulas:
+            formulas = [f for f in formulas if f not in self.exclude_these_formulas]
+        if self.add_these_formulas:
+            formulas.extend(self.add_these_formulas)
+        return formulas
+
+    @property
+    def entries(self):
+        """
+        Returns:
+            List of GibbsEntry objects for all formulas of interest
+        """
+        formulas = self.formulas
+        solids_data = self.solids_data
+        gases_data = self.gases_data
         temperature = self.temperature
-        competing_formulas = self.chemsys_competing_formulas()
-        print("competing formulas found")
-        data = self.data
-        entries = []
-        for formula_data in competing_formulas:
-            formula_str = formula_data["formula"]
-            print(formula_data["material_id"])
-            print("building entry")
-            GibbsEntry = BuildGibbsEntry(formula_str, data)
-            if GibbsEntry.is_NIST_gas:
-                entry = GibbsEntry.gas_ExperimentalReferenceEntry_at_temp(temperature)
-            else:
-                entry = GibbsEntry.ground_GibbsComputedEntry_at_temp(
-                    formula_data, temperature, energies_at_300=at_300
-                )
-            # print(entry)
-            entries.append(entry)
-            # print(entries)
-            print("entry added")
-        print("entries", entries)
-        return GibbsEntrySet(entries)
+        use_carbonate_correction = self.use_carbonate_correction
+
+        return [
+            Gibbs(
+                formula=f,
+                solids_data=solids_data,
+                gases_data=gases_data,
+                temperature=temperature,
+                use_carbonate_correction=use_carbonate_correction,
+            ).entry
+            for f in formulas
+        ]
+
+    @property
+    def entry_set(self):
+        """
+        Returns:
+            GibbsEntrySet for the chemical space of interest
+        """
+        return GibbsEntrySet(self.entries)
 
 
 def main():
-    g = Gibbs("H2O", temperature=317)
+    g = Gibbs("Li2CO3", temperature=317)
     e = g.entry
-    return g, e
+    gs = GibbsSet(chemsys="Ru-Fe-O", temperature=317)
+    es = gs.entries
+    gse = gs.entry_set
+    return g, e, gs, es, gse
 
 
 if __name__ == "__main__":
-    g, e = main()
+    g, e, gs, es, gse = main()
