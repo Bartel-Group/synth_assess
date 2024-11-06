@@ -121,6 +121,33 @@ def get_mp_experimental(MP, remake=False):
     return exp_MP
 
 
+def get_formula_keyed_gs_dict_for_dev(remake=False):
+    """
+    Returns:
+        {formula (str) : {entry}} for lowest energy entries in 241002_mp_experimental_gd.json
+    """
+    fjson = os.path.join(DATA_DIR, "241106_mp_no-theoretical_gs.json")
+    if not remake and os.path.exists(fjson):
+        return read_json(fjson)
+
+    list_of_dicts = read_json(os.path.join(DATA_DIR, "241002_mp_experimental_gd.json"))[
+        "data"
+    ]
+    d = {}
+    for entry in list_of_dicts:
+        formula = CompTools(entry["formula"]).clean
+        if formula not in d:
+            d[formula] = entry
+        else:
+            if (
+                entry["formation_energy_per_atom"]
+                < d[formula]["formation_energy_per_atom"]
+            ):
+                d[formula] = entry
+    write_json(d, fjson)
+    return d
+
+
 # def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
 #     """
 #     Args: materials project data (either as is, including only ground data, and/or including only
@@ -169,5 +196,11 @@ def main():
     return MP, MP_exp, gd_MP, gd_MP_exp
 
 
+def cjb_main():
+    d = get_formula_keyed_gs_dict_for_dev(remake=False)
+    return d
+
+
 if __name__ == "__main__":
-    MP, MP_exp, gd_MP, gd_MP_exp = main()
+    # MP, MP_exp, gd_MP, gd_MP_exp = main()
+    d = cjb_main()

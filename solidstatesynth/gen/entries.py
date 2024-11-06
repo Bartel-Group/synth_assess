@@ -23,9 +23,9 @@ class Gibbs:
     def __init__(
         self,
         formula,
-        solids_data=read_json(os.path.join(DATADIR, "241002_mp_experimental.json"))[
-            "data"
-        ],
+        solids_data=read_json(
+            os.path.join(DATADIR, "241106_mp_no-theoretical_gs.json")
+        ),
         gases_data=get_gases_data(),
         temperature=300,
         use_carbonate_correction=True,
@@ -33,17 +33,14 @@ class Gibbs:
         """
         Args:
             formula (str): formula of the target compound
-            solids_data (list): list of dictionaries containing data to use for solids having that formula
-                each dict must have the following keys:
+            solids_data (dict): {formula (str, clean formula) : {< dict with data >}}
+                < dict with data > must have these keys:
                     {'formula' : <clean formula (CompTools(formula).clean)> (str),
                      'volume' : <volume of calculated structure> (float),
                      'nsites' : <number of sites in calculated structure> (int),
                      'formation_energy_per_atom' : <formation enthalpy per atom at 0 K> (float)}
-                ideally:
-                    - only ground state entries
-                    - all formulas are clean
-                note:
-                    - this might not be the best default dictionary
+                notes:
+                    - this must include the ground-states you want to consider
             gases_data (dict): dictionary of dictionaries containing data to use for gases having that formula (from experiment)
                 {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
             temperature (int): temperature of interest
@@ -72,22 +69,12 @@ class Gibbs:
 
             # find formula in solids_data (ideally this is just one entry)
             ## NOTE: make sure dictionary passed here is clean then remove the cleaning done w/in this list
-            solids_data = [
-                e for e in solids_data if CompTools(e["formula"]).clean == formula
-            ]
-
-            # if no data, then we don't have data for this formula..
-            if not solids_data:
+            ### NOTE: actually, even better strategy would be to make sure the solids_data is a dictionary with clean formulas as keys
+            #### then you can just grab the entry directly without having to filter
+            if formula not in solids_data:
                 raise ValueError("No data for the target compound: %s" % formula)
 
-            # if multiple entries, then something went awry b/c solid_data should just be ground-states
-            if len(solids_data) > 1:
-                print(
-                    "WARNING: %i entries for the target compound: %s; filter ground-states before passing here; using first entry"
-                    % (len(solids_data), formula)
-                )
-            # compound data is the only/first entry
-            self.compound_data = solids_data[0]
+            self.compound_data = solids_data[formula]
 
     @property
     def is_carbonate(self):
@@ -248,9 +235,9 @@ class GibbsSet:
     def __init__(
         self,
         chemsys,
-        solids_data=read_json(os.path.join(DATADIR, "241002_mp_experimental.json"))[
-            "data"
-        ],
+        solids_data=read_json(
+            os.path.join(DATADIR, "241106_mp_no-theoretical_gs.json")
+        ),
         gases_data=get_gases_data(),
         temperature=300,
         use_carbonate_correction=True,
@@ -264,18 +251,15 @@ class GibbsSet:
         """
         Args:
             chemsys (str): 'el1-el2-el3-...'
-            solids_data (list): list of dictionaries containing data to use for solids having that formula
-                each dict must have the following keys:
+            solids_data (dict): {formula (str, clean formula) : {< dict with data >}}
+                < dict with data > must have these keys:
                     {'formula' : <clean formula (CompTools(formula).clean)> (str),
                      'volume' : <volume of calculated structure> (float),
                      'nsites' : <number of sites in calculated structure> (int),
-                     'formation_energy_per_atom' : <formation enthalpy per atom at 0 K> (float, eV/at),
+                     'formation_energy_per_atom' : <formation enthalpy per atom at 0 K> (float),
                      'energy_above_hull' : <energy above hull> (float, eV/at)}
-                ideally:
-                    - only ground state entries
-                    - all formulas are clean
-                note:
-                    - this might not be the best default dictionary
+                notes:
+                    - this should be all the ground-states you want to consider
                     - instead of having a flag "include_theoretical", I gather it might be easier to just pass the "solids_data" you want to use
             gases_data (dict): dictionary of dictionaries containing data to use for gases having that formula (from experiment)
                 {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
@@ -304,9 +288,12 @@ class GibbsSet:
 
         # this is an easy filter so best to do this right away
         if stability_threshold:
-            solids_data = [
-                e for e in solids_data if e["energy_above_hull"] < stability_threshold
-            ]
+            solids_data = {
+                f: solids_data[f]
+                for f in solids_data
+                if solids_data[f]["energy_above_hull"] < stability_threshold
+            }
+
         self.solids_data = solids_data
 
     @property
@@ -319,7 +306,7 @@ class GibbsSet:
             return self.include_only_these_formulas
 
         solids_data = self.solids_data
-        all_formulas = list(set([e["formula"] for e in solids_data]))
+        all_formulas = list(solids_data.keys())
         chemsys = self.chemsys
         extend_with_hydroxides, extend_with_carbonates = (
             self.extend_with_hydroxides,
