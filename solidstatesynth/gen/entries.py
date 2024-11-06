@@ -67,10 +67,7 @@ class Gibbs:
             # if not a gas, look in solids_data
             self.is_gas = False
 
-            # find formula in solids_data (ideally this is just one entry)
-            ## NOTE: make sure dictionary passed here is clean then remove the cleaning done w/in this list
-            ### NOTE: actually, even better strategy would be to make sure the solids_data is a dictionary with clean formulas as keys
-            #### then you can just grab the entry directly without having to filter
+            # find formula in solids_data
             if formula not in solids_data:
                 raise ValueError("No data for the target compound: %s" % formula)
 
