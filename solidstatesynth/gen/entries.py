@@ -232,14 +232,15 @@ class FormulaChecker:
             return True
         els_to_check = self.els_to_check
         els = self.els
-        if self.extend_with_carbonates and self.is_carbonate:
-            non_CO_els = [el for el in els_to_check if el not in ["C", "O"]]
-            if set(non_CO_els).issubset(set(els)):
-                return True
-        if self.extend_with_hydroxides and self.is_hydroxide:
-            non_OH_els = [el for el in els_to_check if el not in ["O", "H"]]
-            if set(non_OH_els).issubset(set(els)):
-                return True
+        if "O" in els:
+            if self.extend_with_carbonates and self.is_carbonate:
+                non_CO_els = [el for el in els_to_check if el not in ["C", "O"]]
+                if set(non_CO_els).issubset(set(els)):
+                    return True
+            if self.extend_with_hydroxides and self.is_hydroxide:
+                non_OH_els = [el for el in els_to_check if el not in ["O", "H"]]
+                if set(non_OH_els).issubset(set(els)):
+                    return True
         return False
 
 
