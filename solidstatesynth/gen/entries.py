@@ -360,13 +360,17 @@ class GibbsSet:
 
 
 def main():
-    g = Gibbs("Li2CO3", temperature=317)
+    g = Gibbs("Fe2O3", temperature=1317)
     e = g.entry
-    gs = GibbsSet(chemsys="Ru-Fe-O", temperature=317)
-    es = gs.entries
+    print("dGf for Fe2O3 from one entry = %.4f" % g.dGf)
+    gs = GibbsSet(chemsys="Fe-O", temperature=1317)
     gse = gs.entry_set
-    return g, e, gs, es, gse
+    print(
+        "dGf from entry set = %.4f"
+        % gse.entries_list[-2].as_dict()["formation_energy_per_atom"]
+    )
+    return g, e, gs, gse
 
 
 if __name__ == "__main__":
-    g, e, gs, es, gse = main()
+    g, e, gs, gse = main()
