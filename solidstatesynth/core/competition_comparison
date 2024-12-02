@@ -5,7 +5,7 @@ from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
 import os 
 
-DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+DATA_DIR = "/Users/schle759/Documents"
 
 def relevant_entry(entry):
     if 'positive' not in entry:
@@ -130,16 +130,18 @@ def get_reaction_dict_from_string(reaction_string):
 
 
 def get_competitions():
-    fjson = os.path.join(DATA_DIR, "240705_mcdermott_data.json")
+    fjson = os.path.join(DATA_DIR, "mcdermott.json")
     competition = read_json(fjson)
-    competitions = [entry for entry in competition['Sheet1'] if 'open' in entry]
+    competitions = [entry for entry in competition if 'open' in entry]
     new_entries = []
     for entry in competitions:
         rxn_dict = get_reaction_dict_from_string(entry['reaction'])
         temp = float(entry['temp_degC']) + 273.15
         if temp > 2000:
             temp = 2000
-        entry_new = {'precursors': rxn_dict['reactants'],  'temp': temp, 'energy': entry['energy']}
+        entry_new = {'precursors': rxn_dict['reactants'],  
+        'temp': temp, 'energy': entry['energy'],
+        'c1': entry['c1'], 'c2': entry['c2']}
         target = [formula for formula in rxn_dict['products'] if CompTools(formula).clean not in ['O1', 'H2O1','C1O2']][0]
         entry_new['target'] = target
         new_entries.append(entry_new)
@@ -162,20 +164,22 @@ def get_rxn_from_comp(competition_entry):
             true_energy = true_rxn[0]['energy']
     else:
         true_energy = None
-    return {'true':competition_entry['energy'],'calc':true_energy, 'target':target, 'temperature':temp}
+    return {'true':competition_entry['energy'],'calc':true_energy, 
+    'target':target, 'temperature':temp, 
+    'c1': competition_entry['c1'], 'c2': competition_entry['c2']}
 
-def get_competition_rxns(length = 200):
+def get_competition_rxns(a):
     competitions = get_competitions()
     competition_rxns = []
-    for i, competition in enumerate(competitions[0:length]):
+    for i, competition in enumerate(competitions[a:a+20]):
         r =get_rxn_from_comp(competition)
         print(r)
         competition_rxns.append(r)
     return competition_rxns
 
-def main():
-    tm = get_relevant_textmined()
-    return tm
+# def main():
+#     # tm = get_relevant_textmined()
+#     # return tm
 
-if __name__ == "__main__":
-    tm = main()
+# if __name__ == "__main__":
+#     main()
