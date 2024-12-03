@@ -1,21 +1,21 @@
-from pydmclab.utils.handy import read_json, write_json
+from pydmclab.utils.handy import read_json
 import os
-import math
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.entry_set import GibbsEntrySet
-from rxn_network.entries.nist import NISTReferenceEntry
 from pymatgen.core.composition import Composition
-from pymatgen.entries.computed_entries import ComputedEntry, ConstantEnergyAdjustment
-from pymatgen.ext.matproj import MPRester
-from pymatgen.entries import computed_entries
 from pydmclab.core.comp import CompTools
-# from pydmclab.core.structure import StrucTools
-from pydmclab.data.thermochem import gas_thermo_data
-from solidstatesynth.extract.mp import get_gases_data, get_MP_data
+from solidstatesynth.extract.mp import get_gases_data
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
-from itertools import combinations
-import numpy as np
-from emmet.core.thermo import ThermoDoc, ThermoType
+# from itertools import combinations
+# import numpy as np
+# from emmet.core.thermo import ThermoDoc, ThermoType
+# from pydmclab.core.structure import StrucTools
+# from pydmclab.data.thermochem import gas_thermo_data
+# from pymatgen.entries.computed_entries import ComputedEntry, ConstantEnergyAdjustment
+# from pymatgen.ext.matproj import MPRester
+# from pymatgen.entries import computed_entries
+# from rxn_network.entries.nist import NISTReferenceEntry
+# import math
 
 
 DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
@@ -33,15 +33,18 @@ class Gibbs:
         """
         Args:
             formula (str): formula of the target compound
+            solids_data (dict): {formula (str, clean formula) : {< dict with mp data >}}
             gases_data (dict): dictionary of dictionaries containing data to use for gases having that formula (from experiment)
                 {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
+                Refer to McDermott's rxn_network/entries/experimental.py for the structure of any desired
+                experimental data
             temperature (int): temperature of interest
             use_carbonate_correction (bool) : whether to use carbonate correction for carbonates
 
         """
         # clean the formula coming in
         # self.entry = entry
-        self.formula = formula
+        self.formula = CompTools(formula).clean
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
         self.formula_data = solids_data[formula]
@@ -65,7 +68,7 @@ class Gibbs:
                 raise ValueError("No data for the target compound: %s" % formula)
 
             self.compound_data = solids_data[formula]
-            print(self.compound_data)
+            # print(self.compound_data)
 
     @property
     def is_carbonate(self):
@@ -163,6 +166,7 @@ class FormulaChecker:
             chemsys [(str)]: [el1,el2,el3...]
             extend_with_hydroxides (bool): whether to include hydroxides as additional compounds in *chemsys*
             extend_with_carbonates (bool): whether to include carbonates as additional compounds in *chemsys*
+        NOTE that extensions will occur only for oxide chemistries
         """
         self.formula = formula
         # self.chemsys = chemsys
@@ -184,15 +188,17 @@ class FormulaChecker:
 
     @property
     def is_hydroxide(self):
-        els_to_check = self.els_to_check
-        if ("O" in els_to_check) and ("H" in els_to_check):
+        formula = self.formula
+        n_H, n_O = CompTools(formula).stoich("H"), CompTools(formula).stoich("O")
+        if n_H and (n_O / n_H == 1):
             return True
         return False
 
     @property
     def is_carbonate(self):
-        els_to_check = self.els_to_check
-        if ("O" in els_to_check) and ("C" in els_to_check):
+        formula = self.formula
+        n_C, n_O = CompTools(formula).stoich("C"), CompTools(formula).stoich("O")
+        if n_C and (n_O / n_C == 3):
             return True
         return False
 
@@ -225,19 +231,20 @@ class GibbsSet:
         self,
         chemsys_els,
         gases_data=get_gases_data(),
+        solids_data=None,
         temperature=300,
         use_carbonate_correction=True,
         extend_with_hydroxides=True,
         extend_with_carbonates=True,
         with_theoretical=True,
-        stability_threshold=0.05,
+        stability_threshold=0.5,
         include_only_these_formulas=[],
         exclude_these_formulas=[],
         add_these_formulas=[],
     ):
         """
-        Args:
-            els [str]: ['el1', 'el2', 'el3'...]
+         Args:
+            chemsys_els [str]: ['el1', 'el2', 'el3'...]
             solids_data (dict): {formula (str, clean formula) : {< dict with data >}}
                 < dict with data > must have these keys:
                     {'formula' : <clean formula (CompTools(formula).clean)> (str),
@@ -247,7 +254,9 @@ class GibbsSet:
                      'energy_above_hull' : <energy above hull> (float, eV/at)}
                 notes:
                     - this should be all the ground-states you want to consider
-                    - instead of having a flag "include_theoretical", I gather it might be easier to just pass the "solids_data" you want to use
+                    - if solids data is not given, it will be extracted from the MP database (using only GS)
+                    - the stability threshold is used only for default solids data. Users should impose their own
+                    stability thresholds if they provide their own solids data
             gases_data (dict): dictionary of dictionaries containing data to use for gases having that formula (from experiment)
                 {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
             temperature (int): temperature of interest
@@ -272,19 +281,17 @@ class GibbsSet:
         self.add_these_formulas = add_these_formulas
         self.els = chemsys_els
         # self.chemsys = chemsys
-        if not with_theoretical:
-            solids_data = read_json(os.path.join(DATADIR, '241119_mp_experimental.json'))['data']
-        else:
-            solids_data = read_json(os.path.join(DATADIR, '241119_mp_gd.json'))['data']
+        if not solids_data:
+            if not with_theoretical:
+                solids_data = read_json(os.path.join(DATADIR, '241119_mp_experimental.json'))['data']
+            else:
+                solids_data = read_json(os.path.join(DATADIR, '241119_mp_gd.json'))['data']
 
-
-        # this is an easy filter so best to do this right away
-        if stability_threshold:
             solids_data = {
-                f['formula']: f
-                for f in solids_data
-                if f["energy_above_hull"] < stability_threshold
-            }
+                    CompTools(f['formula']).clean: f
+                    for f in solids_data
+                    if f["energy_above_hull"] < stability_threshold
+                }
         self.solids_data = solids_data
 
 
