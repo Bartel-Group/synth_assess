@@ -3,6 +3,7 @@ from pydmclab.core.comp import CompTools
 from pymatgen.core.composition import Composition
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from solidstatesynth.gen.entries import Gibbs, GibbsSet, FormulaChecker
+from solidstatesynth.gen.metrics_calculation import EnumerateRxns
 from pymatgen.ext.matproj import MPRester
 
 # class UnitTestExtractData(unittest.TestCase):
@@ -45,6 +46,17 @@ class UnitTestGibbs(unittest.TestCase):
             self.assertAlmostEqual(energy_1450,formula_energies[formula][1450], places=3)
 
 class UnitTestFormulaChecker(unittest.TestCase):
+    def test_sub_chemsys(self):
+        formulas = ['BaTiO3','CO2','BaCO3']
+        chemsys_els = ['Ba','Ti','O']
+        subsys = {'BaTiO3':True, 'CO2':False, 'BaCO3':False}
+        for formula in formulas:
+            self.assertEqual(
+                FormulaChecker(formula, chemsys_els).sub_chemsys, 
+                subsys[formula]
+                )
+
+
     def test_is_relevant(self):
         formulas = ['BaTiO3','CO2','BaCO3', 'CaCO3']
         chemsys_els = ['Ba','Ti','O']
@@ -71,6 +83,10 @@ class UnitTestGibbsSet(unittest.TestCase):
             chemsys = '-'.join(entry)
             gibbs_set = GibbsSet(entry, solids_data = els_data)
             self.assertEqual(list(set(gibbs_set.formulas)), list(set(entries[chemsys])))
+
+class UnitTestEnumerate(unittest.TestCase):
+    def test_get_entries(self):
+
 
 
 

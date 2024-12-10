@@ -42,7 +42,57 @@ GAS_PARTIAL_PRESSURES = {
 
 #boltzmann constant
 KB = 8.6173303e-5
+DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+DATADIR_enumerate = "/Volumes/cems_bartel/projects/negative-examples/data/rxn_networks"
 
+class PrecursorSet():
+    def __init__(
+                 self, 
+                 els: Iterable (str), 
+                 solids_data: dict,
+                 filter_precursors: bool = True,
+                 precursor_stability_filter: float = 0.05, 
+                 restrict_to_tm_precursors: bool = True, 
+                 with_theoretical_precursors: bool = False,
+                 ):
+        """
+        Initialize the precursor set with the specified elements
+        Args:
+            els (Iterable[str]): Formula Strings of all the elements in the chemical system.
+            solids_data dict: Dictionary of the solids data to use for the precursors, of the form {formula:{data for formula}}
+            -- for filtering, data must include keys "theoretical" (bool), "textmined_precursor" (bool) and "energy_above_hull" (float)
+            restrict_to_tm (bool): Whether to restrict the precursors to only those listed in the text-mined dataset
+            with_theoretical (bool): Whether to include theoretical MP entries in the precursor set
+            filter_data (bool): Whether to filter the data for the specified elements and/or based on tm/theoretical args
+            Note that, implicitly, if restrict_to_tm and with_theoretical are both False and filter_data = True,  the precursor set will include only 
+            ICSD materials from MP. If filter_data = False, the list of precursors will include all materials in the solids data. 
+        """
+        self.els = els
+        self.solids_data = solids_data
+        self.filter_data = filter_precursors
+        self.stability_filter = precursor_stability_filter
+        self.restrict_to_tm = restrict_to_tm_precursors
+        self.with_theoretical = with_theoretical_precursors
+        
+        
+    def relevant_precursor(self, formula, entry):
+        if self.restrict_to_tm and not entry['textmined_precursor']:
+            return False
+        if not self.with_theoretical and entry['theoretical']:
+            return False
+        if not FormulaChecker(formula, self.els).is_relevant:
+            return False
+        return True
+    
+    def precursors(self):
+        if not self.filter_data:
+            return list(self.solids_data.keys())
+        precursors = []
+        for formula, entry in self.solids_data.items():
+            if self.relevant_precursor(formula, entry):
+                precursors.append(formula)
+        return precursors
+    
 
 class EnumerateRxns():
     """
@@ -56,12 +106,12 @@ class EnumerateRxns():
     def __init__(
         self,
         els: Iterable[str],
+        solids_data: dict,
         temperature: float = 300,
-        with_theoretical: bool = True,
-        stability_filter: float = 0.05,
         open = True,
-        all_possible_precursors = None,
-        remake: bool = True
+        gibbs_kwargs: dict = {},
+        prec_kwargs: dict = {},
+        remake: bool = True,
     ):
         """
         Initialize the calculator with the specified elements and temperature
@@ -73,48 +123,39 @@ class EnumerateRxns():
         """
 
         self.els = list(set(els))
+        self.temperature = temperature
         if open:
             file_name = ''.join(els)+str(temperature)+ '_open_rxns.pkl'
         else:
             file_name = ''.join(els)+str(temperature) + '_rxns.pkl'
-        if os.path.exists(os.path.join('../data/', file_name)) and remake == False:
-            file = open('../data/' + file_name, 'rb')
+        if os.path.exists(os.path.join(DATADIR_enumerate, file_name)) and remake == False:
+            file = open(DATADIR_enumerate + file_name, 'rb')
             self.rxns = pickle.load(file)
         else:
+            self.solids_data = solids_data
+            self.temperature = temperature
             self.open = open
-            self._temperature = temperature
-            self.with_theoretical = with_theoretical
-            self.stability_filter = stability_filter
-            if not all_possible_precursors:
-                all_possible_precursors = read_json(os.path.join('../data/', 'tm_precursors.json'))['data']
-            self.all_possible_precursors = all_possible_precursors
+            self.prec_kwargs = prec_kwargs
+            self.gibbs_kwargs = gibbs_kwargs
             #Initialize the entries and reactions to None
             self.entries = None
             self.rxns = None
             self._build_calculator()
-            with open('../data/' + file_name, 'wb') as f:
+            with open(DATADIR_enumerate + file_name, 'wb') as f:
                 pickle.dump(self.rxns, f)
-
+            
         # numpy array should go deeper 
 
 
     def _get_entries(self):
         els = self.els
-        temperature = self._temperature
-        with_theoretical = self.with_theoretical
-        stability_filter = self.stability_filter
-        entry_set = GibbsSet(chemsys_els = els,temperature = temperature, with_theoretical=with_theoretical,stability_threshold=stability_filter).entry_set
-        print('entry set',entry_set.entries)
+        kwargs = self.gibbs_kwargs
+        solids_data = self.solids_data
+        temperature = self.temperature
+        entry_set = GibbsSet(chemsys_els = els,temperature = temperature,  
+                             solids_data = solids_data, **kwargs).entry_set
         return entry_set
 
-    def possible_precursors(self):
-        els = self.els
-        all_possible_precursors = self.all_possible_precursors
-        possible_precursors = []
-        for precursor in all_possible_precursors:
-            if FormulaChecker(precursor, els).is_relevant:
-                possible_precursors.append(precursor)
-        return possible_precursors
 
     def _build_calculator(self):
         """
@@ -122,7 +163,8 @@ class EnumerateRxns():
         """
         self.entries = self._get_entries()
         entries = self.entries
-        precursors = self.possible_precursors()
+        kwargs = self.prec_kwargs
+        precursors = PrecursorSet(els = self.els, solids_data=self.solids_data , **kwargs).precursors()
 
         print('entries obtained')
         #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
@@ -130,64 +172,28 @@ class EnumerateRxns():
 
         print('rxns enumerated')
         if self.open:
-            self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], precursors = precursors, exclusive_precursors=True).enumerate(entries))
+            self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], 
+                                                                  precursors = precursors, 
+                                                                  exclusive_precursors=True).enumerate(entries))
         #Filter out duplicate reactions
         self.rxns = self.rxns.filter_duplicates()
         print('rxn duplicates filtered')
         return
 
+#start with the same solids data 
     
 
+class TempEnvCorrections():
 
-class TargetRxns():
-    """
-    class for calculating competition
-    """
-    def __init__(self, target, reactions, temperature = 300, environment = "air", open = True):
-        self.target = target
-        self.reactions = reactions
+    def __init__(self,  
+                 temperature: float = 300, 
+                 environment: str = "air",
+                 open = True
+                 ):
         self.temperature = temperature
         self.environment = environment
         self.open = open
-
-
-    def target_rxns(
-            self,
-            reactions = None   
-        ) -> list[ComputedReaction]:
-        """
-        Helper method to find all the reactions that make the specified target without any byproducts (besides balancing gases)
-        Args:
-            target (str): String of the target to find the reactions for
-            reactions (ReactionSet): ReactionSet of all the reactions to search through at the reaction temperature
-        Returns:
-            list[ComputedReaction]: List of all the reactions that make the target without any byproducts
-        """
-        if not reactions:
-            reactions = self.reactions
-        else:
-            reactions = reactions
-        target = self.target
         
-        target_rxns = []
-
-        #The products that are allowed in the target reactions - the target and any balancing gases
-        allowed_products = {Composition(target)} | set([Composition(i) for i in GAS_PARTIAL_PRESSURES["air"].keys()])
-
-        #Check each reaction to see if its products are within the allowed products
-        #The precursors should already be the only reactants in the reaction - besides O2 in some cases
-        #These are already filtered by the correct atmosphere - if it is open to air, O2 can be a reactant
-
-        for rxn in reactions:
-            if CompTools(target).clean in [CompTools(i).clean for i in rxn.products]:
-                if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
-                    target_rxns.append(rxn)
-        print('target rxns found')
-        print(target_rxns)
-
-        return ReactionSet.from_rxns(target_rxns)
-    
-
     def environment_correction(
             self,
             formula: str,
@@ -219,9 +225,24 @@ class TargetRxns():
 
         return CompositionEnergyAdjustment(adj_per_atom=adjustment_per_atom, n_atoms=n_atoms, name=name)
 
-
+    @property
+    def mu(self):
+        """
+        Get the chemical potential of O at the specified temperature and environment partial pressure
+        Args:
+            temp (float): Temperature in Kelvin to get the chemical potential at
+            environment (str): Environment to correct the gas entries for ("air" or "inert")
+        Returns:
+            float: Chemical potential of O at the specified temperature
+        """
+        temperature = self.temperature
+        environment = self.environment
+        mu = KB * (temperature) * math.log(GAS_PARTIAL_PRESSURES[environment]["O2"])
+        return mu
+    
     def rxns_at_temp_env(
         self,
+        rxns: ReactionSet
     ) -> ReactionSet:
         """
         Get the reactions at the specified temperature and environment. This requires adding a correction for the partial pressure of gases in the environment.
@@ -232,34 +253,67 @@ class TargetRxns():
         Returns:
             ReactionSet: Reactions at the specified temperature
         """
-        temperature = self.temperature
         environment = self.environment
         open = self.open
         rxns = self.reactions
+        gasses = set(GAS_PARTIAL_PRESSURES[environment].keys())-{"O2"}
         #Chemical potential of O at specified temperature and evironment partial pressure
-        mu = KB * (temperature) * math.log(GAS_PARTIAL_PRESSURES[environment]["O2"])
 
         #For inert environment, remove all reactions that contain O2 as a reactant
         #Determine the allowed gas products to add the correction to
-        gas_comps = [i.composition for i in rxns.entries if i.reduced_formula in set(GAS_PARTIAL_PRESSURES["air"].keys())-{"O2"}]
         #Get the environment correction for each gas
-        gas_dict = {i: self.environment_correction(i.reduced_formula) for i in gas_comps}
+        # gas_dict = {i: corrections.environment_correction(i.reduced_formula) for i in gas_comps}
         
         # #Add the environment correction to the gas products
         for i in rxns.entries:
-            if Composition(i.composition) in gas_comps:
-                i.energy_adjustments.append(gas_dict[Composition(i.composition)])
-                print('correction',i.composition, i.energy_adjustments)
+            formula = i.reduced_formula
+            if formula in gasses:
+                i.energy_adjustments.append(self.environment_correction(formula))
 
         #Finally set O as an open element with the calculated chemical potential from partial pressure
         if not open:
             return rxns
         else:
-            return rxns.set_chempot(open_el="O", chempot=mu)
+            return rxns.set_chempot(open_el="O", chempot=self.mu)
+    
+class AnalyzeReactionSet():
+    def __init__(self,
+                 reactions: ReactionSet,
+                 target: str = None,
+                 temperature: float = 300,
+                 environment: str = "air",):
+        
+        self.reactions = reactions
+        self.temperature = temperature
+        self.environment = environment
+        self.target = target
+
+    def target_rxns(
+            self):
+        """
+        Get the reactions that make the target without any byproducts
+        Args:
+            target (str): Formula of the target compound
+        Returns:
+            list[ComputedReaction]: Reactions that make the target without any byproducts
+        """ 
+        target = self.target
+        environment = self.environment
+        rxns = self.reactions
+        rxns_with_target = []
+        allowed_products = {Composition(target)} | set([Composition(i) 
+                                for i in GAS_PARTIAL_PRESSURES[environment].keys()])
+        for rxn in rxns:
+            if CompTools(target).clean in [CompTools(i).clean for i in rxn.products]:
+                if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
+                    rxns_with_target.append(rxn)
+        print('target rxns found')
+
+        return ReactionSet.from_rxns(rxns_with_target)
+
 
     def metrics_at_temp_env(
         self,
-        rxns = None
     ) -> list[dict[str, ComputedReaction | float]]:
         """
         Calculate the competition metrics for all the reactions at the specified temperature and environment
@@ -272,10 +326,9 @@ class TargetRxns():
         environment = self.environment
 
         #Get the reactions at the correct temperature
-        if not rxns:
-            print('generating')
-            rxns = self.rxns_at_temp_env()
-        target_rxns_at_temp = self.target_rxns(rxns)
+
+        rxns = self.reactions()
+        target_rxns_at_temp = self.target_rxns()
         
 
         #Initialize the metrics data
@@ -283,6 +336,7 @@ class TargetRxns():
 
         #Loop through all the targets to calculate metrics for all the precursors combinations to make each target.
         #Find the reactions that make the target without any byproducts - will calculate metrics for each reaction
+        #correct entries based on atmosphere 
         for rxn in target_rxns_at_temp:
             reactants = rxn.reactants
             if len(reactants) == 1:
@@ -319,6 +373,8 @@ class TargetRxns():
             metrics.append(rxn_data)
 
         return metrics
+
+
 
 def get_metrics(target, temperature, open = True):
     r = EnumerateRxns(els = CompTools(target).els, temperature = temperature).rxns

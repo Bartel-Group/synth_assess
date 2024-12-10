@@ -230,8 +230,8 @@ class GibbsSet:
     def __init__(
         self,
         chemsys_els,
+        solids_data,
         gases_data=get_gases_data(),
-        solids_data=None,
         temperature=300,
         use_carbonate_correction=True,
         extend_with_hydroxides=True,
@@ -269,7 +269,7 @@ class GibbsSet:
             add_these_formulas (list): list of formulas to add (if you want to augment list with some)
 
         """
-
+        self.solids_data = solids_data
         self.gases_data = gases_data
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
@@ -281,18 +281,18 @@ class GibbsSet:
         self.add_these_formulas = add_these_formulas
         self.els = chemsys_els
         # self.chemsys = chemsys
-        if not solids_data:
-            if not with_theoretical:
-                solids_data = read_json(os.path.join(DATADIR, '241119_mp_experimental.json'))['data']
-            else:
-                solids_data = read_json(os.path.join(DATADIR, '241119_mp_gd.json'))['data']
+        # if not solids_data:
+        #     if not with_theoretical:
+        #         solids_data = read_json(os.path.join(DATADIR, '241119_mp_experimental.json'))['data']
+        #     else:
+        #         solids_data = read_json(os.path.join(DATADIR, '241119_mp_gd.json'))['data']
 
-            solids_data = {
-                    CompTools(f['formula']).clean: f
-                    for f in solids_data
-                    if f["energy_above_hull"] < stability_threshold
-                }
-        self.solids_data = solids_data
+        #     solids_data = {
+        #             CompTools(f['formula']).clean: f
+        #             for f in solids_data
+        #             if f["energy_above_hull"] < stability_threshold
+        #         }
+        # self.solids_data = solids_data
 
 
     @property
