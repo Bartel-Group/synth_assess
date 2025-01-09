@@ -8,7 +8,7 @@ from emmet.core.thermo import ThermoType
 DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
 
 
-def get_MP_data(remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
+def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
     """
     Returns a list of dictionar5ies for materials project data with properties
     of interest (the json file is of the form {'data': [entries]} an additional entry key of 'data')
@@ -40,6 +40,7 @@ def get_MP_data(remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
         entry_new['energy_above_hull'] = entry.energy_above_hull
         # entry_new['theoretical'] = entry.theoretical
         entry_new['nsites'] = entry.nsites
+        entry_new['tm_precursor'] = is_textmined_precursor(entry.formula_pretty, tm_data)
         if entry_new['formation_energy_per_atom'] is not None:
             entries.append(entry_new)
     # ids = [entry['material_id'] for entry in entries]
@@ -48,7 +49,9 @@ def get_MP_data(remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
     # print(len(docs2))
     d2 = get_is_theoretical()
     for entry in entries:
-        if entry['material_id'] in d2:
+        if entry['tm_precursor']:
+            entry['theoretical'] = False
+        elif entry['material_id'] in d2:
             entry['theoretical'] = d2[entry['material_id']]
         else:
             entry['theoretical'] = None
@@ -68,6 +71,10 @@ def get_is_theoretical(remake = False):
     return mpt
 
     # add material id as key to regrab from MP
+def is_textmined_precursor(formula, tm_data):
+    if CompTools(formula).clean in tm_data:
+        return True
+    return False
 
 def get_mp_formulas(MP):
     """
@@ -78,7 +85,7 @@ def get_mp_formulas(MP):
     mp_formulas = [entry['formula'] for entry in MP]
     return list(set(mp_formulas))
 
-def gd_state_formula(MP, formula):
+def gd_state_formula(MP, formula, tm_data):
     """
     helper function to get the ground state formula for a given formula.
     Returns the dictionary entry for the ground state of a given formula
@@ -91,7 +98,7 @@ def gd_state_formula(MP, formula):
             gd_state_entry = entry
     return gd_state_entry
 
-def get_gd_state_MP(data,with_theoretical, remake = False):
+def get_gd_state_MP(data,with_theoretical, tm_data,remake = False):
     """
     Returns:
         [{thermo info from MP} for ground state polymorphs in MP]
@@ -105,7 +112,7 @@ def get_gd_state_MP(data,with_theoretical, remake = False):
     mp_formulas = get_mp_formulas(data)
     gd_state_MP = []
     for formula in mp_formulas:
-        formula_gd = gd_state_formula(data, formula)
+        formula_gd = gd_state_formula(data, formula, tm_data)
         if formula_gd:
             gd_state_MP.append(formula_gd)
     gd_MP = {'data': gd_state_MP}
@@ -166,15 +173,16 @@ def get_gases_data(remake=False):
 
 
 def main():
+    tm_precursors = read_json(DATA_DIR + '/textmined_precursors.json')['precursors']
     MPt = get_is_theoretical()
     print('mp theoretical done')
-    MP =  get_MP_data(remake=True)['data']
+    MP =  get_MP_data(tm_precursors, remake=True)['data']
     print('mp done')
     MP_exp = get_mp_experimental(MP,remake=True)['data']
     print('mp exp done')
-    gd_MP = get_gd_state_MP(MP,with_theoretical = True,remake=False)['data']
+    gd_MP = get_gd_state_MP(MP,with_theoretical = True, tm_data= tm_precursors, remake=True)['data']
     print('gd_mp done')
-    gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, remake=False)['data']
+    gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, tm_data = tm_precursors, remake=True)['data']
     print('gd_mp_exp done')
     # use only experimental data to identify the ground state so that we idenitfy the
     # experimental ground state and don't miss experimentally-observed formulas

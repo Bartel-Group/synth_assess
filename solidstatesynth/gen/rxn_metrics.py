@@ -7,6 +7,7 @@ from rxn_network.reactions.reaction_set import ReactionSet
 from rxn_network.reactions.computed import ComputedReaction
 from rxn_network.enumerators.basic import BasicEnumerator
 from rxn_network.enumerators.basic import BasicOpenEnumerator
+from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.reactions.hull import InterfaceReactionHull
 from collections.abc import Iterable
 
@@ -14,7 +15,7 @@ from pydmclab.core.comp import CompTools
 
 from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
 import math
-from solidstatesynth.gen.entries import GibbsSet, FormulaChecker
+from solidstatesynth.gen.entries import Gibbs, GibbsSet, FormulaChecker
 import pickle
 
 #Gas partial pressures in atm for different environments
@@ -23,19 +24,19 @@ PA_TO_ATM_CONV = 101300
 GAS_PARTIAL_PRESSURES = {
     "air": {
         "O2": 21200 / PA_TO_ATM_CONV,
-        "N2": 79033 / PA_TO_ATM_CONV,
-        "CO2": 40.50 / PA_TO_ATM_CONV,#FIXED
-        "H2O": 2300 / PA_TO_ATM_CONV,
-        "H3N": 16 / PA_TO_ATM_CONV,
-        "NO": 0.1 / PA_TO_ATM_CONV
+        "N1": 79033 / PA_TO_ATM_CONV,
+        "C1O2": 40.50 / PA_TO_ATM_CONV,#FIXED
+        "H2O1": 2300 / PA_TO_ATM_CONV,
+        "H3N1": 16 / PA_TO_ATM_CONV,
+        "N1O1": 0.1 / PA_TO_ATM_CONV
     },
     "inert": {
         "O2": 0.1 / PA_TO_ATM_CONV,
-        "N2": 0.1 / PA_TO_ATM_CONV,
-        "CO2": 0.1 / PA_TO_ATM_CONV,
-        "H2O": 0.1 / PA_TO_ATM_CONV,
-        "H3N": 0.1 / PA_TO_ATM_CONV,
-        "NO": 0.1 / PA_TO_ATM_CONV
+        "N1": 0.1 / PA_TO_ATM_CONV,
+        "C1O2": 0.1 / PA_TO_ATM_CONV,
+        "H2O1": 0.1 / PA_TO_ATM_CONV,
+        "H3N1": 0.1 / PA_TO_ATM_CONV,
+        "N1O1": 0.1 / PA_TO_ATM_CONV
     }
 }
 
@@ -48,7 +49,7 @@ DATADIR_enumerate = "/Volumes/cems_bartel/projects/negative-examples/data/rxn_ne
 class PrecursorSet():
     def __init__(
                  self, 
-                 els: Iterable (str), 
+                 els: Iterable[str], 
                  solids_data: dict,
                  filter_precursors: bool = True,
                  precursor_stability_filter: float = 0.05, 
@@ -76,7 +77,11 @@ class PrecursorSet():
         
         
     def relevant_precursor(self, formula, entry):
-        if self.restrict_to_tm and not entry['textmined_precursor']:
+        """
+        each entry corresponds to an entry in solids data
+        
+        """
+        if self.restrict_to_tm and not entry['tm_precursor']:
             return False
         if not self.with_theoretical and entry['theoretical']:
             return False
@@ -84,8 +89,10 @@ class PrecursorSet():
             return False
         return True
     
+    @property
     def precursors(self):
         if not self.filter_data:
+            # to use the whole data set as possible precursors
             return list(self.solids_data.keys())
         precursors = []
         for formula, entry in self.solids_data.items():
@@ -164,7 +171,7 @@ class EnumerateRxns():
         self.entries = self._get_entries()
         entries = self.entries
         kwargs = self.prec_kwargs
-        precursors = PrecursorSet(els = self.els, solids_data=self.solids_data , **kwargs).precursors()
+        precursors = PrecursorSet(els = self.els, solids_data=self.solids_data , **kwargs).precursors
 
         print('entries obtained')
         #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
@@ -181,7 +188,7 @@ class EnumerateRxns():
         return
 
 #start with the same solids data 
-    
+
 
 class TempEnvCorrections():
 
@@ -218,7 +225,11 @@ class TempEnvCorrections():
         #Calculate the environment correction for the gas on a per atom basis
         if not open:
             adjustment_per_atom = 0
+        elif formula not in GAS_PARTIAL_PRESSURES[environment]:
+            adjustment_per_atom = 0
         else:
+            if CompTools(formula).clean == ['O1']:
+                formula = 'O2'
             adjustment_per_atom = KB * math.log(GAS_PARTIAL_PRESSURES[environment][formula])*float(temperature)/n_atoms
         #Set a useful name for the correction - This is important because the correction does not automatically change with temperature
         name = f"{formula} {environment} correction @ {temperature}K"
@@ -237,10 +248,12 @@ class TempEnvCorrections():
         """
         temperature = self.temperature
         environment = self.environment
+        if environment not in GAS_PARTIAL_PRESSURES:
+            return None
         mu = KB * (temperature) * math.log(GAS_PARTIAL_PRESSURES[environment]["O2"])
         return mu
     
-    def rxns_at_temp_env(
+    def rxns_with_temp_env_correction(
         self,
         rxns: ReactionSet
     ) -> ReactionSet:
@@ -255,7 +268,6 @@ class TempEnvCorrections():
         """
         environment = self.environment
         open = self.open
-        rxns = self.reactions
         gasses = set(GAS_PARTIAL_PRESSURES[environment].keys())-{"O2"}
         #Chemical potential of O at specified temperature and evironment partial pressure
 
@@ -275,6 +287,48 @@ class TempEnvCorrections():
             return rxns
         else:
             return rxns.set_chempot(open_el="O", chempot=self.mu)
+        # what happens if i set mu to 'None' instead of zero? 1111\
+
+class RxnsAtNewTempEnv():
+    def __init__(self,
+                 reaction_set: ReactionSet,
+                 els: Iterable[str],
+                 solids_data: dict ,
+                 new_temperature: float = 300,
+                 environment: str = "air",
+                 open = True, 
+                ):
+        self.temperature = new_temperature
+        self.environment = environment
+        self.corr = TempEnvCorrections(temperature = new_temperature,
+                                       environment=environment, 
+                                       open = open)
+        self.entries = reaction_set.entries
+        self.reactions = reaction_set.get_rxns()
+        self.solids_data = solids_data
+        self.els = els
+    
+    def reactions_at_temp(self):
+        """
+        Get the reactions at the specified temperature
+        Args:
+            temp (float): Temperature in Kelvin to get the reactions at
+        Returns:
+            ReactionSet: Reactions at the specified temperature
+        """
+        solids_data = self.solids_data
+        # entries regenerated at new temperatures
+        entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, temperature=self.temperature).entry_set
+        reactions = self.reactions
+        print(list(reactions))
+        rxns_at_temp = ReactionSet.from_rxns(rxns = reactions, entries = entries)
+        return rxns_at_temp
+    
+    def corrected_reactions_at_temp(self):
+        rxns = self.reactions_at_temp()
+        corr = self.corr
+        return corr.rxns_with_temp_env_correction(rxns)
+
     
 class AnalyzeReactionSet():
     def __init__(self,
@@ -327,7 +381,7 @@ class AnalyzeReactionSet():
 
         #Get the reactions at the correct temperature
 
-        rxns = self.reactions()
+        rxns = self.reactions
         target_rxns_at_temp = self.target_rxns()
         
 

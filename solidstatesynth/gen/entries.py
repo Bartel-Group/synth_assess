@@ -47,7 +47,6 @@ class Gibbs:
         self.formula = CompTools(formula).clean
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
-        self.formula_data = solids_data[formula]
 
         # retrieve gases data for this formula if its a gas
         gases_data = {
@@ -122,8 +121,9 @@ class Gibbs:
         """
         Returns:
             GibbsComputedEntry for solid at a temperature of interest
+            Note that energy is in eV, not eV/atom
         """
-        entry = self.formula_data
+        entry = self.compound_data
         vol_per_at = entry["volume"] /entry["nsites"]
         Ef_per_at = (
             entry["formation_energy_per_atom"] + self.carbonate_correction
@@ -280,6 +280,10 @@ class GibbsSet:
         self.exclude_these_formulas = exclude_these_formulas
         self.add_these_formulas = add_these_formulas
         self.els = chemsys_els
+        # if self.extend_with_carbonates:
+        #     self.add_these_formulas.append('C1O2')
+        # if self.extend_with_hydroxides:
+        #     self.add_these_formulas.append('H2O1')
         # self.chemsys = chemsys
         # if not solids_data:
         #     if not with_theoretical:
@@ -322,6 +326,10 @@ class GibbsSet:
                 extend_with_hydroxides=extend_with_hydroxides,
             ).is_relevant
         ]
+        if self.extend_with_carbonates:
+            formulas.append('C1O2')
+        if self.extend_with_hydroxides:
+            formulas.append('H2O1')
 
         if self.exclude_these_formulas:
             formulas = [f for f in formulas if f not in self.exclude_these_formulas]
@@ -340,6 +348,7 @@ class GibbsSet:
         gases_data = self.gases_data
         temperature = self.temperature
         use_carbonate_correction = self.use_carbonate_correction
+
 
         return [
             Gibbs(
@@ -361,14 +370,15 @@ class GibbsSet:
         return GibbsEntrySet(self.entries)
 
 
-def main():
-    # g = Gibbs("Fe2O3", temperature=1317)
-    # e = g.entry
-    gs = GibbsSet(chemsys_els=['Fe','O'], temperature=1317)
-    es = gs.entries
-    gse = gs.entry_set
-    return gs, es, gse
+# def main():
+#     # g = Gibbs("Fe2O3", temperature=1317)
+#     # e = g.entry
+#     # gs = GibbsSet(chemsys_els=['Fe','O'], temperature=1317)
+#     # es = gs.entries
+#     # gse = gs.entry_set
+#     # return gs, es, gse
 
 
-if __name__ == "__main__":
-    gs, es, gse = main()
+# if __name__ == "__main__":
+#     return
+#     # gs, es, gse = main()
