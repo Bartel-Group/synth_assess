@@ -2,18 +2,16 @@ import os
 import math
 from collections.abc import Iterable
 from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
+from pymatgen.core.composition import Composition
 from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
 from pydmclab.core.comp import CompTools
-
-from rxn_network.core import Composition
 from rxn_network.reactions.reaction_set import ReactionSet
 from rxn_network.reactions.computed import ComputedReaction
 from rxn_network.enumerators.basic import BasicEnumerator
 from rxn_network.enumerators.basic import BasicOpenEnumerator
-from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.reactions.hull import InterfaceReactionHull
-from solidstatesynth.gen.entries import Gibbs, GibbsSet, FormulaChecker
+from solidstatesynth.gen.entries import GibbsSet, FormulaChecker
 
 
 #Gas partial pressures in atm for different environments

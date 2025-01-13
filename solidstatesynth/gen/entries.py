@@ -1,21 +1,10 @@
-from pydmclab.utils.handy import read_json
-import os
-from rxn_network.entries.gibbs import GibbsComputedEntry
-from rxn_network.entries.entry_set import GibbsEntrySet
 from pymatgen.core.composition import Composition
 from pydmclab.core.comp import CompTools
-from solidstatesynth.extract.mp import get_gases_data
+from rxn_network.entries.gibbs import GibbsComputedEntry
+from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
-# from itertools import combinations
-# import numpy as np
-# from emmet.core.thermo import ThermoDoc, ThermoType
-# from pydmclab.core.structure import StrucTools
-# from pydmclab.data.thermochem import gas_thermo_data
-# from pymatgen.entries.computed_entries import ComputedEntry, ConstantEnergyAdjustment
-# from pymatgen.ext.matproj import MPRester
-# from pymatgen.entries import computed_entries
-# from rxn_network.entries.nist import NISTReferenceEntry
-# import math
+from solidstatesynth.extract.mp import get_gases_data
+
 
 
 DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
