@@ -85,7 +85,7 @@ class Gibbs:
     def carbonate_correction(self):
         """
         Returns:
-            carbonate correction for the compound 0.83 * n_{CO3} groups (eV/atom)
+            carbonate correction for the compound 0.83 * n_{CO3} groups per total number of atoms (eV/atom)
         """
         if not self.use_carbonate_correction or not self.is_carbonate:
             return 0
@@ -176,6 +176,9 @@ class FormulaChecker:
 
     @property
     def els_to_check(self):
+        """
+        We will check the formula in question for its relevance to the chemical system of interest
+        """
         return CompTools(self.formula).els
 
     @property
@@ -207,6 +210,7 @@ class FormulaChecker:
         """
         Returns:
             True if formula of interest is in the chemical system or subsystem
+            This allows for carbonates and hydroxides if the system has oxygen (and they are deemed allowed)
         """
         if self.same_chemsys:
             return True
@@ -280,23 +284,6 @@ class GibbsSet:
         self.exclude_these_formulas = exclude_these_formulas
         self.add_these_formulas = add_these_formulas
         self.els = chemsys_els
-        # if self.extend_with_carbonates:
-        #     self.add_these_formulas.append('C1O2')
-        # if self.extend_with_hydroxides:
-        #     self.add_these_formulas.append('H2O1')
-        # self.chemsys = chemsys
-        # if not solids_data:
-        #     if not with_theoretical:
-        #         solids_data = read_json(os.path.join(DATADIR, '241119_mp_experimental.json'))['data']
-        #     else:
-        #         solids_data = read_json(os.path.join(DATADIR, '241119_mp_gd.json'))['data']
-
-        #     solids_data = {
-        #             CompTools(f['formula']).clean: f
-        #             for f in solids_data
-        #             if f["energy_above_hull"] < stability_threshold
-        #         }
-        # self.solids_data = solids_data
 
 
     @property

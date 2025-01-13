@@ -131,25 +131,25 @@ class EnumerateRxns():
 
         self.els = list(set(els))
         self.temperature = temperature
-        if open:
-            file_name = ''.join(els)+str(temperature)+ '_open_rxns.pkl'
-        else:
-            file_name = ''.join(els)+str(temperature) + '_rxns.pkl'
-        if os.path.exists(os.path.join(DATADIR_enumerate, file_name)) and remake == False:
-            file = open(DATADIR_enumerate + file_name, 'rb')
-            self.rxns = pickle.load(file)
-        else:
-            self.solids_data = solids_data
-            self.temperature = temperature
-            self.open = open
-            self.prec_kwargs = prec_kwargs
-            self.gibbs_kwargs = gibbs_kwargs
-            #Initialize the entries and reactions to None
-            self.entries = None
-            self.rxns = None
-            self._build_calculator()
-            with open(DATADIR_enumerate + file_name, 'wb') as f:
-                pickle.dump(self.rxns, f)
+        # if open:
+        #     file_name = ''.join(els)+str(temperature)+ '_open_rxns.pkl'
+        # else:
+        #     file_name = ''.join(els)+str(temperature) + '_rxns.pkl'
+        # if os.path.exists(os.path.join(DATADIR_enumerate, file_name)) and remake == False:
+        #     file = open(DATADIR_enumerate + file_name, 'rb')
+        #     self.rxns = pickle.load(file)
+        # else:
+        self.solids_data = solids_data
+        self.temperature = temperature
+        self.open = open
+        self.prec_kwargs = prec_kwargs
+        self.gibbs_kwargs = gibbs_kwargs
+        #Initialize the entries and reactions to None
+        self.entries = None
+        self.rxns = None
+        self._build_calculator()
+            # with open(DATADIR_enumerate + file_name, 'wb') as f:
+            #     pickle.dump(self.rxns, f)
             
         # numpy array should go deeper 
 
@@ -191,7 +191,11 @@ class EnumerateRxns():
 
 
 class TempEnvCorrections():
-
+    """
+    Applying environment/temperature corrections based on variable gas partial pressure and variable chemical potential
+    with respect to O. Note that these corrections are distinct from the SISSO temperature correction which is applied
+    using the Gibbs entry object.
+    """
     def __init__(self,  
                  temperature: float = 300, 
                  environment: str = "air",

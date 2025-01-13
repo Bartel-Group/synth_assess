@@ -1,7 +1,6 @@
 import os
 from pydmclab.utils.handy import read_json, write_json
 from pydmclab.core.comp import CompTools
-# from solidstatesynth.core.utils import in_icsd
 from pydmclab.core.query import MPRester
 from pydmclab.data.thermochem import gas_thermo_data
 from emmet.core.thermo import ThermoType
@@ -171,23 +170,32 @@ def get_gases_data(remake=False):
     # reformatting the gasses dictionary to match the format of the materials project data
     return g_new
 
+def restructured_solids_data(solids_data):
+    fjson = os.path.join(DATA_DIR, '241119_mp_gd.json')
+    data = read_json(fjson)['data']
+    solids_data = {entry['formula']: entry for entry in data}
+    d = os.path.join(DATA_DIR, 'solids_data.json')
+    return write_json(solids_data, d)
+     
 
 def main():
     tm_precursors = read_json(DATA_DIR + '/textmined_precursors.json')['precursors']
     MPt = get_is_theoretical()
     print('mp theoretical done')
-    MP =  get_MP_data(tm_precursors, remake=True)['data']
+    MP =  get_MP_data(tm_precursors, remake=False)['data']
     print('mp done')
-    MP_exp = get_mp_experimental(MP,remake=True)['data']
+    MP_exp = get_mp_experimental(MP,remake=False)['data']
     print('mp exp done')
-    gd_MP = get_gd_state_MP(MP,with_theoretical = True, tm_data= tm_precursors, remake=True)['data']
+    gd_MP = get_gd_state_MP(MP,with_theoretical = True, tm_data= tm_precursors, remake=False)['data']
     print('gd_mp done')
-    gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, tm_data = tm_precursors, remake=True)['data']
+    gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, tm_data = tm_precursors, remake=False)['data']
     print('gd_mp_exp done')
+    solids = restructured_solids_data(gd_MP)
+    
     # use only experimental data to identify the ground state so that we idenitfy the
     # experimental ground state and don't miss experimentally-observed formulas
-    return MPt, MP, MP_exp, gd_MP, gd_MP_exp
+    return MPt, MP, MP_exp, gd_MP, gd_MP_exp, solids
 
 
 if __name__ == '__main__':
-    MPt, MP, MP_exp,gd_MP, gd_MP_exp = main()
+    MPt, MP, MP_exp,gd_MP, gd_MP_exp, solids = main()
