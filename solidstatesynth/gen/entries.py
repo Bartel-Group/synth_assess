@@ -18,6 +18,7 @@ class Gibbs:
         gases_data=get_gases_data(),
         temperature=300,
         use_carbonate_correction=True,
+        entry_id = None
     ):
         """
         Args:
@@ -36,6 +37,7 @@ class Gibbs:
         self.formula = CompTools(formula).clean
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
+        self.entry_id = entry_id
 
         # retrieve gases data for this formula if its a gas
         gases_data = {
@@ -122,6 +124,7 @@ class Gibbs:
             formation_energy_per_atom=Ef_per_at,
             composition=Composition(self.formula),
             temperature=self.temperature,
+            entry_id= self.entry_id
         )
 
     @property
@@ -231,6 +234,7 @@ class GibbsSet:
         extend_with_carbonates=True,
         with_theoretical=True,
         stability_threshold=0.5,
+        entry_id_dict = {},
         include_only_these_formulas=[],
         exclude_these_formulas=[],
         add_these_formulas=[],
@@ -273,6 +277,7 @@ class GibbsSet:
         self.exclude_these_formulas = exclude_these_formulas
         self.add_these_formulas = add_these_formulas
         self.els = chemsys_els
+        self.entry_id_dict = entry_id_dict
 
 
     @property
@@ -320,6 +325,11 @@ class GibbsSet:
             List of GibbsEntry objects for all formulas of interest
         """
         formulas = self.formulas
+        id_dict = self.entry_id_dict
+        for formula in formulas:
+            f = CompTools(formula).clean
+            if f not in id_dict:
+                id_dict[f] = None
         solids_data = self.solids_data
         gases_data = self.gases_data
         temperature = self.temperature
@@ -333,6 +343,7 @@ class GibbsSet:
                 gases_data=gases_data,
                 temperature=temperature,
                 use_carbonate_correction=use_carbonate_correction,
+                entry_id= id_dict[CompTools(f).clean]
             ).entry
             for f in formulas
         ]

@@ -1,14 +1,13 @@
 import os
 import math
+import numpy as np
 from collections.abc import Iterable
 from pymatgen.entries.computed_entries import CompositionEnergyAdjustment
 from pymatgen.core.composition import Composition
 from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
-from pydmclab.core.comp import CompTools
 from rxn_network.reactions.computed import ComputedReaction
-from rxn_network.enumerators.basic import BasicEnumerator
-from rxn_network.enumerators.basic import BasicOpenEnumerator
+from rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
 from rxn_network.reactions.hull import InterfaceReactionHull
 from rxn_network.reactions.reaction_set import ReactionSet
 from solidstatesynth.gen.entries import GibbsSet, FormulaChecker
@@ -120,9 +119,7 @@ class EnumerateRxns():
         Initialize the calculator with the specified elements and temperature
         Args:
             els (Iterable[str]): Formula Strings of all the elements in the chemical system.
-            precursors (Iterable[str]): Optional way to specify the precursors to use in the reaction enumeration. Otherwise,
-            the possible precursors will be identified from the elements and known text-mined precursors. Specified precursors
-            will still be filtered by the elements in the chemical system.
+            gibbs kwargs and prec kwargs are a dictionary of relevant arguments from GibbsSet and PrecursorSet respectively
         """
 
         self.els = list(set(els))
@@ -289,6 +286,71 @@ class TempEnvCorrections():
             return rxns.set_chempot(open_el="O", chempot=self.mu)
         # what happens if i set mu to 'None' instead of zero? 1111\
 
+class CustomClass(ReactionSet):
+    @classmethod
+    def from_rxns(
+        cls,
+        rxns: [ComputedReaction],
+        entries: [GibbsSet],
+        open_elem: str | None = None,
+        chempot: float = 0.0,
+        filter_duplicates: bool = False,
+    ) -> ReactionSet:
+        
+        entries = sorted(set(entries), key=lambda r: r.composition)
+
+        # Always use entry_id, ignoring unique_id
+        all_entry_indices = {entry.entry_id: idx for idx, entry in enumerate(entries)}
+        indices, coeffs, data = {}, {}, {}  # type: ignore
+
+        for rxn in rxns:
+            size = len(rxn.entries)
+
+            rxn_indices = []
+            for e in rxn.entries:
+                rxn_indices.append(all_entry_indices[e.entry_id])
+        
+            if size not in indices:
+                indices[size] = []
+                coeffs[size] = []
+                data[size] = []
+
+            indices[size].append(rxn_indices)
+            coeffs[size].append(rxn.coefficients)
+            data[size].append(rxn.data)
+
+        for size in indices:
+            indices[size] = np.array(indices[size])
+            coeffs[size] = np.array(coeffs[size])
+            data[size] = np.array(data[size])
+
+        all_open_elems: set[Element] = set()
+        all_chempots: set[float] = set()
+
+        if all(r.__class__.__name__ == "OpenComputedReaction" for r in rxns) and not open_elem:
+            for r in rxns:
+                all_open_elems.update(r.chempots.keys())
+                all_chempots.update(r.chempots.values())
+
+            if len(all_chempots) == 1 and len(all_open_elems) == 1:
+                chempot = all_chempots.pop()
+                open_elem = all_open_elems.pop()
+
+        rxn_set = cls(
+            entries=entries,
+            indices=indices,
+            coeffs=coeffs,
+            open_elem=open_elem,
+            chempot=chempot,
+            all_data=data,
+        )
+
+        if filter_duplicates:
+            rxn_set = rxn_set.filter_duplicates()
+
+        return rxn_set
+        # Optionally include logging or checks for debugging
+
 class RxnsAtNewTempEnv():
     def __init__(self,
                  reaction_set: ReactionSet,
@@ -304,10 +366,28 @@ class RxnsAtNewTempEnv():
                                        environment=environment, 
                                        open = open)
         self.entries = reaction_set.entries
-        self.reactions = reaction_set.get_rxns()
+        self.reactions = reaction_set
         self.solids_data = solids_data
         self.els = els
+        self.open = open
+
+    def reaction_entry_ids(self):
+        reaction_entries = self.reactions.entries 
+        entry_id_dict = {CompTools(entry.composition.reduced_formula).clean: 
+                         entry.entry_id for entry in reaction_entries}
+        # for key in entry_id_dict:
+        #     current_entry_id = entry_id_dict[key]
+        #     if 'Experimental' in current_entry_id:
+        #         id_no_temp = current_entry_id.split('_')[0]
+        #         id_new = id_no_temp + f"_{self.temperature}"
+        #         # id_new = id_no_temp + "_300"
+
+        #         entry_id_dict[key] = id_new
+        #         # print('id_new',id_new)
+        # print(entry_id_dict)
+        return entry_id_dict
     
+
     def reactions_at_temp(self):
         """
         Get the reactions at the specified temperature
@@ -317,11 +397,32 @@ class RxnsAtNewTempEnv():
             ReactionSet: Reactions at the specified temperature
         """
         solids_data = self.solids_data
+        entry_id_dict = self.reaction_entry_ids()
+        # for key in entry_id_dict:
+        #     if '_300' not in entry_id_dict[key]:
+        #         entry_id_dict[key] = entry_id_dict[key] + '_300'
+        print(entry_id_dict)
         # entries regenerated at new temperatures
-        entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, temperature=self.temperature).entry_set
-        reactions = self.reactions
-        print(list(reactions))
-        rxns_at_temp = ReactionSet.from_rxns(rxns = reactions, entries = entries)
+        entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, temperature=self.temperature, entry_id_dict= entry_id_dict).entries
+        for entry in entries:
+            entry_id = entry.entry_id
+            if 'Experimental' in entry_id:
+                entry.entry_id = entry_id.split('_')[0]+'_300'
+        # print(entries)
+        print([entry.entry_id for entry in entries])
+        print([entry.entry_id for entry in self.reactions.entries])
+        # print(self.reactions.entries)
+        reactions = list(self.reactions)
+        if self.open:
+            open_elem = 'O'
+            chempot = self.corr.mu
+        else:
+            open_elem = None
+            chempot = 0.0
+
+        # print(list(reactions))
+        rxns_at_temp = CustomClass.from_rxns(rxns = reactions, entries = entries, 
+                                             open_elem= open_elem, chempot= chempot)
         return rxns_at_temp
     
     def corrected_reactions_at_temp(self):
@@ -341,7 +442,7 @@ class AnalyzeReactionSet():
         self.temperature = temperature
         self.environment = environment
         self.target = target
-
+    
     def target_rxns(
             self):
         """
