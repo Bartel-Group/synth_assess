@@ -287,6 +287,11 @@ class TempEnvCorrections():
         # what happens if i set mu to 'None' instead of zero? 1111\
 
 class CustomClass(ReactionSet):
+    """
+    A helper subclass to modify McDermott's ReactionSet for our purposes:
+    in this class, we redefine the "from_rxns" function in order to constrain entry
+    IDs to facilitate matching entries at new temperatures to pre-generated reactions
+    """
     @classmethod
     def from_rxns(
         cls,
@@ -299,7 +304,8 @@ class CustomClass(ReactionSet):
         
         entries = sorted(set(entries), key=lambda r: r.composition)
 
-        # Always use entry_id, ignoring unique_id
+        # Always use entry_id, ignoring unique_id (the main distinction between this code
+        # and the original code)
         all_entry_indices = {entry.entry_id: idx for idx, entry in enumerate(entries)}
         indices, coeffs, data = {}, {}, {}  # type: ignore
 
@@ -348,8 +354,8 @@ class CustomClass(ReactionSet):
         if filter_duplicates:
             rxn_set = rxn_set.filter_duplicates()
 
+        # this reaction set allows for hard-coded "entry_ids"
         return rxn_set
-        # Optionally include logging or checks for debugging
 
 class RxnsAtNewTempEnv():
     def __init__(self,
@@ -359,6 +365,7 @@ class RxnsAtNewTempEnv():
                  new_temperature: float = 300,
                  environment: str = "air",
                  open = True, 
+                 original_temperature = 300
                 ):
         self.temperature = new_temperature
         self.environment = environment
@@ -370,21 +377,25 @@ class RxnsAtNewTempEnv():
         self.solids_data = solids_data
         self.els = els
         self.open = open
+        # The default original temperature is 300 K: generally entries will first
+        # be generated at 300 and then modified. However, the modification is feasible
+        # at other temperatures as well and the function will be modified accordingly
+        # with the designated original temperature
+        self.original_temperature = original_temperature
 
     def reaction_entry_ids(self):
+        """
+        Returns a dictionary of entry ids associated with each formula and its entry:
+        this function is used to match previously generated reactions to Gibbs entries
+        constructed at a new temperature. The new-temperature entries will have an enforced
+        entry id designated by the entry ids associated with the reaction set entries
+        {formula (cleaned): entry_id from generated reaction entry (str)
+        for formula in reactions (each formula corresponding to a distinct entry)}
+
+        """
         reaction_entries = self.reactions.entries 
         entry_id_dict = {CompTools(entry.composition.reduced_formula).clean: 
                          entry.entry_id for entry in reaction_entries}
-        # for key in entry_id_dict:
-        #     current_entry_id = entry_id_dict[key]
-        #     if 'Experimental' in current_entry_id:
-        #         id_no_temp = current_entry_id.split('_')[0]
-        #         id_new = id_no_temp + f"_{self.temperature}"
-        #         # id_new = id_no_temp + "_300"
-
-        #         entry_id_dict[key] = id_new
-        #         # print('id_new',id_new)
-        # print(entry_id_dict)
         return entry_id_dict
     
 
@@ -398,16 +409,15 @@ class RxnsAtNewTempEnv():
         """
         solids_data = self.solids_data
         entry_id_dict = self.reaction_entry_ids()
-        # for key in entry_id_dict:
-        #     if '_300' not in entry_id_dict[key]:
-        #         entry_id_dict[key] = entry_id_dict[key] + '_300'
-        print(entry_id_dict)
-        # entries regenerated at new temperatures
         entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, temperature=self.temperature, entry_id_dict= entry_id_dict).entries
         for entry in entries:
             entry_id = entry.entry_id
             if 'Experimental' in entry_id:
-                entry.entry_id = entry_id.split('_')[0]+'_300'
+                # ExperimentalReferenceEntry type entries do not allow for a 
+                # specified entry id and explicitly include temperature. Here,
+                # we modify the temperature so that the entry id matches that of
+                # the original entries, generated at 300 K. 
+                entry.entry_id = entry_id.split('_')[0]+'_' + str(self.original_temperature)
         # print(entries)
         print([entry.entry_id for entry in entries])
         print([entry.entry_id for entry in self.reactions.entries])

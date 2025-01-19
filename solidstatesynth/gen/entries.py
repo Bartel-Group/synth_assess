@@ -30,7 +30,8 @@ class Gibbs:
                 experimental data
             temperature (int): temperature of interest
             use_carbonate_correction (bool) : whether to use carbonate correction for carbonates
-
+            entry_id (str): the entry id can be specified for the purpose of matching entries (as in the case of
+            the RxnsAtNewTempEnv class -- if an entry_id is not specified, one will be automatically generated)
         """
         # clean the formula coming in
         # self.entry = entry
@@ -261,6 +262,8 @@ class GibbsSet:
             extend_with_hydroxides (bool): whether to include hydroxides as additional compounds in *chemsys*
             extend_with_carbonates (bool): whether to include carbonates as additional compounds in *chemsys*
             stability_threshold (float): maximum energy above hull for a compound to be considered as "relevant"
+            entry_id_dict (dict): (of the form {formula (clean): entry_id (str)}) a dictionary of specified entry ids if the user would 
+            like specific entries to take on specific ids. Note that entry ids cannot be specified for ExperimentalReferenceEntry
             include_only_these_formulas (list): list of formulas to include (if you want to specify them)
             exclude_these_formulas (list): list of formulas to exclude (if you don't want them included)
             add_these_formulas (list): list of formulas to add (if you want to augment list with some)

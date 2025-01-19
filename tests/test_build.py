@@ -86,6 +86,67 @@ GAS_PARTIAL_PRESSURES = {
     }
 }
 
+# helper function
+def get_reaction_dict_from_string(reaction_string):
+    """
+    Args: reaction string
+    Returns: dictionary with keys 'reactants' and 'products' where
+    the values are lists of the reactants and products in the reaction
+    *** IF CLEANABLE -- otherwise returns None ***
+    Uses: this is the most usable reaction format from which to calculate
+    dG_rxn using the pydmclab ReactionEnergy class-- get_dGrxn_at_T takes
+    a reaction dictionary as an argument
+    """
+    reactant_list = []
+    reactant_coeffs = []
+    product_list = []
+    product_coeffs = []
+    if '->' in reaction_string:
+        reactants, products = reaction_string.split(" -> ")
+        # print(reactants)
+    elif '==' in reaction_string:
+        reactants, products = reaction_string.split(" == ")
+    if "+" in reactants:
+        reactants = reactants.split(" + ")
+    else:
+        reactants = [reactants]
+    # print('reactants', reactants)
+    for reactant in reactants:
+        if " " in reactant:
+            if len(reactant.split(" ")) != 1:
+                coefficient, reactant = reactant.split(" ")
+                if float(coefficient) > 0:
+                    try:
+                        CompTools(reactant).clean
+                        reactant_list.append(reactant)
+                        reactant_coeffs.append(coefficient)
+                    except:
+                        return None
+        else:
+            reactant_list.append(reactant)
+            reactant_coeffs.append(1)
+    if "+" in products:
+        products = products.split(" + ")
+    else:
+        products = [products]
+    for product in products:
+        if " " in product:
+            if len(product.split(" ")) != 1:
+                coefficient, product = product.split(" ")
+                if float(coefficient) > 0:
+                    try:
+                        CompTools(product).clean
+                        product_list.append(product)
+                        product_coeffs.append(coefficient)
+                    except:
+                        return None
+        else:
+            product_list.append(product)
+            product_coeffs.append(1)
+    # print(reactant_list,product_list)
+    return {"reactants": reactant_list, "products": product_list, 
+            "reactant_coeffs": reactant_coeffs, "product_coeffs": product_coeffs}
+
 class UnitTestGibbs(unittest.TestCase):
 
     def test_is_carbonate(self):
@@ -302,6 +363,39 @@ class UnitTestAnalyzeReactionSet(unittest.TestCase):
                     energies.append(sec.energy_per_atom)
             c2 = (sum(energies)/len(energies))*(-1)
             self.assertAlmostEqual(c2, r['c2'], places = 3)
+
+class UnitTestRxnsAtNewTempEnv(unittest.TestCase):
+    def test_corrected_reactions_at_temp(self):
+        """
+        Demonstrate the RxnsAtNewTempEnv to modify enumerated reactions from one temperature to a new temperatures 
+        yields equivalent reactions to those generated using EnumerateRxns for a given temperature. 
+        """
+        rxns_at_300 = EnumerateRxns(['Cd','S'],solids_data, temperature=300).rxns
+        rxns_changed_temp = RxnsAtNewTempEnv(rxns_at_300, ['Cd', 'S'], new_temperature= 1073, solids_data= solids_data).corrected_reactions_at_temp()
+        rxns_at_1073 = EnumerateRxns(['Cd','S'],solids_data, temperature=1073).rxns
+        rxns_at_1073 = TempEnvCorrections(temperature=1073).rxns_with_temp_env_correction(rxns_at_1073)
+        self.assertEqual(len(list(rxns_changed_temp)), len(list(rxns_at_1073)))
+        metrics_changed = AnalyzeReactionSet(reactions = rxns_changed_temp,
+                                             target = 'Cd2S1', 
+                                             temperature = 1073).metrics_at_temp_env()
+        metrics_1073 = AnalyzeReactionSet(reactions = rxns_at_1073,
+                                          target = 'Cd2S1',
+                                          temperature= 1073).metrics_at_temp_env()
+        for metric in metrics_changed:
+            reaction_dict = get_reaction_dict_from_string(metric['rxn'])
+            for entry in metrics_1073:
+                print(entry)
+                reaction_dict_1073 = get_reaction_dict_from_string(entry['rxn'])
+                if set(reaction_dict_1073['reactants'])== set(reaction_dict['reactants']):
+                    if set(reaction_dict_1073['products']) == set(reaction_dict['products']):
+                        self.assertAlmostEqual(metric['energy'], entry['energy'], delta = 0.0001)
+                        self.assertAlmostEqual(metric['c1'], entry['c1'], delta = 0.0001)
+                        self.assertAlmostEqual(metric['c2'], entry['c2'], delta = 0.0001)
+                        self.assertAlmostEqual(metric['gamma'], entry['gamma'], delta = 0.0001)
+                        # self.assertEqual(metric['energy'], entry['energy'])
+                        # self.assertEqual(metric['c1'], entry['c1'])
+                        # self.assertEqual(metric['c2'], entry['c2'])
+                        # self.assertEqual(metric['gamma'], entry['gamma'])
     
 
 if __name__ == "__main__":
