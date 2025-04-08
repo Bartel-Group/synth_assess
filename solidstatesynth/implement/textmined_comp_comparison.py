@@ -34,6 +34,20 @@ def relevant_tm_rxns():
                     relevant_tm_rxns.append(rxn)
     return relevant_tm_rxns
 
+def relevant_tm_new():
+    rxns = tm_rxns()
+    relevant_tm_rxns = []
+    for rxn in rxns:
+        target = rxn['target']
+        target_els = CompTools(target).els
+        if 'O' in target_els:
+            if all([a not in target_els for a in ['C', 'H', 'N']]):
+                environment = rxn['atmosphere']
+                if environment == 'air' or environment == None:
+                    if len(target_els)==4:
+                        relevant_tm_rxns.append(rxn)
+    return relevant_tm_rxns
+
 def chemsys_reactions(els):
     reactions = EnumerateRxns(els).rxns
     return reactions
@@ -152,13 +166,18 @@ def reaction_comparisons(tm_entry, solids_data, temperature_new=None):
 
 def tm_rxns_by_chemsys(tm):
     rxns_by_chemsys = {}
+    new = True if len(CompTools(tm[0]['target']).els) > 3 else False
     for entry in tm:
         chemsys = CompTools(entry['target']).chemsys
         chemsys = chemsys.replace('-',',')
         if chemsys not in rxns_by_chemsys:
             rxns_by_chemsys[chemsys] = []
         rxns_by_chemsys[chemsys].append(entry)
-    d = os.path.join(DATA_DIR, 'tm_chemsys.json')
+    if new:
+        d = os.path.join(DATA_DIR, 'tm_chemsys_new.json')
+    else:
+        d = os.path.join(DATA_DIR, 'tm_chemsys.json')
+
     # r = write_json(rxns_by_chemsys, d)
     return write_json(rxns_by_chemsys, d)
 
@@ -180,11 +199,17 @@ def reduced_rxns_by_chemsys(tm):
 
 def main():
     tm = relevant_tm_rxns()
+    tm_new = relevant_tm_new()
     fjson = os.path.join(DATA_DIR, "241119_mp_gd.json")
     solids_data = read_json(fjson)['data']
-    solids_data = {entry['formula']: entry for entry in solids_data}
+    solids_data = {CompTools(entry['formula']).clean: entry for entry in solids_data}
     tm_chemsys = tm_rxns_by_chemsys(tm)
-    return tm, solids_data, tm_chemsys
+    tm_chemsys_new = tm_rxns_by_chemsys(tm_new)
+    tm_chemsys_all = tm_chemsys|tm_chemsys_new
+    tm_chemsys_all = {key: [a for a in tm_chemsys_all[key] if a['mp']] for key in tm_chemsys_all}
+    tm_chemsys_all = {key: tm_chemsys_all[key] for key in tm_chemsys_all if tm_chemsys_all[key]}
+    f = write_json(tm_chemsys_all,  os.path.join(DATA_DIR, 'tm_chemsys_all.json'))
+    return tm, solids_data, tm_chemsys, tm_chemsys_new, tm_chemsys_all
 
 if __name__ == "__main__":
-    tm, solids_data, tm_chemsys = main()
+    tm, solids_data, tm_chemsys, tm_chemsys_new, tm_chemsys_all = main()

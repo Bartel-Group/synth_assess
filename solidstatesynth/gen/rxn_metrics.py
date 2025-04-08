@@ -48,7 +48,7 @@ class PrecursorSet():
                  solids_data: dict,
                  filter_precursors: bool = True,
                  precursor_stability_filter: float = 0.05, 
-                 restrict_to_tm_precursors: bool = True, 
+                 restrict_to_tm_precursors: bool = False, 
                  with_theoretical_precursors: bool = False,
                  ):
         """
@@ -113,6 +113,8 @@ class EnumerateRxns():
         open = True,
         gibbs_kwargs: dict = {},
         prec_kwargs: dict = {},
+        gen_data = None,
+        gen_formula = None,
         remake: bool = True,
     ):
         """
@@ -124,19 +126,13 @@ class EnumerateRxns():
 
         self.els = list(set(els))
         self.temperature = temperature
-        # if open:
-        #     file_name = ''.join(els)+str(temperature)+ '_open_rxns.pkl'
-        # else:
-        #     file_name = ''.join(els)+str(temperature) + '_rxns.pkl'
-        # if os.path.exists(os.path.join(DATADIR_enumerate, file_name)) and remake == False:
-        #     file = open(DATADIR_enumerate + file_name, 'rb')
-        #     self.rxns = pickle.load(file)
-        # else:
         self.solids_data = solids_data
         self.temperature = temperature
         self.open = open
         self.prec_kwargs = prec_kwargs
         self.gibbs_kwargs = gibbs_kwargs
+        self.gen_data = gen_data
+        self.gen_formula = gen_formula
         #Initialize the entries and reactions to None
         self.entries = None
         self.rxns = None
@@ -153,7 +149,8 @@ class EnumerateRxns():
         solids_data = self.solids_data
         temperature = self.temperature
         entry_set = GibbsSet(chemsys_els = els,temperature = temperature,  
-                             solids_data = solids_data, **kwargs).entry_set
+                             solids_data = solids_data, gen_data = self.gen_data,
+                             gen_formula = self.gen_formula, **kwargs).entry_set
         return entry_set
 
 
@@ -164,23 +161,32 @@ class EnumerateRxns():
         self.entries = self._get_entries()
         entries = self.entries
         kwargs = self.prec_kwargs
-        precursors = PrecursorSet(els = self.els, solids_data=self.solids_data , **kwargs).precursors
+        precursors = PrecursorSet(els = self.els, solids_data=self.solids_data, **kwargs).precursors
 
         print('entries obtained')
         #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
         self.rxns = BasicEnumerator(precursors = precursors, exclusive_precursors=True).enumerate(entries)
-
+#        print('closed', list(self.rxns))
         print('rxns enumerated')
         if self.open:
             self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], 
                                                                   precursors = precursors, 
                                                                   exclusive_precursors=True).enumerate(entries))
+#        print('open', list(self.rxns))
         #Filter out duplicate reactions
         self.rxns = self.rxns.filter_duplicates()
         print('rxn duplicates filtered')
+        # print(len(list(self.rxns)))
+        # rxns_new = []
+        # for rxn in self.rxns:
+        #     product_list = list(set([i.reduced_formula for i in rxn.products]) - {'O2'})
+        #     if all([len(CompTools(p).els)>1 for p in product_list]):
+        #         rxns_new.append(rxn)
+        # print(len(rxns_new))
+        # self.rxns = ReactionSet.from_rxns(rxns_new)
+        # print(len(list(self.rxns)))
         return
 
-#start with the same solids data 
 
 
 class TempEnvCorrections():
@@ -230,6 +236,7 @@ class TempEnvCorrections():
             adjustment_per_atom = KB * math.log(GAS_PARTIAL_PRESSURES[environment][formula])*float(temperature)/n_atoms
         #Set a useful name for the correction - This is important because the correction does not automatically change with temperature
         name = f"{formula} {environment} correction @ {temperature}K"
+        print('adjustment',CompositionEnergyAdjustment(adj_per_atom=adjustment_per_atom, n_atoms=n_atoms, name=name))
 
         return CompositionEnergyAdjustment(adj_per_atom=adjustment_per_atom, n_atoms=n_atoms, name=name)
 
@@ -365,6 +372,8 @@ class RxnsAtNewTempEnv():
                  new_temperature: float = 300,
                  environment: str = "air",
                  open = True, 
+                 gen_data = None,
+                 gen_formula = None,
                  original_temperature = 300
                 ):
         self.temperature = new_temperature
@@ -375,6 +384,8 @@ class RxnsAtNewTempEnv():
         self.entries = reaction_set.entries
         self.reactions = reaction_set
         self.solids_data = solids_data
+        self.gen_data = gen_data
+        self.gen_formula = gen_formula
         self.els = els
         self.open = open
         # The default original temperature is 300 K: generally entries will first
@@ -409,7 +420,9 @@ class RxnsAtNewTempEnv():
         """
         solids_data = self.solids_data
         entry_id_dict = self.reaction_entry_ids()
-        entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, temperature=self.temperature, entry_id_dict= entry_id_dict).entries
+        entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, 
+                            temperature=self.temperature, entry_id_dict= entry_id_dict,
+                            gen_data = self.gen_data, gen_formula = self.gen_formula).entries
         for entry in entries:
             entry_id = entry.entry_id
             if 'Experimental' in entry_id:
@@ -469,6 +482,7 @@ class AnalyzeReactionSet():
         allowed_products = {Composition(target)} | set([Composition(i) 
                                 for i in GAS_PARTIAL_PRESSURES[environment].keys()])
         for rxn in rxns:
+            print(rxn.products)
             if CompTools(target).clean in [CompTools(i).clean for i in rxn.products]:
                 if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
                     rxns_with_target.append(rxn)
@@ -516,6 +530,7 @@ class AnalyzeReactionSet():
             #In excess inert, O2 is not allowed as a reactant
             if environment == "air":
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]+["O2"]))
+                print(filtered_rxns)
             else:
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]))
 
@@ -541,9 +556,15 @@ class AnalyzeReactionSet():
 
 
 
-def get_metrics(target, temperature, open = True):
-    r = EnumerateRxns(els = CompTools(target).els, temperature = temperature).rxns
-    t = TargetRxns(target = target, reactions = r, temperature = temperature, open = open)
+def get_metrics(target, temperature, solids_data, gen_data = None, is_gen = False):
+    if is_gen:
+        gen_formula = target
+    else:
+        gen_formula = None
+    r = EnumerateRxns(els = CompTools(target).els, temperature = 300, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).rxns
+    r = RxnsAtNewTempEnv(reaction_set = r, els = CompTools(target).els, new_temperature = temperature, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).corrected_reactions_at_temp()
+    print(r.entries)
+    t = AnalyzeReactionSet(target = target, reactions = r, temperature = temperature)
     return t.metrics_at_temp_env()   
 
 def get_reaction_dict_from_string(reaction_string):

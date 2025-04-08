@@ -16,6 +16,8 @@ class Gibbs:
         formula,
         solids_data,
         gases_data=get_gases_data(),
+        is_gen = False,
+        gen_data = None,
         temperature=300,
         use_carbonate_correction=True,
         entry_id = None
@@ -28,6 +30,7 @@ class Gibbs:
                 {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
                 Refer to McDermott's rxn_network/entries/experimental.py for the structure of any desired
                 experimental data
+            gen_data (dict): dictionary of dictionaries with formulas as keys (gen_data should be only for a specific model type)
             temperature (int): temperature of interest
             use_carbonate_correction (bool) : whether to use carbonate correction for carbonates
             entry_id (str): the entry id can be specified for the purpose of matching entries (as in the case of
@@ -50,16 +53,20 @@ class Gibbs:
             self.is_gas = True
             # set the compound data to the gases data for this formula
             self.compound_data = gases_data
-        else:
-            # if not a gas, look in solids_data
+        elif is_gen:
             self.is_gas = False
-
-            # # find formula in solids_data
+            if not gen_data:
+                raise ValueError("No data for the target compound: %s" % formula)
+            if formula not in gen_data:
+                raise ValueError("No data for the target compound: %s" % formula)
+            self.compound_data = gen_data[formula]
+        
+        else:
+            self.is_gas = False
             if formula not in solids_data:
                 raise ValueError("No data for the target compound: %s" % formula)
-
             self.compound_data = solids_data[formula]
-            # print(self.compound_data)
+
 
     @property
     def is_carbonate(self):
@@ -229,12 +236,14 @@ class GibbsSet:
         chemsys_els,
         solids_data,
         gases_data=get_gases_data(),
+        gen_data = None,
         temperature=300,
         use_carbonate_correction=True,
         extend_with_hydroxides=True,
         extend_with_carbonates=True,
         with_theoretical=True,
         stability_threshold=0.5,
+        gen_formula = None,
         entry_id_dict = {},
         include_only_these_formulas=[],
         exclude_these_formulas=[],
@@ -271,6 +280,7 @@ class GibbsSet:
         """
         self.solids_data = solids_data
         self.gases_data = gases_data
+        self.gen_data = gen_data
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
         self.extend_with_hydroxides = extend_with_hydroxides
@@ -281,6 +291,9 @@ class GibbsSet:
         self.add_these_formulas = add_these_formulas
         self.els = chemsys_els
         self.entry_id_dict = entry_id_dict
+        if gen_formula:
+            gen_formula = CompTools(gen_formula).clean
+        self.gen_formula = gen_formula
 
 
     @property
@@ -319,6 +332,8 @@ class GibbsSet:
             formulas = [f for f in formulas if f not in self.exclude_these_formulas]
         if self.add_these_formulas:
             formulas.extend(self.add_these_formulas)
+        if self.gen_formula:
+            formulas.append(self.gen_formula)
         return formulas
 
     @property
@@ -330,11 +345,16 @@ class GibbsSet:
         formulas = self.formulas
         id_dict = self.entry_id_dict
         for formula in formulas:
+            print(formula)
             f = CompTools(formula).clean
             if f not in id_dict:
                 id_dict[f] = None
         solids_data = self.solids_data
         gases_data = self.gases_data
+        gen_formula = None
+        if self.gen_formula:
+            gen_formula = self.gen_formula
+        gen_data = self.gen_data
         temperature = self.temperature
         use_carbonate_correction = self.use_carbonate_correction
 
@@ -344,6 +364,8 @@ class GibbsSet:
                 formula=f,
                 solids_data=solids_data,
                 gases_data=gases_data,
+                gen_data = gen_data,
+                is_gen = True if f == gen_formula else False,
                 temperature=temperature,
                 use_carbonate_correction=use_carbonate_correction,
                 entry_id= id_dict[CompTools(f).clean]

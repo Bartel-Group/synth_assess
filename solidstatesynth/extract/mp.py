@@ -171,11 +171,33 @@ def get_gases_data(remake=False):
     return g_new
 
 def restructured_solids_data(solids_data):
-    fjson = os.path.join(DATA_DIR, '241119_mp_gd.json')
+    fjson = os.path.join(DATA_DIR, '241119_mp_experimental_gd.json')
     data = read_json(fjson)['data']
     solids_data = {entry['formula']: entry for entry in data}
     d = os.path.join(DATA_DIR, 'solids_data.json')
     return write_json(solids_data, d)
+
+def get_icsd_solids(solids, metrics):
+    metric_targets = [list(entry.keys()) for entry in metrics]
+    metric_targets = [CompTools(t).clean for t in metric_targets]
+    in_tm = []
+    not_tm = []
+    metric_chemsystems = list(set([CompTools(t).chemsys for t in metric_targets]))
+    metric_chemsystems.extend(['Li-Mn-Ni-O','Co-Li-Mn-O','Li-O-P-V', 'Co-Li-O-P', 'Fe-Li-O-P',
+                               'Li-Mn-O-P','Li-Mn-O-Ti','Fe-Li-O-Ti','Co-Li-O-Ti','Bi-Li-O-Ti',
+                               'La-Li-Mn-O','Ca-Fe-O-P','Fe-Li-Mn-O','Li-Ni-O-V','Fe-Li-O-Si',
+                               'Li-Ni-O-P','Fe-Na-O-P','B-Li-Mn-O','Cu-Li-O-V','Mn-Na-O-V',
+                               'Li-Mn-O-Si','Cr-Li-O-Si','Cr-Li-O-Ti','Fe-O-P-Sr','Li-Mn-O-V',
+                               'Fe-Li-O-V'])
+    for key in solids:
+        if CompTools(key).clean in metric_targets:
+            continue
+        elif CompTools(key).chemsys in metric_chemsystems:
+            in_tm.append(key)
+        else:
+            not_tm.append(key)
+    return in_tm, not_tm
+
      
 
 def main():
@@ -191,6 +213,8 @@ def main():
     gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, tm_data = tm_precursors, remake=False)['data']
     print('gd_mp_exp done')
     solids = restructured_solids_data(gd_MP)
+    metrics = read_json(os.path.join(DATA_DIR, 'feb_all_metrics.json'))
+    icsd_solids = get_icsd_solids(solids, metrics=metrics)
     
     # use only experimental data to identify the ground state so that we idenitfy the
     # experimental ground state and don't miss experimentally-observed formulas
