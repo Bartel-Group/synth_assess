@@ -4,15 +4,11 @@ from matplotlib import pyplot as plt
 from matplotlib.colors import CSS4_COLORS
 from pydmclab.utils.handy import read_json, write_json
 from pydmclab.core.comp import CompTools
-from scipy.stats import iqr, wasserstein_distance, entropy
-from scipy.optimize import minimize
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from itertools import product
 from pydmclab.plotting.utils import set_rc_params
-from scipy.stats import binned_statistic
-from mpl_toolkits.axes_grid1 import make_axes_locatable
+from scipy.optimize import minimize
+import matplotlib.pyplot as plt
+from itertools import product
+
 
 
 set_rc_params()
