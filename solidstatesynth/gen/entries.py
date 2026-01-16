@@ -6,9 +6,12 @@ from rxn_network.entries.experimental import ExperimentalReferenceEntry
 from solidstatesynth.extract.mp import get_gases_data
 
 
+DATADIR = "/user/specifies/data/path"
+"""
+These are helper classes used to create entries for reaction network generation. 
+This code draws on the work of McDermott, M. J., Dwaraknath, S. S., and Persson, K. A.  https://doi.org/10.1038/s41467-021-23339-x
 
-DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
-
+"""
 
 class Gibbs:
     def __init__(
@@ -30,6 +33,7 @@ class Gibbs:
                 {formula (str) : {temperature (int) : free energy (float, eV/f.u.)}}
                 Refer to McDermott's rxn_network/entries/experimental.py for the structure of any desired
                 experimental data
+            is_gen (Bool): if is_gen is True, the entry will be computed using gen_data
             gen_data (dict): dictionary of dictionaries with formulas as keys (gen_data should be only for a specific model type)
             temperature (int): temperature of interest
             use_carbonate_correction (bool) : whether to use carbonate correction for carbonates
@@ -37,7 +41,6 @@ class Gibbs:
             the RxnsAtNewTempEnv class -- if an entry_id is not specified, one will be automatically generated)
         """
         # clean the formula coming in
-        # self.entry = entry
         self.formula = CompTools(formula).clean
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
@@ -241,7 +244,6 @@ class GibbsSet:
         use_carbonate_correction=True,
         extend_with_hydroxides=True,
         extend_with_carbonates=True,
-        with_theoretical=True,
         stability_threshold=0.5,
         gen_formula = None,
         entry_id_dict = {},
@@ -382,15 +384,4 @@ class GibbsSet:
         return GibbsEntrySet(self.entries)
 
 
-# def main():
-#     # g = Gibbs("Fe2O3", temperature=1317)
-#     # e = g.entry
-#     # gs = GibbsSet(chemsys_els=['Fe','O'], temperature=1317)
-#     # es = gs.entries
-#     # gse = gs.entry_set
-#     # return gs, es, gse
 
-
-# if __name__ == "__main__":
-#     return
-#     # gs, es, gse = main()

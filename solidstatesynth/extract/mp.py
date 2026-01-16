@@ -4,17 +4,17 @@ from pydmclab.core.comp import CompTools
 from pydmclab.core.query import MPRester
 from pydmclab.data.thermochem import gas_thermo_data
 from emmet.core.thermo import ThermoType
-DATA_DIR = "/Volumes/cems_bartel/projects/negative-examples/data"
+DATA_DIR = "/user/specifies/data/path"
 
 
 def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
     """
-    Returns a list of dictionar5ies for materials project data with properties
+    Returns a list of dictionaries for materials project data with properties
     of interest (the json file is of the form {'data': [entries]} an additional entry key of 'data')
     for no thermo type filter, use thermo_types = []
     """
-    if os.path.exists(os.path.join(DATA_DIR, '241119_mpdata.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, '241119_mpdata.json'))
+    if os.path.exists(os.path.join(DATA_DIR, 'mpdata.json')) and remake == False:
+        return read_json(os.path.join(DATA_DIR, 'mpdata.json'))
     mpr = MPRester()
     entries = []
     docs = mpr.materials.thermo.search(thermo_types=thermo_types,
@@ -23,10 +23,9 @@ def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
                                                 "formation_energy_per_atom",
                                                 "energy_per_atom",
                                                 "energy_above_hull",
-                                                "theoretical",
                                                 "nsites",
                                                 "material_id",
-                                                "task_types"],
+                                                ],
                                                 )
     print(len(docs))
     for entry in docs:
@@ -42,10 +41,7 @@ def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
         entry_new['tm_precursor'] = is_textmined_precursor(entry.formula_pretty, tm_data)
         if entry_new['formation_energy_per_atom'] is not None:
             entries.append(entry_new)
-    # ids = [entry['material_id'] for entry in entries]
-    # docs2 = mpr.materials.summary.search(fields=["theoretical",'material_id'])
-    # d2 = {entry.material_id: entry.theoretical for entry in docs2}
-    # print(len(docs2))
+
     d2 = get_is_theoretical()
     for entry in entries:
         if entry['tm_precursor']:
@@ -55,40 +51,45 @@ def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
         else:
             entry['theoretical'] = None
     data = {'data': entries}
-    fjson = os.path.join(DATA_DIR, '241119_mpdata.json')
+    fjson = os.path.join(DATA_DIR, 'mp_all_data.json')
     mp = write_json(data, fjson)
     return mp
 
 def get_is_theoretical(remake = False):
+    """
+    Returns a dictionary of the form {mpid: Bool (True or False)} where 'True' indicates that a material
+    is not experimentally realized according to MP.
+    """
     mpr = MPRester()
-    if os.path.exists(os.path.join(DATA_DIR, '241119_is_theoretical.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, '241119_is_theoretical.json'))
+    if os.path.exists(os.path.join(DATA_DIR, 'mp_is_theoretical.json')) and remake == False:
+        return read_json(os.path.join(DATA_DIR, 'mp_is_theoretical.json'))
     docs2 = mpr.materials.summary.search(fields=["theoretical",'material_id'])
     d2 = {entry.material_id: entry.theoretical for entry in docs2}
-    fjson = os.path.join(DATA_DIR, '241119_is_theoretical.json')
+    fjson = os.path.join(DATA_DIR, 'mp_is_theoretical.json')
     mpt = write_json(d2, fjson)
     return mpt
 
-    # add material id as key to regrab from MP
+
 def is_textmined_precursor(formula, tm_data):
+    """
+    Returns a bool indicating whether the formula in question is listed as a precursor in the textmined data
+    """
     if CompTools(formula).clean in tm_data:
         return True
     return False
 
 def get_mp_formulas(MP):
     """
-    helper function to get the list of formulas in the materials project data 
-    (for any version of materials project data)
+    Returns the list of formulas in the dataset given 
     """
-    # print(MP.keys())
+
     mp_formulas = [entry['formula'] for entry in MP]
     return list(set(mp_formulas))
 
-def gd_state_formula(MP, formula, tm_data):
+def gd_state_formula(MP, formula):
     """
-    helper function to get the ground state formula for a given formula.
-    Returns the dictionary entry for the ground state of a given formula
-    
+    Returns the dictionary entry for the ground state of a given formula. If only experimental data is given,
+    the ground state in question is the lowest-energy experimentally realized polymorph for that formula.
     """
     mp_data = [entry for entry in MP if entry['formula'] == formula]
     gd_state_entry = mp_data[0]
@@ -97,21 +98,25 @@ def gd_state_formula(MP, formula, tm_data):
             gd_state_entry = entry
     return gd_state_entry
 
-def get_gd_state_MP(data,with_theoretical, tm_data,remake = False):
+def get_gd_state_MP(MP,with_theoretical, remake = False):
     """
+    Args:
+        data: 
+        with_theoretical (Bool): user-specified argument to include or exclude materials that
+        are not experimentally realized when identifying the ground state.
     Returns:
         [{thermo info from MP} for ground state polymorphs in MP]
     """
     if with_theoretical == False:
-        filename = '241119_mp_experimental_gd.json'
+        filename = 'mp_experimental_gd.json'
     else:
-        filename = '241119_mp_gd.json'
+        filename = 'mp_gd.json'
     if os.path.exists(os.path.join(DATA_DIR, filename)) and remake == False:
         return read_json(os.path.join(DATA_DIR, filename))
-    mp_formulas = get_mp_formulas(data)
+    mp_formulas = get_mp_formulas(MP)
     gd_state_MP = []
     for formula in mp_formulas:
-        formula_gd = gd_state_formula(data, formula, tm_data)
+        formula_gd = gd_state_formula(MP, formula)
         if formula_gd:
             gd_state_MP.append(formula_gd)
     gd_MP = {'data': gd_state_MP}
@@ -124,29 +129,19 @@ def get_mp_experimental(MP, remake = False):
     Returns a list of MP entries where the data has key 'theoretical' set to False
     (the json file is of the form {'data': [entries]} with an additional entry key of 'data')
     """
-    if os.path.exists(os.path.join(DATA_DIR, '241119_mp_experimental.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, '241119_mp_experimental.json'))
+    if os.path.exists(os.path.join(DATA_DIR, 'mp_experimental.json')) and remake == False:
+        return read_json(os.path.join(DATA_DIR, 'mp_experimental.json'))
     entries = []
     for entry in MP:
         if not entry['theoretical']:
             entries.append(entry)
     exp_MP = {'data': entries}
-    fjson = os.path.join(DATA_DIR, '241119_mp_experimental.json')
+    fjson = os.path.join(DATA_DIR, 'mp_experimental.json')
     exp_MP = write_json(exp_MP, fjson)
     return exp_MP
 
-# def get_useful_mp_data(MP,stability_cutoff = 0.05, n_els_max = 4):
-#     """
-#     Args: materials project data (either as is, including only ground data, and/or including only 
-#     experimental data)
-#     Returns: a dictionary of materials project by data filtered by energy above the hull and
-#     maximum number of elements (for efficiency)
-#     """
-#     MP_stability= {formula: MP[formula] for formula in MP if MP[formula]['energy_above_hull'] < stability_cutoff}
-#     MP_els_max = {formula: MP_stability[formula] for formula in MP_stability if len(CompTools(formula).els) <= n_els_max}
-#     return MP_els_max
 
-def get_gases_data(remake=False):
+def get_gases_data():
     """
     Returns: dictionary of the form {temperature: {gas: dG in eV/atom}}}
     from pre-existing gas thermo data from pydmclab. Note that the gas thermo
@@ -164,59 +159,41 @@ def get_gases_data(remake=False):
     temperatures = [int(key) for key in g["C1O2"]]
     g_new = {
         new_gas[j]: {k: (g[j][str(k)]) / (96.485) for k in temperatures}
-        # new_gas[j]: {k: (g[j][str(k)]) / (96.485 * CompTools(j).n_atoms) for k in temperatures}
         for j in gasses
     }
     # reformatting the gasses dictionary to match the format of the materials project data
     return g_new
 
-def restructured_solids_data(solids_data):
-    fjson = os.path.join(DATA_DIR, '241119_mp_experimental_gd.json')
-    data = read_json(fjson)['data']
-    solids_data = {entry['formula']: entry for entry in data}
-    d = os.path.join(DATA_DIR, 'solids_data.json')
+def restructured_solids_data(gd_mp_data):
+    """
+    restructuring MP data to the format of {formula:formula_data}
+    """
+
+    solids_data = {CompTools(entry['formula']).clean: entry for entry in gd_mp_data}
+    d = os.path.join(DATA_DIR, 'mp_solids_data.json')
     return write_json(solids_data, d)
 
-def get_icsd_solids(solids, metrics):
-    metric_targets = [list(entry.keys()) for entry in metrics]
-    metric_targets = [CompTools(t).clean for t in metric_targets]
-    in_tm = []
-    not_tm = []
-    metric_chemsystems = list(set([CompTools(t).chemsys for t in metric_targets]))
-    metric_chemsystems.extend(['Li-Mn-Ni-O','Co-Li-Mn-O','Li-O-P-V', 'Co-Li-O-P', 'Fe-Li-O-P',
-                               'Li-Mn-O-P','Li-Mn-O-Ti','Fe-Li-O-Ti','Co-Li-O-Ti','Bi-Li-O-Ti',
-                               'La-Li-Mn-O','Ca-Fe-O-P','Fe-Li-Mn-O','Li-Ni-O-V','Fe-Li-O-Si',
-                               'Li-Ni-O-P','Fe-Na-O-P','B-Li-Mn-O','Cu-Li-O-V','Mn-Na-O-V',
-                               'Li-Mn-O-Si','Cr-Li-O-Si','Cr-Li-O-Ti','Fe-O-P-Sr','Li-Mn-O-V',
-                               'Fe-Li-O-V'])
-    for key in solids:
-        if CompTools(key).clean in metric_targets:
-            continue
-        elif CompTools(key).chemsys in metric_chemsystems:
-            in_tm.append(key)
-        else:
-            not_tm.append(key)
-    return in_tm, not_tm
 
-     
 
 def main():
-    tm_precursors = read_json(DATA_DIR + '/textmined_precursors.json')['precursors']
+    tm_precursors = read_json(DATA_DIR + '/tm_precursors.json')['precursors']
     MPt = get_is_theoretical()
     print('mp theoretical done')
-    MP =  get_MP_data(tm_precursors, remake=False)['data']
+    MP =  get_MP_data(tm_precursors, remake=True)['data']
     print('mp done')
-    MP_exp = get_mp_experimental(MP,remake=False)['data']
+    MP_exp = get_mp_experimental(MP,remake=True)['data']
     print('mp exp done')
-    gd_MP = get_gd_state_MP(MP,with_theoretical = True, tm_data= tm_precursors, remake=False)['data']
+    gd_MP = get_gd_state_MP(MP,with_theoretical = True, remake=True)['data']
     print('gd_mp done')
-    gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, tm_data = tm_precursors, remake=False)['data']
+    gd_MP_exp = get_gd_state_MP(MP_exp,with_theoretical = False, remake=True)['data']
     print('gd_mp_exp done')
-    solids = restructured_solids_data(gd_MP)
-    metrics = read_json(os.path.join(DATA_DIR, 'feb_all_metrics.json'))
-    icsd_solids = get_icsd_solids(solids, metrics=metrics)
+    # the data below is used as an input "solids_data" in reaction enumeration. If hypothetical 
+    # as well as experimentally known materials are also desired, solids_data can be regenerated 
+    # with arg gd_mp_data = gd_MP
+    solids = restructured_solids_data(gd_MP_exp)
+
     
-    # use only experimental data to identify the ground state so that we idenitfy the
+    # In this work, we use only experimental data to identify the ground state so that we identify the
     # experimental ground state and don't miss experimentally-observed formulas
     return MPt, MP, MP_exp, gd_MP, gd_MP_exp, solids
 

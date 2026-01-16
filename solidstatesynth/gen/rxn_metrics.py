@@ -38,8 +38,11 @@ GAS_PARTIAL_PRESSURES = {
 
 #boltzmann constant
 KB = 8.6173303e-5
-DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
-DATADIR_enumerate = "/Volumes/cems_bartel/projects/negative-examples/data/rxn_networks"
+DATADIR = "/user/specifies/data/path"
+"""
+This code draws on the work of McDermott, M. J., Dwaraknath, S. S., and Persson, K. A.  https://doi.org/10.1038/s41467-021-23339-x
+"""
+
 
 class PrecursorSet():
     def __init__(
@@ -48,7 +51,7 @@ class PrecursorSet():
                  solids_data: dict,
                  filter_precursors: bool = True,
                  precursor_stability_filter: float = 0.05, 
-                 restrict_to_tm_precursors: bool = False, 
+                 restrict_to_tm_precursors: bool = True, 
                  with_theoretical_precursors: bool = False,
                  ):
         """
@@ -101,7 +104,7 @@ class EnumerateRxns():
     Class for calculating competition metrics for single-step reactions in a single chemical system.
     Uses the reaction-networks package for calculating reaction energy, primary and secondary competition, and the gamma cost function.
     Can be utilized by imnputting select precursors, targets, and temperature, and will output the competition metrics for each reaction.
-    INSERT CREDIT TO MATT MCDERMOTT + maybe others???
+    
     
     """
 
@@ -110,12 +113,10 @@ class EnumerateRxns():
         els: Iterable[str],
         solids_data: dict,
         temperature: float = 300,
-        open = True,
         gibbs_kwargs: dict = {},
         prec_kwargs: dict = {},
         gen_data = None,
         gen_formula = None,
-        remake: bool = True,
     ):
         """
         Initialize the calculator with the specified elements and temperature
@@ -128,7 +129,6 @@ class EnumerateRxns():
         self.temperature = temperature
         self.solids_data = solids_data
         self.temperature = temperature
-        self.open = open
         self.prec_kwargs = prec_kwargs
         self.gibbs_kwargs = gibbs_kwargs
         self.gen_data = gen_data
@@ -137,13 +137,11 @@ class EnumerateRxns():
         self.entries = None
         self.rxns = None
         self._build_calculator()
-            # with open(DATADIR_enumerate + file_name, 'wb') as f:
-            #     pickle.dump(self.rxns, f)
-            
-        # numpy array should go deeper 
+
 
 
     def _get_entries(self):
+        """refer to solidstatesynth.gen.entries GibbsSet class for kwargs (additional control to set)"""
         els = self.els
         kwargs = self.gibbs_kwargs
         solids_data = self.solids_data
@@ -156,35 +154,18 @@ class EnumerateRxns():
 
     def _build_calculator(self):
         """
-        Build the calculator by getting the entries and enumerating the reactions
+        Build the calculator by getting the entries and enumerating the reactions.
+        Executing the calculator generates the set of rxns (callable by EnumerateRxns(...).rxns)
         """
         self.entries = self._get_entries()
         entries = self.entries
         kwargs = self.prec_kwargs
         precursors = PrecursorSet(els = self.els, solids_data=self.solids_data, **kwargs).precursors
-
         print('entries obtained')
-        #Use the BasicEnumerator and BasicOpenEnumerator to enumerate all the reactions from the precursors
         self.rxns = BasicEnumerator(precursors = precursors, exclusive_precursors=True).enumerate(entries)
-#        print('closed', list(self.rxns))
         print('rxns enumerated')
-        if self.open:
-            self.rxns = self.rxns.add_rxn_set(BasicOpenEnumerator(open_phases=["O2"], 
-                                                                  precursors = precursors, 
-                                                                  exclusive_precursors=True).enumerate(entries))
-#        print('open', list(self.rxns))
-        #Filter out duplicate reactions
         self.rxns = self.rxns.filter_duplicates()
         print('rxn duplicates filtered')
-        # print(len(list(self.rxns)))
-        # rxns_new = []
-        # for rxn in self.rxns:
-        #     product_list = list(set([i.reduced_formula for i in rxn.products]) - {'O2'})
-        #     if all([len(CompTools(p).els)>1 for p in product_list]):
-        #         rxns_new.append(rxn)
-        # print(len(rxns_new))
-        # self.rxns = ReactionSet.from_rxns(rxns_new)
-        # print(len(list(self.rxns)))
         return
 
 
@@ -198,11 +179,10 @@ class TempEnvCorrections():
     def __init__(self,  
                  temperature: float = 300, 
                  environment: str = "air",
-                 open = True
                  ):
         self.temperature = temperature
         self.environment = environment
-        self.open = open
+
         
     def environment_correction(
             self,
@@ -220,24 +200,13 @@ class TempEnvCorrections():
         """
         temperature = self.temperature
         environment = self.environment
-        open = self.open
         if environment not in GAS_PARTIAL_PRESSURES:
             return None
 
         n_atoms = CompTools(formula).n_atoms
-        #Calculate the environment correction for the gas on a per atom basis
-        if not open:
-            adjustment_per_atom = 0
-        elif formula not in GAS_PARTIAL_PRESSURES[environment]:
-            adjustment_per_atom = 0
-        else:
-            if CompTools(formula).clean == ['O1']:
-                formula = 'O2'
-            adjustment_per_atom = KB * math.log(GAS_PARTIAL_PRESSURES[environment][formula])*float(temperature)/n_atoms
+        adjustment_per_atom = 0
         #Set a useful name for the correction - This is important because the correction does not automatically change with temperature
         name = f"{formula} {environment} correction @ {temperature}K"
-        print('adjustment',CompositionEnergyAdjustment(adj_per_atom=adjustment_per_atom, n_atoms=n_atoms, name=name))
-
         return CompositionEnergyAdjustment(adj_per_atom=adjustment_per_atom, n_atoms=n_atoms, name=name)
 
     @property
@@ -271,27 +240,14 @@ class TempEnvCorrections():
             ReactionSet: Reactions at the specified temperature
         """
         environment = self.environment
-        open = self.open
         gasses = set(GAS_PARTIAL_PRESSURES[environment].keys())-{"O2"}
-        #Chemical potential of O at specified temperature and evironment partial pressure
-
-        #For inert environment, remove all reactions that contain O2 as a reactant
-        #Determine the allowed gas products to add the correction to
-        #Get the environment correction for each gas
-        # gas_dict = {i: corrections.environment_correction(i.reduced_formula) for i in gas_comps}
-        
         # #Add the environment correction to the gas products
         for i in rxns.entries:
             formula = i.reduced_formula
             if formula in gasses:
                 i.energy_adjustments.append(self.environment_correction(formula))
 
-        #Finally set O as an open element with the calculated chemical potential from partial pressure
-        if not open:
-            return rxns
-        else:
-            return rxns.set_chempot(open_el="O", chempot=self.mu)
-        # what happens if i set mu to 'None' instead of zero? 1111\
+        return rxns
 
 class CustomClass(ReactionSet):
     """
@@ -371,7 +327,6 @@ class RxnsAtNewTempEnv():
                  solids_data: dict ,
                  new_temperature: float = 300,
                  environment: str = "air",
-                 open = True, 
                  gen_data = None,
                  gen_formula = None,
                  original_temperature = 300
@@ -387,7 +342,6 @@ class RxnsAtNewTempEnv():
         self.gen_data = gen_data
         self.gen_formula = gen_formula
         self.els = els
-        self.open = open
         # The default original temperature is 300 K: generally entries will first
         # be generated at 300 and then modified. However, the modification is feasible
         # at other temperatures as well and the function will be modified accordingly
@@ -431,19 +385,11 @@ class RxnsAtNewTempEnv():
                 # we modify the temperature so that the entry id matches that of
                 # the original entries, generated at 300 K. 
                 entry.entry_id = entry_id.split('_')[0]+'_' + str(self.original_temperature)
-        # print(entries)
-        print([entry.entry_id for entry in entries])
-        print([entry.entry_id for entry in self.reactions.entries])
-        # print(self.reactions.entries)
-        reactions = list(self.reactions)
-        if self.open:
-            open_elem = 'O'
-            chempot = self.corr.mu
-        else:
-            open_elem = None
-            chempot = 0.0
 
-        # print(list(reactions))
+        reactions = list(self.reactions)
+        open_elem = None
+        chempot = 0.0
+
         rxns_at_temp = CustomClass.from_rxns(rxns = reactions, entries = entries, 
                                              open_elem= open_elem, chempot= chempot)
         return rxns_at_temp
@@ -459,7 +405,7 @@ class AnalyzeReactionSet():
                  reactions: ReactionSet,
                  target: str = None,
                  temperature: float = 300,
-                 environment: str = "air",):
+                 environment: str = "air"):
         
         self.reactions = reactions
         self.temperature = temperature
@@ -482,12 +428,11 @@ class AnalyzeReactionSet():
         allowed_products = {Composition(target)} | set([Composition(i) 
                                 for i in GAS_PARTIAL_PRESSURES[environment].keys()])
         for rxn in rxns:
-            print(rxn.products)
             if CompTools(target).clean in [CompTools(i).clean for i in rxn.products]:
                 if set([i.reduced_composition for i in rxn.products]) <= allowed_products and (len(rxn.reactants) == 2 or len(set(rxn.reactants) - {Composition("O2")}) == 2):
                     rxns_with_target.append(rxn)
-        print('target rxns found')
 
+        print('target rxns found')
         return ReactionSet.from_rxns(rxns_with_target)
 
 
@@ -524,13 +469,12 @@ class AnalyzeReactionSet():
             rxn_prec = set([i.reduced_composition for i in rxn.reactants])
             if len(rxn_prec) == 3 and Composition("O2") in rxn_prec:
                 rxn_prec.remove(Composition("O2"))
-            print(rxn_prec)
             #Get the filtered reactions for the InterfaceReactionHull that only contain the precursors in this reaction
             #In air, O2 is allowed as a reactant
             #In excess inert, O2 is not allowed as a reactant
             if environment == "air":
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]+["O2"]))
-                print(filtered_rxns)
+                print('f',filtered_rxns)
             else:
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]))
 
@@ -538,8 +482,6 @@ class AnalyzeReactionSet():
             #Build the InterfaceReactionHull from the precursors and filtered reactions
 
             irh = InterfaceReactionHull(*rxn_prec, filtered_rxns)
-
-            # irh.plot().show()
             rxn_data = {}
             rxn_data["rxn"] = str(rxn)
             rxn_data["energy"] = rxn.energy_per_atom
@@ -547,124 +489,7 @@ class AnalyzeReactionSet():
             rxn_data["c2"] = irh.get_secondary_competition(rxn)
             rxn_data["gamma"] = 0.1 * rxn_data["energy"] + 0.45 * rxn_data["c1"] + 0.45 * rxn_data["c2"]
             
-            # #Useful for debugging:
-            # rxn_data["competing_rxns"] = [str(i)+" dG="+str(i.energy_per_atom) for i in filtered_rxns]
-
             metrics.append(rxn_data)
 
         return metrics
-
-
-
-def get_metrics(target, temperature, solids_data, gen_data = None, is_gen = False):
-    if is_gen:
-        gen_formula = target
-    else:
-        gen_formula = None
-    r = EnumerateRxns(els = CompTools(target).els, temperature = 300, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).rxns
-    r = RxnsAtNewTempEnv(reaction_set = r, els = CompTools(target).els, new_temperature = temperature, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).corrected_reactions_at_temp()
-    print(r.entries)
-    t = AnalyzeReactionSet(target = target, reactions = r, temperature = temperature)
-    return t.metrics_at_temp_env()   
-
-def get_reaction_dict_from_string(reaction_string):
-    """
-    Args: reaction string
-    Returns: dictionary with keys 'reactants' and 'products' where
-    the values are lists of the reactants and products in the reaction
-    *** IF CLEANABLE -- otherwise returns None ***
-    Uses: this is the most usable reaction format from which to calculate
-    dG_rxn using the pydmclab ReactionEnergy class-- get_dGrxn_at_T takes
-    a reaction dictionary as an argument
-    """
-    reactant_list = []
-    reactant_coeffs = []
-    product_list = []
-    product_coeffs = []
-    if '->' in reaction_string:
-        reactants, products = reaction_string.split(" -> ")
-        # print(reactants)
-    elif '==' in reaction_string:
-        reactants, products = reaction_string.split(" == ")
-    if "+" in reactants:
-        reactants = reactants.split(" + ")
-    else:
-        reactants = [reactants]
-    # print('reactants', reactants)
-    for reactant in reactants:
-        if " " in reactant:
-            if len(reactant.split(" ")) != 1:
-                coefficient, reactant = reactant.split(" ")
-                if float(coefficient) > 0:
-                    try:
-                        CompTools(reactant).clean
-                        reactant_list.append(reactant)
-                        reactant_coeffs.append(coefficient)
-                    except:
-                        return None
-        else:
-            reactant_list.append(reactant)
-            reactant_coeffs.append(1)
-    if "+" in products:
-        products = products.split(" + ")
-    else:
-        products = [products]
-    for product in products:
-        if " " in product:
-            if len(product.split(" ")) != 1:
-                coefficient, product = product.split(" ")
-                if float(coefficient) > 0:
-                    try:
-                        CompTools(product).clean
-                        product_list.append(product)
-                        product_coeffs.append(coefficient)
-                    except:
-                        return None
-        else:
-            product_list.append(product)
-            product_coeffs.append(1)
-    # print(reactant_list,product_list)
-    return {"reactants": reactant_list, "products": product_list, 
-            "reactant_coeffs": reactant_coeffs, "product_coeffs": product_coeffs}
-
-
-def get_competitions(nist, with_nist = False):
-    DATA_DIR = "/Users/schle759/Documents"
-    fjson = os.path.join(DATA_DIR, "mcdermott.json")
-    competition = read_json(fjson)
-    # competitions = [entry for entry in competition if 'open' in entry]
-    new_entries = []
-    for entry in competition:
-        rxn_dict = get_reaction_dict_from_string(entry['reaction'])
-        temp = float(entry['temp_degC']) + 273.15
-        if temp > 2000:
-            temp = 2000
-        if 'open' not in entry:
-            open = False
-        else:
-            open = True
-        entry_new = {'precursors': rxn_dict['reactants'],  
-        'temp': temp, 'energy': entry['energy'],
-        'c1': entry['c1'], 'c2': entry['c2'], 'open': open}
-        target = [formula for formula in rxn_dict['products'] if CompTools(formula).clean not in ['O1', 'H2O1','C1O2']][0]
-        entry_new['target'] = target
-        if not with_nist:
-            if not_nist_rxn(entry_new, nist):
-                new_entries.append(entry_new)
-        else:
-            new_entries.append(entry_new)
-    return new_entries
-
-def nist_cmpds():
-    DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
-    f = os.path.join(DATADIR, "nist_compounds.json")
-    cmpds = read_json(f)
-    nist_cmpds = [CompTools(entry).clean for entry in cmpds]
-    return nist_cmpds
-
-def not_nist_rxn(competition_entry, nist):
-    # rxns = []
-    species = competition_entry['precursors'] + [competition_entry['target']]
-    if all([CompTools(i).clean not in nist for i in species]):
-        return True
-    return False
+    
