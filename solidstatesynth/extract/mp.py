@@ -4,7 +4,7 @@ from pydmclab.core.comp import CompTools
 from pydmclab.core.query import MPRester
 from pydmclab.data.thermochem import gas_thermo_data
 from emmet.core.thermo import ThermoType
-DATA_DIR = "/user/specifies/data/path"
+DATA_DIR = "../data"
 
 
 def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
@@ -61,10 +61,19 @@ def get_is_theoretical(remake = False):
     is not experimentally realized according to MP.
     """
     mpr = MPRester()
-    if os.path.exists(os.path.join(DATA_DIR, 'mp_is_theoretical.json')) and remake == False:
-        return read_json(os.path.join(DATA_DIR, 'mp_is_theoretical.json'))
-    docs2 = mpr.materials.summary.search(fields=["theoretical",'material_id'])
-    d2 = {entry.material_id: entry.theoretical for entry in docs2}
+    with MPRester() as mpr:
+        session = mpr.session          # requests.Session
+        endpoint = mpr.endpoint        # base API URL
+
+        r = session.get(
+            f"{endpoint}/materials/summary",
+            params={"_fields": "material_id,theoretical"}
+        )
+        r.raise_for_status()
+        resp = r.json()
+
+    # docs2 = mpr.materials.summary.search(fields=["theoretical",'material_id'], all_fields=False)
+    d2 = {entry['material_id']: entry['theoretical'] for entry in resp['data']}
     fjson = os.path.join(DATA_DIR, 'mp_is_theoretical.json')
     mpt = write_json(d2, fjson)
     return mpt
@@ -176,7 +185,7 @@ def restructured_solids_data(gd_mp_data):
 
 
 def main():
-    tm_precursors = read_json(DATA_DIR + '/tm_precursors.json')['precursors']
+    tm_precursors = read_json(DATA_DIR + '/tm_precursors.json')['data']
     MPt = get_is_theoretical()
     print('mp theoretical done')
     MP =  get_MP_data(tm_precursors, remake=True)['data']
