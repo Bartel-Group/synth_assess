@@ -1,6 +1,8 @@
 # solidstatesynth
 
-This package serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions. We also offer the mechanism to generate new materials from input chemical spaces and to compute material energetics using CHGNET and to predict synthesizability using different predictive models. Please run the following lines for installation:
+A package for assessing a candidate target for solid-state synthesis. This package was developed in conjunction with the following work:
+
+# Installation
 
 ```
 # Clone the repository
@@ -13,7 +15,52 @@ cd solidstatesynth
 pip install .
 ```
 
-This package enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation, but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code (with solidstatesynth installed).
+# Modules
+
+## Reaction generation and selectivity assessment (solidstatesynth.selectivity)
+This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. This module enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.rxn_networks), but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code:
+
+```
+from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
+```
+To get all reactions for a given target and temperature (if temperature is unspecified, 1073 K is used):
+
+```
+all_rxns = GammaFromTarget(target, temperature).get_metrics(gen_data = None, is_gen = None)
+```
+
+To get the optimum rxn for a given target and temperature (if temperature is unspecified, 1073 K is used):
+```
+opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen = None)
+```
+In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /solidstatesynth/data/README.md for further details).
+
+If this module is used, please consider citing the following:
+
+```
+[1] McDermott, M. J.; Dwaraknath, S. S.; Persson, K. A. A Graph-Based Network for Predicting Chemical Reaction Pathways in Solid-State Materials Synthesis. Nat. Commun. 2021, 12 (1), 3097. https://doi.org/10.1038/s41467-021-23339-x.
+
+[2]	McDermott, M. J.; McBride, B. C.; Regier, C. E.; Tran, G. T.; Chen, Y.; Corrao, A. A.; Gallant, M. C.; Kamm, G. E.; Bartel, C. J.; Chapman, K. W.; Khalifah, P. G.; Ceder, G.; Neilson, J. R.; Persson, K. A. Assessing Thermodynamic Selectivity of Solid-State Reactions for the Predictive Synthesis of Inorganic Materials. ACS Cent. Sci. 2023, 9 (10), 1957–1975. https://doi.org/10.1021/acscentsci.3c01051.
+```
+
+- Material generation from input chemical spaces /solidstatesynth/gen
+
+serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions (/solidstatesynth/selectivity). We also offer the mechanism to generate new materials from input chemical spaces (/solidstatesynth/gen) and to compute material energetics using CHGNET and to predict synthesizability using different predictive models  (/solidstatesynth/predict). Figures from the reference paper can also be regenerated using this package (/solidstatesynth/plotting)
+
+# Installation
+
+```
+# Clone the repository
+git clone https://github.com/bartel-group/solidstatesynth.git
+
+# Change to the repository directory
+cd solidstatesynth
+
+# Install the package
+pip install .
+```
+
+This package enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth/selectivity/entries.py and solidstatesynth/selectivity/rxn_networks.py, but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code (with solidstatesynth installed).
 
 ```
 from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
