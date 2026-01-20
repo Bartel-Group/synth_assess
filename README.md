@@ -4,13 +4,18 @@ This package serves to generate possible reactions to form a target of interest 
 
 ```
 from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
-# to get all reactions for a given target and temperature (if temperature is unspecified, 1073 K is used):
-# if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /data/README.md for further details)
-all_rxns = GammaFromTarget(target, temperature).get_metrics(gen_data = None, is_gen = None)
+```
+To get all reactions for a given target and temperature (if temperature is unspecified, 1073 K is used):
 
-# to get the optimum rxn for a given target and temperature (if temperature is unspecified, 1073 K is used):
+```
+all_rxns = GammaFromTarget(target, temperature).get_metrics(gen_data = None, is_gen = None)
+```
+
+To get the optimum rxn for a given target and temperature (if temperature is unspecified, 1073 K is used):
+```
 opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen = None)
 ```
+In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /data/README.md for further details)
 
 If this package is used for selectivity assessment, please consider citing the following works:
 
