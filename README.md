@@ -15,7 +15,7 @@ To get the optimum rxn for a given target and temperature (if temperature is uns
 ```
 opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen = None)
 ```
-In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /data/README.md for further details)
+In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /solidstatesynth/data/README.md for further details).
 
 If this package is used for selectivity assessment, please consider citing the following works:
 
@@ -35,3 +35,4 @@ If predictive models are used, please refer to the following works:
 
 [7]	Gleaves, D.; Fu, N.; Dilanga Siriwardane, E. M.; Zhao, Y.; Hu, J. Materials Synthesizability and Stability Prediction Using a Semi-Supervised Teacher-Student Dual Neural Network. Digit. Discov. 2023, 2 (2), 377–391. https://doi.org/10.1039/D2DD00098A.
 
+In addition, this work acknowledges contributions from [pydmclab](https://github.com/Bartel-Group/pydmclab/blob/main/README.md).
