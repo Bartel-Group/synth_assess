@@ -1,6 +1,19 @@
 # solidstatesynth
 
-This package serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions. We also offer the mechanism to generate new materials from input chemical spaces and to compute material energetics using CHGNET and to predict synthesizability using different predictive models. This package enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation, but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code (with solidstatesynth installed).
+This package serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions. We also offer the mechanism to generate new materials from input chemical spaces and to compute material energetics using CHGNET and to predict synthesizability using different predictive models. Please run the following lines for installation:
+
+```
+# Clone the repository
+git clone https://github.com/bartel-group/solidstatesynth.git
+
+# Change to the repository directory
+cd solidstatesynth
+
+# Install the package
+pip install .
+```
+
+This package enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation, but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code (with solidstatesynth installed).
 
 ```
 from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
