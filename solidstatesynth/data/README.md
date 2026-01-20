@@ -1,3 +1,5 @@
+This file contains an overview of folders and files inside data.
+
 ## load.py
 This file contains functions for loading the data listed here. If the data listed here is needed, the user can import loading functions from solidstatesynth.data.load. Note that files that are of the form {'data': [list of data]} are loaded just as [list of data] by loading functions.
 
