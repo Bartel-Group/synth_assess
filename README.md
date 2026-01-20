@@ -34,4 +34,4 @@ If predictive models are used, please refer to the following works:
 [6]	Amariamir, S.; George, J.; Benner, P. SynCoTrain: A Dual Classifier PU-Learning Framework for Synthesizability Prediction. Digit. Discov. 2025, 4 (6), 1437–1448. https://doi.org/10.1039/D4DD00394B.
 
 [7]	Gleaves, D.; Fu, N.; Dilanga Siriwardane, E. M.; Zhao, Y.; Hu, J. Materials Synthesizability and Stability Prediction Using a Semi-Supervised Teacher-Student Dual Neural Network. Digit. Discov. 2023, 2 (2), 377–391. https://doi.org/10.1039/D2DD00098A.
-![image](https://github.umn.edu/user-attachments/assets/f10d0bcd-d63d-42cb-abdd-d6484ebccd66)
+
