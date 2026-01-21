@@ -45,7 +45,7 @@ If this module is used, please consider citing the following:
 
 - Material generation from input chemical spaces /solidstatesynth/gen
 
-serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions (/solidstatesynth/selectivity). We also offer the mechanism to generate new materials from input chemical spaces (/solidstatesynth/gen) and to compute material energetics using CHGNET and to predict synthesizability using different predictive models  (/solidstatesynth/predict). Figures from the reference paper can also be regenerated using this package (/solidstatesynth/plotting)
+serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions (solidstatesynth.selectivity). We also offer the mechanism to generate new materials from input chemical spaces (solidstatesynth.gen) and to compute material energetics using CHGNET and to predict synthesizability using different predictive models  (solidstatesynth.predict). Figures from the reference paper can also be regenerated using this package (solidstatesynth.plotting)
 
 # Installation
 
@@ -60,7 +60,7 @@ cd solidstatesynth
 pip install .
 ```
 
-This package enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth/selectivity/entries.py and solidstatesynth/selectivity/rxn_networks.py, but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code (with solidstatesynth installed).
+This package enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.entries and solidstatesynth.selectivity.rxn_networks, but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code (with solidstatesynth installed).
 
 ```
 from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
