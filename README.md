@@ -1,6 +1,11 @@
 # solidstatesynth
 
-A package for assessing a candidate target for solid-state synthesis. This package was developed in conjunction with the following work:
+A package for assessing a candidate target for solid-state synthesis. This tool allows users to assess reaction selectivity to access a target of interest, generate new targets, and apply synthesizability predictors to a target. If using this package, please consider citing the accompanying paper:
+
+```
+[1] Schlesinger, J.; Hjaltason, S.; Szymanski, N.; Bartel, C. Thermodynamic assessment of machine learning models for solid-state synthesis prediction. ** In preparation **. 2026 
+  
+```
 
 # Installation
 
@@ -49,12 +54,11 @@ This module enables users to generate new materials in a specified chemical spac
 
 If this module is used for material generation, please cite the following:
 ```
-[3]	Park, H.; Onwuli, A.; Walsh, A. Exploration of Crystal Chemical Space Using Text-Guided Generative Artificial Intelligence. Nat. Commun. 2025, 16 (1), 4379. https://doi.org/10.1038/s41467-025-59636-y.![image](https://github.umn.edu/user-attachments/assets/7f47dcd2-a3d3-478b-8f32-18b4d24f0ea9)
-
+[3]	Park, H.; Onwuli, A.; Walsh, A. Exploration of Crystal Chemical Space Using Text-Guided Generative Artificial Intelligence. Nat. Commun. 2025, 16 (1), 4379. https://doi.org/10.1038/s41467-025-59636-y.!
 ```
 If this module is used for energy computation, please cite the following:
 ```
-[4] Deng, B.; Zhong, P.; Jun, K.; Riebesell, J.; Han, K.; Bartel, C. J.; Ceder, G. CHGNet as a Pretrained Universal Neural Network Potential for Charge-Informed Atomistic Modelling. Nat. Mach. Intell. 2023, 5 (9), 1031–1041. https://doi.org/10.1038/s42256-023-00716-3.![image](https://github.umn.edu/user-attachments/assets/f5a5ae3a-6456-49ef-acdb-9976fa2d668b)
+[4] Deng, B.; Zhong, P.; Jun, K.; Riebesell, J.; Han, K.; Bartel, C. J.; Ceder, G. CHGNet as a Pretrained Universal Neural Network Potential for Charge-Informed Atomistic Modelling. Nat. Mach. Intell. 2023, 5 (9), 1031–1041. https://doi.org/10.1038/s42256-023-00716-3.
 
 ```
 
@@ -74,4 +78,3 @@ If this module is used, please cite the following (depending which predictive mo
 [9]	Gleaves, D.; Fu, N.; Dilanga Siriwardane, E. M.; Zhao, Y.; Hu, J. Materials Synthesizability and Stability Prediction Using a Semi-Supervised Teacher-Student Dual Neural Network. Digit. Discov. 2023, 2 (2), 377–391. https://doi.org/10.1039/D2DD00098A.
 ```
 
-This work acknowledges contributions from [pydmclab](https://github.com/Bartel-Group/pydmclab/blob/main/README.md).
