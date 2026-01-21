@@ -59,7 +59,7 @@ If this module is used for energy computation, please cite the following:
 ```
 
 - Material synthesizability prediction solistatesynth.pred
-This module enables users to apply five synthesizability predictors to a material of interest. Two of the five models (PU-CGNF [5] and SynthNN [6] take only formula as input while the other three PU-CGCNN [7], SynCoTrain [8], and TSDNN [9] require structural inputs as well.
+This module enables users to apply five synthesizability predictors to a material of interest. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well.
 
 If this module is used, please cite the following (depending which predictive models are used)
 ```
