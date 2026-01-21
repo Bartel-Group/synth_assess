@@ -43,7 +43,7 @@ If this module is used, please consider citing the following:
 [2]	McDermott, M. J.; McBride, B. C.; Regier, C. E.; Tran, G. T.; Chen, Y.; Corrao, A. A.; Gallant, M. C.; Kamm, G. E.; Bartel, C. J.; Chapman, K. W.; Khalifah, P. G.; Ceder, G.; Neilson, J. R.; Persson, K. A. Assessing Thermodynamic Selectivity of Solid-State Reactions for the Predictive Synthesis of Inorganic Materials. ACS Cent. Sci. 2023, 9 (10), 1957–1975. https://doi.org/10.1021/acscentsci.3c01051.
 ```
 
-- Material generation from input chemical spaces /solidstatesynth/gen
+- Material generation from input chemical spaces solidstatesynth.gen
 
 serves to generate possible reactions to form a target of interest and to compute the selectivity associated with these reactions (solidstatesynth.selectivity). We also offer the mechanism to generate new materials from input chemical spaces (solidstatesynth.gen) and to compute material energetics using CHGNET and to predict synthesizability using different predictive models  (solidstatesynth.predict). Figures from the reference paper can also be regenerated using this package (solidstatesynth.plotting)
 
