@@ -1,11 +1,6 @@
 # solidstatesynth
 
-A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, generate new targets, and apply synthesizability predictors to a target. If using this package, please consider citing the accompanying paper:
-
-```
-[1] Schlesinger, J.; Hjaltason, S.; Szymanski, N.; Bartel, C. Thermodynamic assessment of machine learning models for solid-state synthesis prediction. ** In preparation **. 2026 
-  
-```
+A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, generate new targets, and apply synthesizability predictors to a target. 
 
 # Installation
 
@@ -78,3 +73,10 @@ If this module is used, please cite the following (depending which predictive mo
 [9]	Gleaves, D.; Fu, N.; Dilanga Siriwardane, E. M.; Zhao, Y.; Hu, J. Materials Synthesizability and Stability Prediction Using a Semi-Supervised Teacher-Student Dual Neural Network. Digit. Discov. 2023, 2 (2), 377–391. https://doi.org/10.1039/D2DD00098A.
 ```
 
+# Citation
+If using this package, please consider citing the accompanying paper:
+
+```
+[1] Schlesinger, J.; Hjaltason, S.; Szymanski, N.; Bartel, C. Thermodynamic assessment of machine learning models for solid-state synthesis prediction. ** In preparation **. 2026 
+  
+```
