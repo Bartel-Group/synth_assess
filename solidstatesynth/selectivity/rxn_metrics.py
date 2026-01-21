@@ -507,13 +507,6 @@ class AnalyzeReactionSet():
 
         return metrics
     
-    def opt_rxn(self):
-        """
-        Identify and return the lowest-gamma (most selective) reaction entry. 
-        """
-        all_rxn_metrics = self.metrics_at_temp_env()
-        min_entry = min(all_rxn_metrics, key=lambda d: d['gamma'])
-        return min_entry
 
     
 class GammaFromTarget():
@@ -553,3 +546,11 @@ class GammaFromTarget():
         r = RxnsAtNewTempEnv(reaction_set = r, els = CompTools(target).els, new_temperature = temperature, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).corrected_reactions_at_temp()
         t = AnalyzeReactionSet(target = target, reactions = r, temperature = temperature)
         return t.metrics_at_temp_env()
+    
+    def opt_rxn(self):
+        """
+        Identify and return the lowest-gamma (most selective) reaction entry. 
+        """
+        all_rxn_metrics = self.get_metrics(gen_data=None, is_gen = False)
+        min_entry = min(all_rxn_metrics, key=lambda d: d['gamma'])
+        return min_entry

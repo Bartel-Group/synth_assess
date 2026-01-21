@@ -9,6 +9,9 @@ results_DATA_PATH = os.path.join(this_dir, "results_data")
 def mp_data():
     return read_json(os.path.join(DATA_PATH,'mp_solids_data.json'))
 
+def mp_data_with_theoretical():
+    return read_json(os.path.join(DATA_PATH, 'mp_data_with_theoretical.json'))
+
 def tm_precursors():
     f = read_json(os.path.join(DATA_PATH,'tm_precursors.json'))
     return f['data']
