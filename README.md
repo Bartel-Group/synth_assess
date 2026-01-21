@@ -18,7 +18,7 @@ pip install .
 # Modules
 
 ## Reaction generation and selectivity assessment (solidstatesynth.selectivity)
-This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. This module enables the user the reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.rxn_networks), but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code:
+This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. This module enables the user to reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.rxn_networks), but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code:
 
 ```
 from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
