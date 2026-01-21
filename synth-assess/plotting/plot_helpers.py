@@ -4,7 +4,8 @@ from matplotlib.path import Path
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
-
+lw = 3.5
+sz = 35
 # Helper functions for figure 1
 
 def plot_hull(ax, target, ylabel = '$\Delta$$\it{G}$$_{rxn}$ ' + '(eV/atom)', p_sz = 300):
@@ -266,7 +267,7 @@ def binned_fraction_overlay(ax, x, scores, xedges,
     ax.scatter(
         centers, frac_true,
         edgecolor=color, facecolor='white',
-        s=150, linewidth=2.5, zorder=4
+        s=100, linewidth=1.5, zorder=4
     )
 
     ax.set_ylim(0, 1)
