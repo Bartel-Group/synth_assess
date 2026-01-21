@@ -9,22 +9,17 @@ from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
 from pydmclab.plotting.utils import set_rc_params
 from solidstatesynth.plotting.plot_helpers import plot_hull, plot_rolling_stats, metric_cdf, metric_hexbin_parity, binned_fraction_overlay, make_heatmap, get_data, model_hist, plot_stacked_hist
-from solidstatesynth.data.load import tm_entries, gen_data, tm_rxns_with_gamma
+from solidstatesynth.data.load import tm_entries, mp_data, mp_data_with_theoretical, gen_data, tm_rxns_with_gamma
 
 set_rc_params()
-# from pydmclab.plotting.utils import get_colors
 COLORS = CSS4_COLORS # or some other palette
-
-
-DATADIR = "/Volumes/cems_bartel/projects/negative-examples/data"
-DATADIR_gen = "/Volumes/cems_bartel/projects/negative-examples/data/gen_materials"
 models = ['PU-CGNF', 'SynthNN','PU-CGCNN','SynCoTrain']
 lw = 3.5
 sz = 35
 
 def plot_fig_1(sz = sz, p_sz = 250, figsize = (20,18)):
-    tm_entries = tm_entries()
-    entries = [entry for entry in tm_entries if entry['E_d'] != None]
+    tm_list = tm_entries()
+    entries = [entry for entry in tm_list if entry['E_d'] != None]
     x = []
     for entry in entries:
         if entry['true_rxn'] == True:
@@ -93,9 +88,7 @@ def plot_fig_1(sz = sz, p_sz = 250, figsize = (20,18)):
 
 
 def plot_fig_2(sz = sz):
-    metric = 'gamma_new'
-    data = tm_rxns_with_gamma()
-    tm_entries = tm_entries()
+    tm_list = tm_entries()
     plt.rcParams.update({
         'font.size': sz,
         'axes.titlesize': sz,
@@ -110,7 +103,7 @@ def plot_fig_2(sz = sz):
     fig, axes = plt.subplots(1, 2, figsize=(16, 6.375), constrained_layout = True)
     hb = metric_hexbin_parity(axes[0], data_tm)
     axes[0].text(x = -0.58,y = 0.3, s = 'a', fontweight = 'bold', fontsize = 45)
-    metric_cdf(axes[1], tm_entries)
+    metric_cdf(axes[1], tm_list)
     axes[0].tick_params(axis='y', right = False, length = 10, width = lw)
     axes[0].tick_params(axis='x', length = 10, top = False, width = lw)
     axes[1].text(x = -0.65,y = 1.0, s = 'b', fontweight = 'bold', fontsize = 45)
@@ -687,14 +680,15 @@ def plot_fig_s3(gamma_gen, ylabel="Score", bins=12, vmax=100, score_line=None,
 
 
 def main():
-    data_mp = read_json(os.path.join(DATADIR, 'mp_gd.json'))['data']
-    mp_data ={CompTools(entry['formula']).clean: entry for entry in data_mp}
-    data_tm = read_json(os.path.join(DATADIR,'tm_rxns_with_gamma.json'))
-    tm_entries = read_json(os.path.join(DATADIR,'tm_rxns_with_gamma.json'))
+    data_mp = mp_data()
+    data_mp_theoretical = mp_data_with_theoretical()
+    data_mp ={CompTools(entry['formula']).clean: entry for entry in data_mp}
+    data_tm = tm_rxns_with_gamma()
+    entries = tm_entries()
     # data_gen = read_json(os.path.join(DATADIR_gen, 'gen_data_with_pred.json'))
-    gamma_gen = read_json(os.path.join(DATADIR_gen, 'gen_mat_pred_gamma.json'))
+    gamma_gen = gen_data()
 
-    return mp_data, data_tm, stability, tm_entries, gamma_gen
+    return data_mp, data_mp_theoretical, data_tm, stability, entries, gamma_gen
 
 if __name__ == "__main__":
-    mp_data, data_tm, stability, tm_entries, gamma_gen = main()
+    data_mp, data_mp_theoretical, data_tm, stability, entries, gamma_gen = main()

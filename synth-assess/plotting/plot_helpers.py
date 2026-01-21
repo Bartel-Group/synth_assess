@@ -266,7 +266,7 @@ def binned_fraction_overlay(ax, x, scores, xedges,
     ax.scatter(
         centers, frac_true,
         edgecolor=color, facecolor='white',
-        s=100, linewidth=1.5, zorder=4
+        s=150, linewidth=2.5, zorder=4
     )
 
     ax.set_ylim(0, 1)
