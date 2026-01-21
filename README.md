@@ -1,4 +1,4 @@
-# solidstatesynth
+# synth-assess
 
 A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, and generate new targets, to reproduce our results, or for new targets. 
 
@@ -6,7 +6,7 @@ A package for assessing a candidate target for solid-state synthesis. This tool 
 
 ```
 # Clone the repository
-git clone https://github.com/bartel-group/solidstatesynth.git
+git clone https://github.com/bartel-group/synth-assess.git
 
 # Change to the repository directory
 cd solidstatesynth
@@ -17,11 +17,11 @@ pip install .
 
 # Modules
 
-## Reaction generation and selectivity assessment (solidstatesynth.selectivity)
+## Reaction generation and selectivity assessment (synth-assess.selectivity)
 This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. This module enables the user to reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.rxn_networks), but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code:
 
 ```
-from solidstatesynth.selectivity.rxn_metrics import GammaFromTarget
+from synth-assess.selectivity.rxn_metrics import GammaFromTarget
 ```
 To get all reactions for a given target and temperature (if temperature is unspecified, 1073 K is used):
 
@@ -43,7 +43,7 @@ If this module is used, please cite the following:
 [2]	McDermott, M. J.; McBride, B. C.; Regier, C. E.; Tran, G. T.; Chen, Y.; Corrao, A. A.; Gallant, M. C.; Kamm, G. E.; Bartel, C. J.; Chapman, K. W.; Khalifah, P. G.; Ceder, G.; Neilson, J. R.; Persson, K. A. Assessing Thermodynamic Selectivity of Solid-State Reactions for the Predictive Synthesis of Inorganic Materials. ACS Cent. Sci. 2023, 9 (10), 1957–1975. https://doi.org/10.1021/acscentsci.3c01051.
 ```
 
-## Material generation from input chemical spaces (solidstatesynth.gen)
+## Material generation from input chemical spaces (synth-assess.gen)
 
 This module enables users to generate new materials in a specified chemical space using [Chemeleon](https://github.com/hspark1212/chemeleon/) and to compute material energetics using CHGNET.
 
@@ -57,7 +57,7 @@ If this module is used for energy computation, please cite the following:
 
 ```
 
-## Material synthesizability prediction (solistatesynth.pred)
+## Material synthesizability prediction (synth-assess.pred)
 This module enables users to replicate our results for five synthesizability predictors applied to generative models. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well. Note that we do not import these packages, but offer users the input files needed to make predictions on the materials used in this assessment.
 
 For further information, please refer to
