@@ -1,6 +1,6 @@
 # solidstatesynth
 
-A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, generate new targets, and apply synthesizability predictors to a target. 
+A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, and generate new targets, to reproduce our results, or for new targets. 
 
 # Installation
 
@@ -58,9 +58,9 @@ If this module is used for energy computation, please cite the following:
 ```
 
 ## Material synthesizability prediction (solistatesynth.pred)
-This module enables users to apply five synthesizability predictors to a material of interest. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well.
+This module enables users to replicate our results for five synthesizability predictors applied to generative models. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well. Note that we do not import these packages, but offer users the input files needed to make predictions on the materials used in this assessment.
 
-If this module is used, please cite the following (depending which predictive models are used)
+For further information, please refer to
 ```
 [5] Jang, J.; Gu, G. H.; Noh, J.; Kim, J.; Jung, Y. Structure-Based Synthesizability Prediction of Crystals Using Partially Supervised Learning. J. Am. Chem. Soc. 2020, 142 (44), 18836–18843. https://doi.org/10.1021/jacs.0c07384.
 
