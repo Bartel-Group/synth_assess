@@ -1,6 +1,6 @@
 # solidstatesynth
 
-A package for assessing a candidate target for solid-state synthesis. This tool allows users to assess reaction selectivity to access a target of interest, generate new targets, and apply synthesizability predictors to a target. If using this package, please consider citing the accompanying paper:
+A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, generate new targets, and apply synthesizability predictors to a target. If using this package, please consider citing the accompanying paper:
 
 ```
 [1] Schlesinger, J.; Hjaltason, S.; Szymanski, N.; Bartel, C. Thermodynamic assessment of machine learning models for solid-state synthesis prediction. ** In preparation **. 2026 
