@@ -43,7 +43,7 @@ If this module is used, please cite the following:
 [2]	McDermott, M. J.; McBride, B. C.; Regier, C. E.; Tran, G. T.; Chen, Y.; Corrao, A. A.; Gallant, M. C.; Kamm, G. E.; Bartel, C. J.; Chapman, K. W.; Khalifah, P. G.; Ceder, G.; Neilson, J. R.; Persson, K. A. Assessing Thermodynamic Selectivity of Solid-State Reactions for the Predictive Synthesis of Inorganic Materials. ACS Cent. Sci. 2023, 9 (10), 1957–1975. https://doi.org/10.1021/acscentsci.3c01051.
 ```
 
-- Material generation from input chemical spaces solidstatesynth.gen
+## Material generation from input chemical spaces (solidstatesynth.gen)
 
 This module enables users to generate new materials in a specified chemical space using [Chemeleon](https://github.com/hspark1212/chemeleon/) and to compute material energetics using CHGNET.
 
@@ -58,7 +58,7 @@ If this module is used for energy computation, please cite the following:
 
 ```
 
-- Material synthesizability prediction solistatesynth.pred
+## Material synthesizability prediction (solistatesynth.pred)
 This module enables users to apply five synthesizability predictors to a material of interest. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well.
 
 If this module is used, please cite the following (depending which predictive models are used)
