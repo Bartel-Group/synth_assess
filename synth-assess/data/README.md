@@ -41,6 +41,9 @@ A dictionary of generated materials, their associated information for reaction n
 ```
 {'A1B1O1': {'nsites': int, 'volume': float, 'formation_energy_per_atom': float, 'tm_precursor': False, 'hull_energy': float, 'gamma': gamma (reweighted), 'predictions':{'PU-CGNF': float (0 to 1), 'SynthNN': float (O to 1), 'PU-CGNF': float (0 to 1), 'SynCoTrain': float (0 to 1), 'TSDNN': float (0 to 1)}}
 ```
+## gen_mat_pred_gamma_reduced.csv
+A reduced dictionary of generated materials, associated hull energies, associated computed gamma, and synthesizability prediction. For ease of use, this file is in a csv format. 
+
 ## tm_entries.json
 TM rxns and results formatted as a list of optimum-gamma and true reactions for plotting purposes. This file is of the form
 ```
