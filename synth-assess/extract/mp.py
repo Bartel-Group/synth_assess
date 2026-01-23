@@ -4,7 +4,7 @@ from pydmclab.core.comp import CompTools
 from pydmclab.core.query import MPRester
 from pydmclab.data.thermochem import gas_thermo_data
 from emmet.core.thermo import ThermoType
-DATA_DIR = "../data"
+DATA_DIR = "../data/data"
 
 
 def get_MP_data(tm_data, remake = False, thermo_types = [ThermoType.GGA_GGA_U]):
