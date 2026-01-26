@@ -10,8 +10,8 @@ from rxn_network.reactions.computed import ComputedReaction
 from rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
 from rxn_network.reactions.hull import InterfaceReactionHull
 from rxn_network.reactions.reaction_set import ReactionSet
-from solidstatesynth.gen.entries import GibbsSet, FormulaChecker
-from solidstatesynth.data.load import mp_data
+from synth_assess.selectivity.entries import GibbsSet, FormulaChecker
+from synth_assess.data.load import mp_data
 
 
 
@@ -199,6 +199,9 @@ class TempEnvCorrections():
         ) -> CompositionEnergyAdjustment:
         """
         Get the environment correction for a gas at the specified temperature
+        This will be zero for all cases of a "closed" reaction. This function is included only for the utility
+        of the user if an open reaction computation is desired.
+
         Different environments will have different partial pressures for gasses, which will affect the correction.
         Args:
             formula (str): Formula of the gas to get the environment correction for

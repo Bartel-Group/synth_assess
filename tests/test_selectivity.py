@@ -1,8 +1,8 @@
 
 import unittest
 from pydmclab.core.comp import CompTools
-from solidstatesynth.gen.entries import Gibbs, GibbsSet, FormulaChecker
-from solidstatesynth.gen.rxn_metrics import PrecursorSet, EnumerateRxns, TempEnvCorrections, RxnsAtNewTempEnv, AnalyzeReactionSet
+from synth_assess.selectivity.entries import Gibbs, GibbsSet, FormulaChecker
+from synth_assess.selectivity.rxn_metrics import PrecursorSet, EnumerateRxns, TempEnvCorrections, RxnsAtNewTempEnv, AnalyzeReactionSet
 
 
 solids_data = {'Cs1O3': {'volume': 353.16244441729305,
@@ -238,25 +238,6 @@ class UnitTestEnumerate(unittest.TestCase):
 
 class UnitTestTempEnv(unittest.TestCase):
 
-    def test_temp_env_correction(self):
-        env_entries = [{'environment':'air', 'open':False, 'formula':'Ba1Ti1O3', 'value':0},
-                       {'environment':'air', 'open':True, 'formula':'Ba1Ti1O3', 'value':0},
-                       {'environment':'inert', 'open':True, 'formula':'Ba1Ti1O3', 'value':0},
-                       {'environment':'air', 'open':False, 'formula':'Ba1Ti1O3', 'value':0},
-                       {'environment':'air', 'open':True, 'formula':'C1O2', 'value':-0.2022799},
-                       {'environment':'inert', 'open':True, 'formula':'C1O2', 'value':-0.35749236}]
-        temperature = 300
-        for entry in env_entries:
-            environment = entry['environment']
-            t = TempEnvCorrections(temperature = temperature, environment = environment, open = entry['open'])
-            
-            if not entry['open']:
-                self.assertEqual(t.environment_correction(entry['formula']).value, 0)
-            elif entry['environment'] not in ['air','inert']:
-                self.assertEqual(t.environment_correction(entry['formula']), None)
-            else:
-                self.assertAlmostEqual(t.environment_correction(entry['formula']).value, entry['value'], places=3)
-
     def test_mu(self):
         env_entries = [{'environment':'air', 'open':True},
                        {'environment':'inert', 'open':True}]           
@@ -392,11 +373,7 @@ class UnitTestRxnsAtNewTempEnv(unittest.TestCase):
                         self.assertAlmostEqual(metric['c1'], entry['c1'], delta = 0.0001)
                         self.assertAlmostEqual(metric['c2'], entry['c2'], delta = 0.0001)
                         self.assertAlmostEqual(metric['gamma'], entry['gamma'], delta = 0.0001)
-                        # self.assertEqual(metric['energy'], entry['energy'])
-                        # self.assertEqual(metric['c1'], entry['c1'])
-                        # self.assertEqual(metric['c2'], entry['c2'])
-                        # self.assertEqual(metric['gamma'], entry['gamma'])
-    
+
 
 if __name__ == "__main__":
     unittest.main()

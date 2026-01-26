@@ -1,5 +1,5 @@
 [project]
-name = "solidstatesynth"
+name = "synth_assess"
 version = "0.0.1"
 description = "A Python package to parse and characterize text-mined solid-state synthesis reactions."
 authors = [{name = "Jane Schlesinger", email = "schle759@umn.edu"}]
@@ -15,10 +15,10 @@ classifiers = [
 dependencies = ["pydmclab","reaction-network == 8.3.0"]
 
 [project.urls]
-Source = "https://github.com/bartel-group/SolidStateSynth"
+Source = "https://github.com/bartel-group/synth_assess"
 
 [tool.setuptools.packages.find]
-include = ["solidstatesynth*"]
+include = ["synth_assess*"]
 
 [build-system]
 requires = ["setuptools>=65.0.0", "wheel >= 0.38"]

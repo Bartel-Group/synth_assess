@@ -3,8 +3,8 @@ from pydmclab.core.comp import CompTools
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
-from synth-assess.extract.mp import get_gases_data
-from synth-assess.data.load import mp_data
+from synth_assess.extract.mp import get_gases_data
+from synth_assess.data.load import mp_data
 
 
 
