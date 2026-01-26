@@ -52,7 +52,7 @@ class Gibbs:
 
         # retrieve gases data for this formula if its a gas
         gases_data = {
-            f: gases_data[f] for f in gases_data if CompTools(f).clean == formula
+            f: self.gases_data[f] for f in self.gases_data if CompTools(f).clean == formula
         }
 
         # if gases_data isn't empty, we have a gas
