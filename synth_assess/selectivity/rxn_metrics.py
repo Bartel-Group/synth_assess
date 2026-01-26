@@ -351,8 +351,7 @@ class RxnsAtNewTempEnv():
         self.temperature = new_temperature
         self.environment = environment
         self.corr = TempEnvCorrections(temperature = new_temperature,
-                                       environment=environment, 
-                                       open = open)
+                                       environment=environment)
         self.entries = reaction_set.entries
         self.reactions = reaction_set
         self.gen_data = gen_data
