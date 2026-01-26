@@ -3,7 +3,7 @@ import unittest
 from pydmclab.core.comp import CompTools
 from synth_assess.selectivity.entries import Gibbs, GibbsSet, FormulaChecker
 from synth_assess.selectivity.rxn_metrics import PrecursorSet, EnumerateRxns, TempEnvCorrections, RxnsAtNewTempEnv, AnalyzeReactionSet
-
+from synth_assess.data.load import gas_data
 
 solids_data = {'Cs1O3': {'volume': 353.16244441729305,
   'formation_energy_per_atom': -0.6521186182327591,
@@ -171,7 +171,7 @@ class UnitTestGibbs(unittest.TestCase):
         for formula in formulas:
             formula_new = CompTools(formula).clean
             n_atoms = CompTools(formula_new).n_atoms
-            build_300 = Gibbs(formula_new, solids_data=solids_data, temperature=300)
+            build_300 = Gibbs(formula_new, solids_data=solids_data,temperature=300)
             build_1450 = Gibbs(formula_new, solids_data=solids_data, temperature=1450)
             energy_300 = build_300.entry.energy
             energy_1450 = build_1450.entry.energy

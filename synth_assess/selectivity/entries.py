@@ -3,8 +3,7 @@ from pydmclab.core.comp import CompTools
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
-from synth_assess.extract.mp import get_gases_data
-from synth_assess.data.load import mp_data
+from synth_assess.data.load import mp_data, gas_data
 
 
 
@@ -45,7 +44,7 @@ class Gibbs:
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
         self.entry_id = entry_id
-        self.gases_data=get_gases_data()
+        self.gases_data=gas_data()
         if solids_data:
             self.solids_data = solids_data
         else:
@@ -288,7 +287,7 @@ class GibbsSet:
             self.solids_data = solids_data
         else:
             self.solids_data = mp_data()
-        self.gases_data = get_gases_data()
+        self.gases_data = gas_data()
         self.gen_data = gen_data
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
@@ -372,7 +371,6 @@ class GibbsSet:
             Gibbs(
                 formula=f,
                 solids_data=solids_data,
-                gases_data=gases_data,
                 gen_data = gen_data,
                 is_gen = True if f == gen_formula else False,
                 temperature=temperature,
