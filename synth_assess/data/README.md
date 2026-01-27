@@ -33,6 +33,9 @@ A list of all (cleaned) targets in text-mined reactions.The file is of the form
 {'data':[list of target strings]}
 ```
 
+## cifs_relaxed.zip
+A zipped folder containing ~22,000 cif structure files generated with the Chemeleon generative model and relaxed using CHGNet.
+
 # /results_data folder contents
 This folder contains data with results from reaction network generation for both textmined and generated materials and synthesizability predictions for generated materials. Data from this folder is also used for plotting
 

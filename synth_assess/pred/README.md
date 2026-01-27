@@ -1,212 +1,95 @@
-This file describes how to run the synthesizability prediction for each model tested. The models's github pages are self-explanatory, but the necessary steps for only pretrained predictions are outlined below. Each model's section in this file will first describe how to arrange the downloaded repos to test on the given structures, and then there is documentation from the repo on how to run the predictor once all the data is in place.
+# PU prediction models
+This folder includes all the files and procedures to replicate the PU model predictions on the structure test set generated with Chemeleon. Each model will have to be downloaded from the respective GitHub page, but the generated materials have been formatted to fit the specifications of each model. Additionally, the models have their own descriptive README files for retraining or testing different datasets, but the following instructions will suffice for replicating these predictions. For any use of a PU model, cite using the included reference.
 
-
-
-
-
-
-
-# Synthesizability-stoi-CGNF
-
-#### Place id_prop.csv in the folder and run the command in [2]
-
+# PU-CGNF
+## Model download
+`git clone https://github.com/kaist-amsg/Synthesizability-stoi-CGNF.git`
 
 ## Prerequisites
-Python3<br> Numpy<br> Pytorch<br> Pymatgen<br>
-
+* python
+* numpy
+* pytorch
+* pymatgen
 
 ## Usage
-### [1] Define a customized data format and prepare atomic embedding vector file for generation of CGNF
-To input crystal structures to Synthesizability-stoi-CGNF, you will need to define a customized dataset and pre-generate CGNF as pickle files for bootstrap aggregating in semi-supervised learning. Note that this is required for both training and predicting.
-Following files should be needed to generate CGNF.
-#### id_prop.csv: a CSV file with two columns for positive data(synthesizable) and unlabeled data(not-yet-synthesized). The first column recodes a inorganic composition (The formula string format of Composition class in Pymatgen package is recommended), and the second column recodes the value (1 = positive, 0 = unlabeled) according to whether they were synthesized already or not.
-#### cgcnn_hd_rcut4_nn8.element_embedding.json: a JSON file containing atomic embedding vectors for generation of CGNF
+1. Copy **id_prop.csv** from **synth_assess/pred/PU-CGNF/** into **Synthesizability-stoi-CGNF/**
+2. Run the prediction in **Synthesizability-stoi-CGNF/** with `python predict_PU_learning.py --bag 100 --data id_prop.csv --embedding cgcnn_hd_rcut4_nn8.element_embedding.json --modeldir ./models`
+3. Results are in the file **test_results_ensemble_100models.csv**
 
-
-### [2] Predict synthesizability of new crystals with pre-trained models
-`python predict_PU_learning.py --bag 100 --data id_prop.csv --embedding cgcnn_hd_rcut4_nn8.element_embedding.json --modeldir ./models`<br>
-
-Load composition information from 'id_prop_test.csv' file for test materials and pre-trained models from 'models' folder.<br>
-Predict synthesizability of crystal composition in id_prop_test.csv file using the loaded models.<br>
-Result of bootstrap aggregating is saved as 'test_results_ensemble_100models.csv'
-
-
-
+## Reference
+* Jang, J.; Noh, J.; Zhou, L.; Gu, G. H.; Gregoire, J. M.; Jung, Y. Synthesizability of Materials Stoichiometry Using Semi-Supervised Learning. Matter 2024, 7 (6), 2294–2312. https://doi.org/10.1016/j.matt.2024.05.002.
 
 # SynthNN
-
-#### Replace input_formulas.txt in the repo with the provided input_formulas.txt. Open the jupyter notebook SynthNN_predict.ipynb and run the first cell for imports, and then run the cell labeled "Option 2: Read in formulas from text file." The results are shown in the file output_formula_preds.txt. Additinoal information is given below.
-
-
-## Prerequisites
-Requirements:
-- Python
-- [Pymatgen](https://pymatgen.org/installation.html)
-- [Tensorflow](https://www.tensorflow.org/install)
-
-
-### Predict Synthesizability
-Predicting the synthesizability of a material composition with a pre-trained version of SynthNN can be done with SynthNN_predict.ipynb.
-We recommend referring to the below performance metrics when choosing a decision threshold to label a material as synthesizable or not. The below table indicates the performance of
-SynthNN of a dataset with a 20:1 ratio of unsynthesized:synthesized examples. Note, a threshold value of '0.10' means that any material with a SynthNN output greater than 0.10 is taken to be synthesizable, which leads to low precision but high recall.
-Threshold | Precision | Recall | 
-| :---: | :---: | :---: |
-0.10 | 0.239 | 0.859 |
-0.20 | 0.337 | 0.783 |
-0.30 | 0.419 | 0.721 |
-0.40 | 0.491 | 0.658 |
-0.50 | 0.563 | 0.604 |
-0.60 | 0.628 | 0.545 |
-0.70 | 0.702 | 0.483 |
-0.80 | 0.765 | 0.404 |
-0.90 | 0.851 | 0.294 |
-
-
-
-
-# Synthesizability-PU-CGCNN
-
-#### To generate the crystal graphs in [1], move the provided folders cif_files and saved_crystal_graph into the model directory. Copy the cifs from cifs_relaxed (unzip first) into cif_files and run the command in [1]. After generating the crystal graphs, run the prediction in [2].
-
+## Model download
+`git clone https://github.com/antoniuk1/SynthNN.git`
 
 ## Prerequisites
-Python3<br> Numpy<br> Pytorch<br> Pymatgen<br>
-
+* python
+* pymatgen
+* tensorflow
 
 ## Usage
-### [1] Define a customized dataset and generate crystal graphs
-To input crystal structures to Synthesizability-PU-CGCNN, you will need to define a customized dataset and pre-generate crystal graph as pickle files for bootstrap aggregating in partially supervised learning. Note that this is required for both training and predicting.
-If you want to use cif data in the folder named as “cif_files”, following files should be needed to generate crystal graph.
-#### 1) id_prop.csv: a CSV file with two columns for positive data(synthesizable) and unlabeled data(not-yet-synthesized). The first column recodes a unique ID for each crystal, and the second column recodes the value (1 = positive, 0 = unlabeled) according to whether they were synthesized already or not.
-#### 2) atom_init.json: a JSON file that stores the initialization vector for each element.
-#### 3) ID.cif: a CIF file that recodes the crystal structure, where ID is the unique ID for the crystal.
-ex) If you want to generate crystal graph with cutoff radius 8A, maximum 12 neighbors:<br>
-`python generate_crystal_graph.py --cifs ./cif_files --n 12 --r 8 --f ./saved_crystal_graph`<br>
-Then, you will obtain preloaded crystal graph files in folder “saved_crystal_graph”<br>
+1. Copy **input_formulas.txt** from **synth_assess/pred/SynthNN/** into **SynthNN/**
+2. Open the jupyter notebook **SynthNN_predict.ipynb** and run the first cell for imports
+3. Run the third cell labeled "Option 2: Read in formulas from text file."
+4. Results are in the file **output_formula_preds.txt**
 
+## Reference
+* Antoniuk, E. R.; Cheon, G.; Wang, G.; Bernstein, D.; Cai, W.; Reed, E. J. Predicting the Synthesizability of Crystalline Inorganic Materials from the Data of Known Material Compositions. Npj Comput. Mater. 2023, 9 (1), 155. https://doi.org/10.1038/s41524-023-01114-4.
 
-### [2] Predict synthesizability of new crystals with pre-trained models
-`python predict_PU_learning.py --bag 100 --graph ./saved_crystal_graph --cifs ./cif_files --modeldir ./trained_models`<br>
+# PU-CGCNN
+## Model download
+`git clone https://github.com/kaist-amsg/Synthesizability-PU-CGCNN.git`
 
-Load crystal graph information from 'saved_crystal_graph' folder and pre-trained models from 'trained_models' folder.<br>
-Predict synthesizability of crystal structures in 'cif_files' folder (with id_prop.csv file) using the loaded models.<br>
-Result of bootstrap aggregating is saved as 'test_results_ensemble_100models.csv'
+## Prerequisites
+* python
+* numpy
+* pytorch
+* pymatgen
 
+## Usage
+1. Copy the folder **synth_assess/pred/PU-CGCNN/cif_files/** with the files **atom_init.json** and **id_prop.csv** into **Synthesizability-PU-CGCNN/**
+2. Make a new directory **Synthesizability-PU-CGCNN/saved_crystal_graph/** - The folder must exist even if it is empty to generate the crystal graphs
+3. Unzip the structure files in **synth_assess/data/data/cifs_relaxed.zip** and copy all the CIFs directly into **Synthesizability-PU-CGCNN/cif_files/** so that the directory has **atom_init.json**, **id_prop.csv**, and ~22,000 CIFs
+4. Generate the crystal graphs by running `python generate_crystal_graph.py --cifs ./cif_files --n 12 --r 8 --f ./saved_crystal_graph` in **Synthesizability-PU-CGCNN/**
+5. Run the prediction model in **Synthesizability-PU-CGCNN/** with `python predict_PU_learning.py --bag 100 --graph ./saved_crystal_graph --cifs ./cif_files --modeldir ./trained_models`
+6. Results are in the file **test_results_ensemble_100models.csv**
 
-
+## Reference
+* Jang, J.; Gu, G. H.; Noh, J.; Kim, J.; Jung, Y. Structure-Based Synthesizability Prediction of Crystals Using Partially Supervised Learning. J. Am. Chem. Soc. 2020, 142 (44), 18836–18843. https://doi.org/10.1021/jacs.0c07384.
 
 # TSDNN
+## Model download
+`git clone https://github.com/usccolumbia/tsdnn.git`
 
-#### Copy the root_dir folder into the /data directory and copy all the cifs from cifs_relaxed into root_dir. Run the prediction command using the pretrained model.
+## Prerequisites
+* python
+* scikit-learn
+* pytorch
+* torchvision
+* pymatgen
+* conda-forge
 
+## Usage
+1. Copy the folder **synth_assess/pred/tsdn/root_dir/** with the files **atom_init.json** and **data_test.csv** into **tsdnn/data/**
+2. Unzip the structure files in **synth_assess/data/data/cifs_relaxed.zip** and copy all the CIFs directly into **tsdnn/data/root_dir** so that the directory has **atom_init.json**, **data_test.csv**, and ~22,000 CIFs
+3. Run the prediction model in **tsdnn/** with `python python predict.py checkpoints/pre-trained/synthesizability.pth.tar data/root_dir`
+4. Results are in the file **tsdnn/results/predictions/predictions_0.csv**
 
-##  Prerequisites
-
-This package requires:
-
-- [PyTorch](http://pytorch.org)
-- [scikit-learn](http://scikit-learn.org/stable/)
-- [pymatgen](http://pymatgen.org)
-
-If you are new to Python, the easiest way of installing the prerequisites is via [conda](https://conda.io/docs/index.html). After installing [conda](http://conda.pydata.org/), run the following command to create a new [environment](https://conda.io/docs/user-guide/tasks/manage-environments.html) named `cgcnn` and install all prerequisites:
-
-```bash
-conda upgrade conda
-conda create -n tsdnn python=3 scikit-learn pytorch torchvision pymatgen -c pytorch -c conda-forge
-```
-
-Alternatively, you can import our conda environment from the `environment.yml file:
-
-```bash
-conda create -n tsdnn
-conda install -f environment.yml
-```
-
-*Note: this code is tested for PyTorch v1.0.0+ and is not compatible with versions below v0.4.0 due to some breaking changes.
-
-This creates a conda environment for running TSDNN. Before using TSDNN, activate the environment by:
-
-```bash
-conda activate tsdnn
-```
-
-
-### Define a customized dataset 
-
-The structure of the `root_dir` should be:
-```
-root_dir
-├── data_test.csv
-├── atom_init.json
-├── id0.cif
-├── id1.cif
-├── ...
-```
-
-### Predict material properties with a pre-trained TSDNN model
-
-Before predicting the material properties, you will need to:
-
-- [Define a customized dataset](#define-a-customized-dataset) at `root_dir` for all the crystal structures that you want to predict.
-- Obtain a pre-trained TSDNN model (example found in checkpoints/pre-trained/pre-train.pth.tar).
-
-Then, in directory `synth-tsdnn`, you can predict the properties of the crystals in `root_dir`:
-
-```bash
-python python predict.py checkpoints/pre-trained/synthesizability.pth.tar data/root_dir
-```
-
-After predicting, you will get one file in `synth-tsdnn` directory:
-
-- `predictions.csv`: stores the `ID` and predicted value for each crystal in test set.
-
-
-
+## Reference
+* Gleaves, D.; Fu, N.; Dilanga Siriwardane, E. M.; Zhao, Y.; Hu, J. Materials Synthesizability and Stability Prediction Using a Semi-Supervised Teacher-Student Dual Neural Network. Digit. Discov. 2023, 2 (2), 377–391. https://doi.org/10.1039/D2DD00098A.
 
 # SynCoTrain
+## Model download
+`git clone https://github.com/BAMeScience/SynCoTrainMP.git`
 
-#### Follow the steps by copying the crystal data file into the schnet_pred/data/ folder and running the command below.
+## Prerequisites
+Create a new environment with **SynCoTrainMP/condaEnvs/sync.yml** and install the repository
 
+## Usage
+1. Copy the file **chemeleon_filtered_structures_3.pkl** into **SynCoTrainMP/schnet_pred/data/**
+2. Run the prediction model in **SynCoTrainMP/** with `python schnet_pred/predict_schnet.py --input_file chemeleon_filtered_structures_3`
+3. Results are in the file that looks like **SynCoTrainMP/schnet_pred/results/chemeleon_filtered_structures_3_ ... .csv** 
 
-## Installation
-It is recommended to create a virtual environment with mamba and miniforge to install the different packages easily. Start by installing mamba according to the instructions [here](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html).
-
-Start by cloning this repository in your preferred path as shown below:
-```bash
-cd /path/to/parent/directory
-git clone git@github.com:BAMeScience/SynCoTrainMP.git
-```
-Next, navigate to the cloned directory. You can create the appropriate mamba environment there based on the `sync.yml` file:
-```bash
-cd SynCoTrain
-mamba env create -f condaEnvs/sync.yml
-mamba activate sync
-```
-This might take a while, as all the required packages are being installed. Please note that you may need to change ther exact version of dgl and cudatoolkit based on your current setup. You can check your current cuda version using the `nvidia-smi` command. Then, you can search for a compatible dgl with cuda using the command `mamba search dgl --channel conda-forge`. Pick a version of dgl earlier than 2.0.0 which is compatible with your cudatoolkit.
-
-Once the packages are installed, you may activate the `sync` conda environment and install this repository with the following commands:
-```bash
-pip install -e .
-```
-
-
-## Predicting Synthesizability of Oxides
-
-If you are only interested in predicting the synthesizability of oxides, there’s no need to train the model from scratch. The current version of SynCoTrain comes pre-trained for synthesizability prediction of oxide crystals, using SchNet as the classifier.
-
-### How to Predict Synthesizability for Your Data
-
-1. **Prepare Your Data**: Save your crystal data as a pickled DataFrame and place it in the `schnet_pred/data` directory. For example:
-```
-schnet_pred/data/chemeleon_filtered_structures_3.pkl
-```
-2. **Run Prediction**: Use the following command to feed your data into the model:
-
-```bash
-python schnet_pred/predict_schnet.py --input_file chemeleon_filtered_structures_3
-```
-3. **View Results**: The prediction results will be saved in the following location:
-```bash
-schnet_pred/results/chemeleon_filtered_structures_3_predictions.csv
-```
-The result will be saved in `schnet_pred/results/chemeleon_filtered_structures_3_predictions.csv`.
+## Reference
+* Amariamir, S.; George, J.; Benner, P. SynCoTrain: A Dual Classifier PU-Learning Framework for Synthesizability Prediction. Digit. Discov. 2025, 4 (6), 1437–1448. https://doi.org/10.1039/D4DD00394B.
