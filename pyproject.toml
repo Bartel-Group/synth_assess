@@ -23,6 +23,12 @@ include = ["synth_assess*"]
 [tool.setuptools]
 include-package-data = true
 
+[tool.setuptools.package-data]
+"synth_assess.data" = [
+  "results_data/**/*",
+  "data/**/*"
+]
+
 
 [build-system]
 requires = ["setuptools>=65.0.0", "wheel >= 0.38"]
