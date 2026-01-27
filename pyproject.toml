@@ -20,6 +20,10 @@ Source = "https://github.com/bartel-group/synth_assess"
 [tool.setuptools.packages.find]
 include = ["synth_assess*"]
 
+[tool.setuptools]
+include-package-data = true
+
+
 [build-system]
 requires = ["setuptools>=65.0.0", "wheel >= 0.38"]
 build-backend = "setuptools.build_meta"
