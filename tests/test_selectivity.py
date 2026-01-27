@@ -32,6 +32,9 @@ solids_data = {'Cs1O3': {'volume': 353.16244441729305,
  'C1O3': {'volume': 32.99685994750084,
   'formation_energy_per_atom': 1.746732446874999,
   'nsites': 4,'tm_precursor': False,'theoretical': True},
+ 'Cd1O1': {'volume': 27.367291401313242,
+ 'formation_energy_per_atom': -1.3647115625000001,
+ 'nsites': 2,'tm_precursor': True,'theoretical': False},
  'Cd1O2': {'volume': 157.87700371639545,
   'formation_energy_per_atom': -0.8535735183333331,
   'nsites': 12,'tm_precursor': False,'theoretical': False},
@@ -231,16 +234,17 @@ class UnitTestEnumerate(unittest.TestCase):
         els = ['Cd','O']
         entries = GibbsSet(els,solids_data).entries
         reactions = EnumerateRxns(els,solids_data).rxns
+        print(list(reactions))
         # number of reactions expected
-        self.assertEqual(len(list(reactions)), 5)
+        self.assertEqual(len(list(reactions)), 10)
         # all precursors/products are in allowed entries
         self.assertTrue(all(r in entries for r in reactions.entries))
 
 class UnitTestTempEnv(unittest.TestCase):
 
     def test_mu(self):
-        env_entries = [{'environment':'air', 'open':True},
-                       {'environment':'inert', 'open':True}]           
+        env_entries = [{'environment':'air'},
+                       {'environment':'inert'}]           
         temperature = 300
         for entry in env_entries:
             if entry['environment'] not in ['air','inert']:
