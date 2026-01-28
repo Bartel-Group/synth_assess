@@ -58,6 +58,21 @@ This folder includes all the files and procedures to replicate the PU model pred
 ## Reference
 * Jang, J.; Gu, G. H.; Noh, J.; Kim, J.; Jung, Y. Structure-Based Synthesizability Prediction of Crystals Using Partially Supervised Learning. J. Am. Chem. Soc. 2020, 142 (44), 18836–18843. https://doi.org/10.1021/jacs.0c07384.
 
+# SynCoTrain
+## Model download
+`git clone https://github.com/BAMeScience/SynCoTrainMP.git`
+
+## Prerequisites
+Create a new environment with **SynCoTrainMP/condaEnvs/sync.yml** and install the repository
+
+## Usage
+1. Copy the file **chemeleon_filtered_structures_3.pkl** into **SynCoTrainMP/schnet_pred/data/**
+2. Run the prediction model in **SynCoTrainMP/** with `python schnet_pred/predict_schnet.py --input_file chemeleon_filtered_structures_3`
+3. Results are in the file that looks like **SynCoTrainMP/schnet_pred/results/chemeleon_filtered_structures_3_ ... .csv** 
+
+## Reference
+* Amariamir, S.; George, J.; Benner, P. SynCoTrain: A Dual Classifier PU-Learning Framework for Synthesizability Prediction. Digit. Discov. 2025, 4 (6), 1437–1448. https://doi.org/10.1039/D4DD00394B.
+
 # TSDNN
 ## Model download
 `git clone https://github.com/usccolumbia/tsdnn.git`
@@ -79,17 +94,3 @@ This folder includes all the files and procedures to replicate the PU model pred
 ## Reference
 * Gleaves, D.; Fu, N.; Dilanga Siriwardane, E. M.; Zhao, Y.; Hu, J. Materials Synthesizability and Stability Prediction Using a Semi-Supervised Teacher-Student Dual Neural Network. Digit. Discov. 2023, 2 (2), 377–391. https://doi.org/10.1039/D2DD00098A.
 
-# SynCoTrain
-## Model download
-`git clone https://github.com/BAMeScience/SynCoTrainMP.git`
-
-## Prerequisites
-Create a new environment with **SynCoTrainMP/condaEnvs/sync.yml** and install the repository
-
-## Usage
-1. Copy the file **chemeleon_filtered_structures_3.pkl** into **SynCoTrainMP/schnet_pred/data/**
-2. Run the prediction model in **SynCoTrainMP/** with `python schnet_pred/predict_schnet.py --input_file chemeleon_filtered_structures_3`
-3. Results are in the file that looks like **SynCoTrainMP/schnet_pred/results/chemeleon_filtered_structures_3_ ... .csv** 
-
-## Reference
-* Amariamir, S.; George, J.; Benner, P. SynCoTrain: A Dual Classifier PU-Learning Framework for Synthesizability Prediction. Digit. Discov. 2025, 4 (6), 1437–1448. https://doi.org/10.1039/D4DD00394B.
