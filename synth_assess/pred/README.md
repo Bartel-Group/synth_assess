@@ -86,7 +86,7 @@ Create a new environment with **SynCoTrainMP/condaEnvs/sync.yml** and install th
 * conda-forge
 
 ## Usage
-1. Copy the folder **synth_assess/pred/tsdn/root_dir/** with the files **atom_init.json** and **data_test.csv** into **tsdnn/data/**
+1. Copy the folder **synth_assess/pred/tsdnn/root_dir/** with the files **atom_init.json** and **data_test.csv** into **tsdnn/data/**
 2. Unzip the structure files in **synth_assess/data/data/cifs_relaxed.zip** and copy all the CIFs directly into **tsdnn/data/root_dir** so that the directory has **atom_init.json**, **data_test.csv**, and ~22,000 CIFs
 3. Run the prediction model in **tsdnn/** with `python python predict.py checkpoints/pre-trained/synthesizability.pth.tar data/root_dir`
 4. Results are in the file **tsdnn/results/predictions/predictions_0.csv**
