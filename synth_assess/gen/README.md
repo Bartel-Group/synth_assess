@@ -1,1 +1,1 @@
-
+This module allows the user to generate new materials in chemical spaces of interest using [Chemeleon](https://github.com/hspark1212/chemeleon.git) and to compute the energies of these materials using [CHGNET].
