@@ -21,16 +21,19 @@ pip install .
 This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. This module enables the user to reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.rxn_networks), but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code:
 
 ```
+# import package to compute Γ 
 from synth-assess.selectivity.rxn_metrics import GammaFromTarget
 ```
 To get all reactions for a given target and temperature (if temperature is unspecified, 1073 K is used):
 
 ```
+# target argument is a formula string; temperature argument is a float or can be left undefined
 all_rxns = GammaFromTarget(target, temperature).get_metrics(gen_data = None, is_gen = None)
 ```
 
 To get the optimum rxn for a given target and temperature (if temperature is unspecified, 1073 K is used):
 ```
+# target argument is a formula string; temperature argument is a float or can be left undefined
 opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen = None)
 ```
 In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /solidstatesynth/data/README.md for further details).
