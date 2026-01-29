@@ -23,3 +23,5 @@ where the target argument is a formula string and the temperature argument is a 
 This line returns a dictionary, detailing the target-forming reaction with the lowest (most favorable) associated Γ for the specified temperature.
 
 In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data. gen_dat must be of the same structure (and contain the same information) as mp_data (refer to synth_assess/data/README for details)
+
+This module was used to determine the selectivity of known reactions and to generate new selective reactions for the accompanying paper.
