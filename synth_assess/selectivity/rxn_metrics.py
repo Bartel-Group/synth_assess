@@ -514,14 +514,18 @@ class AnalyzeReactionSet():
 class GammaFromTarget():
     def __init__(self,
                  target: str = None,
-                 temperature: float = 1073):
+                 temperature: float = 1073,
+                 solids_data: dict = None):
         """
         This class implements the entire pipeline from input target/temperature to output metrics.
         Note that by default, the solids data used is MP data
         """
         self.target = CompTools(target).clean
         self.temperature = temperature
-        self.solids_data = mp_data()
+        if solids_data:
+            self.solids_data = solids_data
+        else:
+            self.solids_data = mp_data()
         
     
     def get_metrics(self, gen_data = None, is_gen = False, restrict_to_tm = False):
@@ -539,12 +543,12 @@ class GammaFromTarget():
         """
         target = self. target
         temperature = self.temperature
-        solids_data = mp_data()
+        solids_data = self.solids_data
         if is_gen:
             gen_formula = target
         else:
             gen_formula = None
-        r = EnumerateRxns(els = CompTools(target).els, open = False, temperature = 300, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula, prec_kwargs={'restrict_to_tm_precursors':restrict_to_tm}).rxns
+        r = EnumerateRxns(els = CompTools(target).els,temperature = 300, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula, prec_kwargs={'restrict_to_tm_precursors':restrict_to_tm}).rxns
         r = RxnsAtNewTempEnv(reaction_set = r, els = CompTools(target).els, new_temperature = temperature, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).corrected_reactions_at_temp()
         t = AnalyzeReactionSet(target = target, reactions = r, temperature = temperature)
         return t.metrics_at_temp_env()
