@@ -39,9 +39,9 @@ opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen =
 where the target argument is a formula string and the temperature argument is a float (in Kelvin). If temperature is unspecified, 1073 K is used.
 This line returns a dictionary, detailing the target-forming reaction with the lowest (most favorable) associated Γ for the specified temperature.
 
-In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /solidstatesynth/data/README.md for further details).
+In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data. gen_dat must be of the same structure (and contain the same information) as mp_data (refer to synth_assess/data/README for details)
 
-If this module is used, please cite [1] and [2].
+If this module is used, please cite [1] and [2]. Refer to examples for further details.
 
 ## Material generation from input chemical spaces (synth-assess.gen)
 
