@@ -21,35 +21,24 @@ pip install .
 This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. This module enables the user to reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to solidstatesynth.selectivity.rxn_networks), but if you are simply seeking to generate selective reactions associated with a particular target using our settings, you can run the following code:
 
 ```
-# import package to compute Γ 
+# import class to compute Γ 
 from synth-assess.selectivity.rxn_metrics import GammaFromTarget
 ```
-To get all reactions for a given target and temperature:
+To get all reactions to form a given target at a given temperature, run the following
 
 ```
-# Args:
-#  target (str): formula of interest
-#  temperature (float): temperature of interest (if temperature is unspecified, 1073 K is used)
-# Returns:
-#   list of reactions (each in dictionary format) to form the desired target at the specified temperature and their associated Γ
-
 all_rxns = GammaFromTarget(target, temperature).get_metrics(gen_data = None, is_gen = None)
 ```
+where the target argument is a formula string and the temperature argument is a float (in Kelvin). If temperature is unspecified, 1073 K is used.
+This line returns a list of dictionaries, each detailing a target-forming reaction and the associated Γ for the specified temperature.
 
-To get the optimum rxn for a given target and temperature (if temperature is unspecified, 1073 K is used):
+To get the optimum reaction to form a given target at a given temperature:
 ```
-# Args:
-#  target (str): formula of interest
-#  temperature (float): temperature of interest (if temperature is unspecified, 1073 K is used)
-# Returns:
-#   a dictionary of the reaction with the lowest # Args:
-#  target (str): formula of interest
-#  temperature (float): temperature of interest (if temperature is unspecified, 1073 K is used)
-# Returns:
-#   list of reactions to form the desired target at the specified temperature and their associated Γ to form the target at the specified temperature
-
 opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen = None)
 ```
+where the target argument is a formula string and the temperature argument is a float (in Kelvin). If temperature is unspecified, 1073 K is used.
+This line returns a dictionary, detailing the target-forming reaction with the lowest (most favorable) associated Γ for the specified temperature.
+
 In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /solidstatesynth/data/README.md for further details).
 
 If this module is used, please cite [1] and [2].
