@@ -35,33 +35,29 @@ opt_rxn = GammaFromTarget(target, temperature).opt_rxn(gen_data = None, is_gen =
 ```
 In both cases, if material is not in MP, additional data must be given-- for this purpose use is_gen = True and gen_data as input data (refer to /solidstatesynth/data/README.md for further details).
 
-If this module is used, please cite the following:
-
-```
-[1] McDermott, M. J.; Dwaraknath, S. S.; Persson, K. A. A Graph-Based Network for Predicting Chemical Reaction Pathways in Solid-State Materials Synthesis. Nat. Commun. 2021, 12 (1), 3097. https://doi.org/10.1038/s41467-021-23339-x.
-
-[2]	McDermott, M. J.; McBride, B. C.; Regier, C. E.; Tran, G. T.; Chen, Y.; Corrao, A. A.; Gallant, M. C.; Kamm, G. E.; Bartel, C. J.; Chapman, K. W.; Khalifah, P. G.; Ceder, G.; Neilson, J. R.; Persson, K. A. Assessing Thermodynamic Selectivity of Solid-State Reactions for the Predictive Synthesis of Inorganic Materials. ACS Cent. Sci. 2023, 9 (10), 1957–1975. https://doi.org/10.1021/acscentsci.3c01051.
-```
+If this module is used, please cite [1] and [2].
 
 ## Material generation from input chemical spaces (synth-assess.gen)
 
 This module enables users to generate new materials in a specified chemical space using [Chemeleon](https://github.com/hspark1212/chemeleon/) and to compute material energetics using CHGNET.
 
-If this module is used for material generation, please cite the following:
-```
-[3]	Park, H.; Onwuli, A.; Walsh, A. Exploration of Crystal Chemical Space Using Text-Guided Generative Artificial Intelligence. Nat. Commun. 2025, 16 (1), 4379. https://doi.org/10.1038/s41467-025-59636-y.!
-```
-If this module is used for energy computation, please cite the following:
-```
-[4] Deng, B.; Zhong, P.; Jun, K.; Riebesell, J.; Han, K.; Bartel, C. J.; Ceder, G. CHGNet as a Pretrained Universal Neural Network Potential for Charge-Informed Atomistic Modelling. Nat. Mach. Intell. 2023, 5 (9), 1031–1041. https://doi.org/10.1038/s42256-023-00716-3.
-
-```
+If this module is used for material generation, please cite [3]. If this module is used for energy computation, please cite [4].
 
 ## Material synthesizability prediction (synth-assess.pred)
 This module enables users to replicate our results for five synthesizability predictors applied to generative models. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well. Note that we do not import these packages, but offer users the input files needed to make predictions on the materials used in this assessment.
 
-For further information, please refer to
+For further information, please refer to [5-9].
+
+
 ```
+[1] McDermott, M. J.; Dwaraknath, S. S.; Persson, K. A. A Graph-Based Network for Predicting Chemical Reaction Pathways in Solid-State Materials Synthesis. Nat. Commun. 2021, 12 (1), 3097. https://doi.org/10.1038/s41467-021-23339-x.
+
+[2]	McDermott, M. J.; McBride, B. C.; Regier, C. E.; Tran, G. T.; Chen, Y.; Corrao, A. A.; Gallant, M. C.; Kamm, G. E.; Bartel, C. J.; Chapman, K. W.; Khalifah, P. G.; Ceder, G.; Neilson, J. R.; Persson, K. A. Assessing Thermodynamic Selectivity of Solid-State Reactions for the Predictive Synthesis of Inorganic Materials. ACS Cent. Sci. 2023, 9 (10), 1957–1975. https://doi.org/10.1021/acscentsci.3c01051.
+
+[3]	Park, H.; Onwuli, A.; Walsh, A. Exploration of Crystal Chemical Space Using Text-Guided Generative Artificial Intelligence. Nat. Commun. 2025, 16 (1), 4379. https://doi.org/10.1038/s41467-025-59636-y.
+
+[4] Deng, B.; Zhong, P.; Jun, K.; Riebesell, J.; Han, K.; Bartel, C. J.; Ceder, G. CHGNet as a Pretrained Universal Neural Network Potential for Charge-Informed Atomistic Modelling. Nat. Mach. Intell. 2023, 5 (9), 1031–1041. https://doi.org/10.1038/s42256-023-00716-3.
+
 [5]	Jang, J.; Noh, J.; Zhou, L.; Gu, G. H.; Gregoire, J. M.; Jung, Y. Synthesizability of Materials Stoichiometry Using Semi-Supervised Learning. Matter 2024, 7 (6), 2294–2312. https://doi.org/10.1016/j.matt.2024.05.002.
 
 [6]	Antoniuk, E. R.; Cheon, G.; Wang, G.; Bernstein, D.; Cai, W.; Reed, E. J. Predicting the Synthesizability of Crystalline Inorganic Materials from the Data of Known Material Compositions. Npj Comput. Mater. 2023, 9 (1), 155. https://doi.org/10.1038/s41524-023-01114-4.
