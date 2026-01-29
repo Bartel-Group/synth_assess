@@ -4,12 +4,14 @@ A package for assessing a candidate target for solid-state synthesis. This tool 
 
 # Installation
 
+Navigate to the desired repository destination, and then run the following:
+
 ```
 # Clone the repository
 git clone https://github.com/bartel-group/synth-assess.git
 
 # Change to the repository directory
-cd solidstatesynth
+cd synth_assess
 
 # Install the package
 pip install .
