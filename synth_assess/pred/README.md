@@ -1,5 +1,5 @@
 # synth_assess.pred
-This folder includes all the files and procedures to replicate the PU model predictions on the structure test set generated with Chemeleon. Each model will have to be downloaded from the respective GitHub page, but the generated materials have been formatted to fit the specifications of each model. Additionally, the models have their own descriptive README files for retraining or testing different datasets, but the following instructions will suffice for replicating these predictions. For any use of a PU model, cite using the included reference.
+This folder includes all the files and procedures to replicate the PU model predictions on the structure test set generated with Chemeleon. Each model will have to be downloaded from the respective GitHub page, but the generated materials have been formatted to fit the specifications of each model. Additionally, the models have their own descriptive README files for retraining or testing different datasets, but the following instructions will suffice for replicating these predictions. For any use of a PU model, cite using the included reference. The procedures detailed here were applied to obtain synthesizability predictions in the accompanying paper.
 
 # PU-CGNF
 ## Model download
