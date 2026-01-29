@@ -6,3 +6,4 @@ This module enables the user to ensure that synth_assess is installed properly. 
 cd /path_to_repo/tests
 python test_selectivity.py
 ```
+If all tests run successfully, a message of "OK" will be returned.
