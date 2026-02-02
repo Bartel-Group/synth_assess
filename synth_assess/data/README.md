@@ -57,7 +57,7 @@ TM rxns and results (reformatted version of tm_entries, wherein the optimum and 
 ```
 
 ## tm_rxns.csv
-A list of textmined reactions, each with the following information: reaction string, temperature, dG_rxn, c1, c2, and gamma. For ease of use, this file is in a csv format. For more detailed data, refer to 'tm_rxns_with_gamma.json'.
+A list of textmined reactions, each with the following information: reaction string, temperature, dG_rxn, c1, c2, gamma_obs (associated with the listed reaction), and gamma_opt (associated with the most selective reaction for the specified target and temperature). For ease of use, this file is in a csv format. For more detailed data, refer to 'tm_rxns_with_gamma.json'.
 
 ## gen_materials.csv
 A reduced dictionary of generated materials, wherein each material has the following information: hull energy, computed optimum gamma, and synthesizability prediction. For ease of use, this file is in a csv format. For more detailed data, refer to 'gen_mat_pred_gamma.json'.
