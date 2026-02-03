@@ -353,7 +353,7 @@ class GibbsSet:
         formulas = self.formulas
         id_dict = self.entry_id_dict
         for formula in formulas:
-            print(formula)
+            # print(formula)
             f = CompTools(formula).clean
             if f not in id_dict:
                 id_dict[f] = None

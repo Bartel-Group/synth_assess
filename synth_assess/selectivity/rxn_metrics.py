@@ -489,7 +489,7 @@ class AnalyzeReactionSet():
             #In excess inert, O2 is not allowed as a reactant
             if environment == "air":
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]+["O2"]))
-                print('f',filtered_rxns)
+                # print('f',filtered_rxns)
             else:
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]))
 
