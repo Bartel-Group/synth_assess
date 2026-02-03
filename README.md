@@ -24,7 +24,7 @@ This module enables the user to generate reactions to form a target of interest 
 
 ```
 # import class to compute Γ 
-from synth-assess.selectivity.rxn_metrics import GammaFromTarget
+from synth_assess.selectivity.rxn_metrics import GammaFromTarget
 ```
 To get all reactions to form a given target at a given temperature, run the following
 
