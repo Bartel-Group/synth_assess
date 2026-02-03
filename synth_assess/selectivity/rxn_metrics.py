@@ -553,10 +553,10 @@ class GammaFromTarget():
         t = AnalyzeReactionSet(target = target, reactions = r, temperature = temperature)
         return t.metrics_at_temp_env()
     
-    def opt_rxn(self):
+    def opt_rxn(self, gen_data = None, is_gen = False,):
         """
         Identify and return the lowest-gamma (most selective) reaction entry. 
         """
-        all_rxn_metrics = self.get_metrics(gen_data=None, is_gen = False)
+        all_rxn_metrics = self.get_metrics(gen_data=gen_data, is_gen = is_gen)
         min_entry = min(all_rxn_metrics, key=lambda d: d['gamma'])
         return min_entry
