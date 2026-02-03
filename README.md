@@ -8,7 +8,7 @@ Navigate to the desired repository destination, and then run the following:
 
 ```
 # Clone the repository
-git clone https://github.com/bartel-group/synth-assess.git
+git clone https://github.com/bartel-group/synth_assess.git
 
 # Change to the repository directory
 cd synth_assess
