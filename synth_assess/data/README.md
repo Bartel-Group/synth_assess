@@ -56,8 +56,8 @@ TM rxns and results (reformatted version of tm_entries, wherein the optimum and 
 {'A1B1O1 (formula)':{'1073 (temperature as string)':[list of rxns with associated temperature and target of the form [{'rxn': rxn string, 'energy': float reaction energy, 'c1': float, 'c2': float, 'gamma': float, 'true_rxn': Bool (True if reaction matches the text-mined reaction),  'gamma_new': float (reweighted gamma),'opt_rxn': Bool (True if reaction has the lowest gamma for associated target, temperature, and precursors-- both 'true_rxn' and 'opt_rxn' may be True for a given rxn. opt is determined using gamma_new), 'temperature': float, 'dois':[doi strings associated with the temperature, target, and precursors], 'target': rxn target string (cleaned), 'E_d': float (hull energy)}]}}
 ```
 
-## tm_rxns.csv
+## table_s1.csv
 A list of textmined reactions, each with the following information: target, hull energy, reaction string, temperature, dG_rxn, c1, c2, gamma_obs (associated with the listed reaction), and gamma_opt (associated with the most selective reaction for the specified target and temperature). For ease of use, this file is in a csv format. For more detailed data, refer to 'tm_rxns_with_gamma.json'.
 
-## gen_materials.csv
+## table_s2.csv
 A reduced dictionary of generated materials, wherein each material has the following information: hull energy, computed optimum gamma, and synthesizability prediction. For ease of use, this file is in a csv format. For more detailed data, refer to 'gen_mat_pred_gamma.json'.
