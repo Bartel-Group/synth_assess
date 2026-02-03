@@ -6,7 +6,7 @@ In the synth_assess.selectivity.rxn_metrics module, the GammaFromTarget class ag
 For quick generation of target-forming reactions and selectivity determination, please use the following code.
 ```
 # import class to compute Γ 
-from synth-assess.selectivity.rxn_metrics import GammaFromTarget
+from synth_assess.selectivity.rxn_metrics import GammaFromTarget
 ```
 To get all reactions to form a given target at a given temperature, run the following
 ```
