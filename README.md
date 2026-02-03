@@ -19,18 +19,18 @@ pip install .
 
 # Modules
 
-## Reaction generation and selectivity assessment (synth-assess.selectivity)
-This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. Users may reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to synth_assess.selectivity.rxn_networks and synth_assess.selectivity.entries). If you are simply seeking to generate reactions associated with a particular target using our settings, and to determine reaction selectivity, please refer to our example notebook.
+## Reaction generation and selectivity assessment (synth_assess.selectivity)
+This module enables the user to generate reactions to form a target of interest and to identify the most thermodynamically selective reactions. Users may reconstruct the entire pipeline, including customization of data used in reaction generation and constraints on reaction generation (refer to synth_assess.selectivity.rxn_networks and synth_assess.selectivity.entries). If you are simply seeking to generate reactions associated with a particular target using our settings, and to determine reaction selectivity, please refer to our example notebook (synth_assess/examples/selectivity_example.ipynb).
 
 If this module is used, please cite [1] and [2]. 
 
-## Material generation from input chemical spaces (synth-assess.gen)
+## Material generation from input chemical spaces (synth_assess.gen)
 
 This module enables users to generate new materials in a specified chemical space using [Chemeleon](https://github.com/hspark1212/chemeleon/) and to compute material energetics using CHGNET.
 
 If this module is used for material generation, please cite [3]. If this module is used for energy computation, please cite [4].
 
-## Material synthesizability prediction (synth-assess.pred)
+## Material synthesizability prediction (synth_assess.pred)
 This module enables users to replicate our results for five synthesizability predictors applied to generative models. Two of the five models (PU-CGNF [5] and SynthNN [6]) take only formula as input while the other three (PU-CGCNN [7], SynCoTrain [8], and TSDNN [9]) require structural inputs as well. Note that we do not import these packages, but offer users the input files needed to make predictions on the materials used in this assessment.
 
 For further information, please refer to [5-9].
