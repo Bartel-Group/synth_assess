@@ -108,8 +108,8 @@ class EnumerateRxns():
     """
     Class for calculating competition metrics for single-step reactions in a single chemical system.
     Uses the reaction-networks package for calculating reaction energy, primary and secondary competition, and the gamma cost function.
-    Can be utilized by imnputting select precursors, targets, and temperature, and will output the competition metrics for each reaction.
-    
+    Can be utilized by inputting select precursors, targets, and temperature, and will output the competition metrics for each reaction.
+    Warning: the code to generate reaction networks will be parallelized over all available processors.
     
     """
 
@@ -518,7 +518,8 @@ class GammaFromTarget():
                  solids_data: dict = None):
         """
         This class implements the entire pipeline from input target/temperature to output metrics.
-        Note that by default, the solids data used is MP data
+        Note that by default, the solids data used is MP data.
+        Warning: the code to generate reaction networks will be parallelized over all available processors.
         """
         self.target = CompTools(target).clean
         self.temperature = temperature
