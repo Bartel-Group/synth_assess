@@ -1,6 +1,6 @@
 # synth_assess
 
-A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, and generate new targets, to reproduce our results, or for new material exploration. 
+A package for assessing a candidate target for solid-state synthesis. This tool allows users to generate and assess the selectivity of reactions to form a target of interest, and generate new targets, to reproduce our results, or for new material exploration. This package accompanies our (publication)[https://arxiv.org/abs/2602.04075].
 
 # Installation
 
