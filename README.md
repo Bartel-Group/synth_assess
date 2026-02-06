@@ -60,6 +60,6 @@ For further information, please refer to [5-9].
 If using this package, please consider citing the accompanying [paper](https://arxiv.org/abs/2602.04075):
 
 ```
-[1] Schlesinger, J.; Hjaltason, S.; Szymanski, N.; Bartel, C. Thermodynamic assessment of machine learning models for solid-state synthesis prediction. ** In preparation **. 2026 
+[1] Schlesinger, J.; Hjaltason, S.; Szymanski, N.; Bartel, C. Thermodynamic assessment of machine learning models for solid-state synthesis prediction. ** arXiv ** 2602.04075. 2026 
   
 ```
