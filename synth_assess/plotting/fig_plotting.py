@@ -9,7 +9,7 @@ from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
 from pydmclab.plotting.utils import set_rc_params
 from synth_assess.plotting.plot_helpers import plot_hull, plot_rolling_stats, metric_cdf, metric_hexbin_parity, binned_fraction_overlay, make_heatmap, get_data, model_hist, plot_stacked_hist
-from synth_assess.data.load import tm_entries, mp_data, mp_data_with_theoretical, gen_data, tm_rxns_with_gamma
+from synth_assess.data.load import tm_entries, mp_data, gen_data, tm_rxns_with_gamma
 
 set_rc_params()
 COLORS = CSS4_COLORS # or some other palette
@@ -681,14 +681,14 @@ def plot_fig_s3(gamma_gen, ylabel="Score", bins=12, vmax=100, score_line=None,
 
 def main():
     data_mp = mp_data()
-    data_mp_theoretical = mp_data_with_theoretical()
-    data_mp ={CompTools(entry['formula']).clean: entry for entry in data_mp}
+    # data_mp_theoretical = mp_data_with_theoretical()
+    data_mp ={CompTools(entry).clean: data_mp[entry] for entry in data_mp}
     data_tm = tm_rxns_with_gamma()
     entries = tm_entries()
     # data_gen = read_json(os.path.join(DATADIR_gen, 'gen_data_with_pred.json'))
     gamma_gen = gen_data()
 
-    return data_mp, data_mp_theoretical, data_tm, stability, entries, gamma_gen
+    return data_mp, data_tm, entries, gamma_gen
 
 if __name__ == "__main__":
-    data_mp, data_mp_theoretical, data_tm, stability, entries, gamma_gen = main()
+    data_mp, data_tm, entries, gamma_gen = main()
