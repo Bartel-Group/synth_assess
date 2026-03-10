@@ -1,6 +1,7 @@
 import numpy as np
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 

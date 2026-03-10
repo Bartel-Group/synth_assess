@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
+import pandas as pd
 from pydmclab.plotting.utils import set_rc_params
 from synth_assess.plotting.plot_helpers import plot_hull, plot_rolling_stats, metric_cdf, metric_hexbin_parity, binned_fraction_overlay, make_heatmap, get_data, model_hist, plot_stacked_hist
 from synth_assess.data.load import tm_entries, mp_data, gen_data, tm_rxns_with_gamma
