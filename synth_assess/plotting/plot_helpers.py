@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib.patches import PathPatch
 from matplotlib.path import Path
-import pandas as pd
+import pandas
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
@@ -65,7 +65,7 @@ def plot_rolling_stats(ax, Ehull, Gamma, window=0.008, step=0.0025,
     Gamma_filtered = Gamma[mask]
 
     # Prepare DataFrame for rolling stats
-    df = pd.DataFrame({'Ehull': Ehull_filtered, 'Gamma': Gamma_filtered}).sort_values('Ehull')
+    df = pandas.DataFrame({'Ehull': Ehull_filtered, 'Gamma': Gamma_filtered}).sort_values('Ehull')
     
     x_vals = np.arange(xlim[0], xlim[1], step)
     
@@ -144,7 +144,7 @@ def metric_cdf(ax, tm_entries):
 
     label_colors = {'all': 'orange', 'observed':'green', 'optimum':'lightskyblue', 'ICSD':'forestgreen'}
 
-    for data, label in zip([data_true, data_optimum], ['observed', 'optimum']):
+    for data, label in zip([metric_true, metric_optima], ['observed', 'optimum']):
     # for data, label in zip([data_true, data_optimum], ['True', 'Optimum']):
         sorted_data = np.sort(data)
         color = label_colors[label]

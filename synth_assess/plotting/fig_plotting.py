@@ -250,8 +250,8 @@ def plot_fig_4(key='hull_energy',
             ylim=ylim,
             bins=bins,
             vmax=vmax_use,
-            sz=sz,
-            score_line=score_line,
+            # sz=sz,
+            # score_line=score_line,
             return_bins=True
         )
         plots.append(im)
