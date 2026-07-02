@@ -102,11 +102,10 @@ class FormulaHofP:
                 print('no st, continuing')
                 continue
             if H < Hmin:
-                print('H<Hmin')
                 Hmin = H
                 Vmin = V
-                st = st
-        formula_entry = {'H_per_atom':Hmin/len(st.sites), 'volume':Vmin, 'nsites':nsites}
+                nsites = len(st.sites)
+        formula_entry = {'H_per_atom':Hmin/nsites, 'volume':Vmin, 'nsites':nsites}
         return formula_entry
         
 

@@ -45,6 +45,11 @@ class Gibbs:
             use_carbonate_correction (bool) : whether to use carbonate correction for carbonates
             entry_id (str): the entry id can be specified for the purpose of matching entries (as in the case of
             the RxnsAtNewTempEnv class -- if an entry_id is not specified, one will be automatically generated)
+            pressure_GPa: the presssure in GPa. If no pressure is supplied, pressure effects are not considered. If a pressure is included, 
+            energies will be recomputed accounting for pressure effects
+            eos: the equation of state initialization. If none is provided, the matcalc._eos.EOSCalc() will be applied with using
+            MACE with a criteria fmax = 0.001. WARNING: this workflow employs the matcalc._eos package. Any input of a different format may
+            not function.
         """
         # clean the formula coming in
         self.formula = CompTools(formula).clean
