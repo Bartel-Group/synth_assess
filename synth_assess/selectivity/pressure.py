@@ -76,6 +76,7 @@ class FormulaHofP:
                         max_Ehull = 0.2,
                         max_polymorph_energy = 0.2,
                         max_strucs_per_cmpd = 10,
+                        max_sites_per_structure= 100,
                         additional_criteria = {"thermo_types":["GGA_GGA+U"]})
         d_list = []
         for k in data:
@@ -88,6 +89,7 @@ class FormulaHofP:
     def formula_data(self):
         Hmin = 100
         Vmin = 0
+        nsites = None
         struc_list = self.formula_strucs()
         P_GPa = self.P_GPa
         eos = self.eos
@@ -95,12 +97,14 @@ class FormulaHofP:
             st = StrucTools(entry['structure']).structure
             V,H = StructureHofP(st, P_GPa = P_GPa, eos = eos).struc_V_H()
             if not H:
+                print('no st, continuing')
                 continue
             if H < Hmin:
+                print('H<Hmin')
                 Hmin = H
                 Vmin = V
-                nsites = len(entry['structure']['sites'])
-        formula_entry = {'H_per_atom':Hmin/nsites, 'volume':Vmin, 'nsites':nsites}
+                st = st
+        formula_entry = {'H_per_atom':Hmin/len(st.sites), 'volume':Vmin, 'nsites':nsites}
         return formula_entry
         
 
