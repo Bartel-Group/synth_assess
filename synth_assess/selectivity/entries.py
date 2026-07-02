@@ -1,11 +1,16 @@
+import os
 from pymatgen.core.composition import Composition
 from pydmclab.core.comp import CompTools
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
 from synth_assess.data.load import mp_data, gas_data
+from matcalc._eos import EOSCalc
+from matcalc import load_fp
+from synth_assess.selectivity.pressure import FormulaHofP
 
-
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+os.environ["TQDM_DISABLE"] = "1"
 
 """
 These are helper classes used to create entries for reaction network generation. 
@@ -22,7 +27,9 @@ class Gibbs:
         gen_data = None,
         temperature=300,
         use_carbonate_correction=True,
-        entry_id = None
+        entry_id = None,
+        pressure_GPa = None,
+        eos = None
     ):
         """
         Args:
@@ -44,6 +51,7 @@ class Gibbs:
         self.temperature = temperature
         self.use_carbonate_correction = use_carbonate_correction
         self.entry_id = entry_id
+        self.pressure_GPa = pressure_GPa
         self.gases_data=gas_data()
         if solids_data:
             self.solids_data = solids_data
@@ -67,7 +75,10 @@ class Gibbs:
             if formula not in gen_data:
                 raise ValueError("No data for the target compound: %s" % formula)
             self.compound_data = gen_data[formula]
-        
+        elif pressure_GPa:
+            print("retrieving pressure-dependent energy. this may take a few minutes...")
+            self.compound_data = FormulaHofP(formula,pressure_GPa,eos = eos).formula_data()
+            self.is_gas = False        
         else:
             self.is_gas = False
             if formula not in solids_data:
@@ -131,12 +142,15 @@ class Gibbs:
         """
         entry = self.compound_data
         vol_per_at = entry["volume"] /entry["nsites"]
-        Ef_per_at = (
-            entry["formation_energy_per_atom"] + self.carbonate_correction
-        )
+        if self.pressure_GPa:
+            E_per_at = entry['H_per_atom']
+        else:
+            E_per_at = (
+                entry["formation_energy_per_atom"] + self.carbonate_correction
+            )
         return GibbsComputedEntry(
             volume_per_atom=vol_per_at,
-            formation_energy_per_atom=Ef_per_at,
+            formation_energy_per_atom=E_per_at,
             composition=Composition(self.formula),
             temperature=self.temperature,
             entry_id= self.entry_id
@@ -249,6 +263,7 @@ class GibbsSet:
         extend_with_carbonates=True,
         stability_threshold=0.5,
         gen_formula = None,
+        pressure_GPa = None,
         entry_id_dict = {},
         include_only_these_formulas=[],
         exclude_these_formulas=[],
@@ -290,6 +305,10 @@ class GibbsSet:
         self.gases_data = gas_data()
         self.gen_data = gen_data
         self.temperature = temperature
+        self.pressure_GPa = pressure_GPa
+        if pressure_GPa:
+            model = load_fp("MACE")
+            self.eos = EOSCalc(calculator=model, fmax=0.01)
         self.use_carbonate_correction = use_carbonate_correction
         self.extend_with_hydroxides = extend_with_hydroxides
         self.extend_with_carbonates = extend_with_carbonates
@@ -359,13 +378,14 @@ class GibbsSet:
                 id_dict[f] = None
         solids_data = self.solids_data
         gases_data = self.gases_data
+        pressure_GPa = self.pressure_GPa
         gen_formula = None
         if self.gen_formula:
             gen_formula = self.gen_formula
         gen_data = self.gen_data
         temperature = self.temperature
         use_carbonate_correction = self.use_carbonate_correction
-
+        eos = self.eos
 
         return [
             Gibbs(
@@ -375,6 +395,8 @@ class GibbsSet:
                 is_gen = True if f == gen_formula else False,
                 temperature=temperature,
                 use_carbonate_correction=use_carbonate_correction,
+                pressure_GPa = pressure_GPa,
+                eos = eos,
                 entry_id= id_dict[CompTools(f).clean]
             ).entry
             for f in formulas
