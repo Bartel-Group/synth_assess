@@ -91,6 +91,8 @@ class FormulaHofP:
         Vmin = 0
         nsites = None
         struc_list = self.formula_strucs()
+        if not struc_list:
+            return None
         P_GPa = self.P_GPa
         eos = self.eos
         for entry in struc_list:

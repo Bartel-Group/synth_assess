@@ -141,6 +141,8 @@ class Gibbs:
             Note that energy is in eV, not eV/atom
         """
         entry = self.compound_data
+        if not entry:
+            return None
         vol_per_at = entry["volume"] /entry["nsites"]
         if self.pressure_GPa:
             E_per_at = entry['H_per_atom']
@@ -387,7 +389,7 @@ class GibbsSet:
         use_carbonate_correction = self.use_carbonate_correction
         eos = self.eos
 
-        return [
+        G_list = [
             Gibbs(
                 formula=f,
                 solids_data=solids_data,
@@ -401,6 +403,7 @@ class GibbsSet:
             ).entry
             for f in formulas
         ]
+        return [g for g in G_list if g]
 
     @property
     def entry_set(self):
