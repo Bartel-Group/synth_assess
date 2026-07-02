@@ -298,6 +298,8 @@ class GibbsSet:
             extend_with_hydroxides (bool): whether to include hydroxides as additional compounds in *chemsys*
             extend_with_carbonates (bool): whether to include carbonates as additional compounds in *chemsys*
             stability_threshold (float): maximum energy above hull for a compound to be considered as "relevant"
+            pressure_GPa: the presssure in GPa. If no pressure is supplied, pressure effects are not considered. If a pressure is included, 
+            energies will be recomputed accounting for pressure effects
             entry_id_dict (dict): (of the form {formula (clean): entry_id (str)}) a dictionary of specified entry ids if the user would 
             like specific entries to take on specific ids. Note that entry ids cannot be specified for ExperimentalReferenceEntry
             include_only_these_formulas (list): list of formulas to include (if you want to specify them)
