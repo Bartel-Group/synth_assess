@@ -116,6 +116,7 @@ class EnumerateRxns():
     def __init__(
         self,
         els: Iterable[str],
+        entries: GibbsSet = None,
         solids_data: dict = None,
         temperature: float = 300,
         gibbs_kwargs: dict = {},
@@ -128,6 +129,7 @@ class EnumerateRxns():
         Args:
             els (Iterable[str]): Formula Strings of all the elements in the chemical system.
             if not user-specified, MP data is used for solids_data.
+            if desired, users can enter pre-computed entries 
             gibbs kwargs and prec kwargs are a dictionary of relevant arguments from GibbsSet and PrecursorSet respectively
         """
 
@@ -143,7 +145,7 @@ class EnumerateRxns():
         self.gen_data = gen_data
         self.gen_formula = gen_formula
         #Initialize the entries and reactions to None
-        self.entries = None
+        self.entries = entries
         self.rxns = None
         self._build_calculator()
 
@@ -166,7 +168,8 @@ class EnumerateRxns():
         Build the calculator by getting the entries and enumerating the reactions.
         Executing the calculator generates the set of rxns (callable by EnumerateRxns(...).rxns)
         """
-        self.entries = self._get_entries()
+        if not self.entries:
+            self.entries = self._get_entries()
         entries = self.entries
         kwargs = self.prec_kwargs
         precursors = PrecursorSet(els = self.els, solids_data=self.solids_data, **kwargs).precursors
