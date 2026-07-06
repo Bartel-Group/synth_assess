@@ -7,6 +7,7 @@ from pymatgen.core.composition import Composition
 from pydmclab.utils.handy import read_json
 from pydmclab.core.comp import CompTools
 from rxn_network.reactions.computed import ComputedReaction
+from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.enumerators.basic import BasicEnumerator, BasicOpenEnumerator
 from rxn_network.reactions.hull import InterfaceReactionHull
 from rxn_network.reactions.reaction_set import ReactionSet
@@ -116,7 +117,7 @@ class EnumerateRxns():
     def __init__(
         self,
         els: Iterable[str],
-        entries: GibbsSet = None,
+        entries: list = None,
         solids_data: dict = None,
         temperature: float = 300,
         gibbs_kwargs: dict = {},
@@ -129,7 +130,7 @@ class EnumerateRxns():
         Args:
             els (Iterable[str]): Formula Strings of all the elements in the chemical system.
             if not user-specified, MP data is used for solids_data.
-            if desired, users can enter pre-computed entries 
+            if desired, users can enter pre-computed entries as a list of GibbsEntry objects 
             gibbs kwargs and prec kwargs are a dictionary of relevant arguments from GibbsSet and PrecursorSet respectively
         """
 
@@ -170,6 +171,8 @@ class EnumerateRxns():
         """
         if not self.entries:
             self.entries = self._get_entries()
+        else:
+            self.entries = GibbsEntrySet(self.entries)
         entries = self.entries
         kwargs = self.prec_kwargs
         precursors = PrecursorSet(els = self.els, solids_data=self.solids_data, **kwargs).precursors
