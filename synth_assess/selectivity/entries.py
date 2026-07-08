@@ -60,8 +60,6 @@ class Gibbs:
         self.gases_data=gas_data()
         if solids_data:
             self.solids_data = solids_data
-        else:
-            self.solids_data = mp_data()
 
         # retrieve gases data for this formula if its a gas
         gases_data = {
@@ -80,10 +78,14 @@ class Gibbs:
             if formula not in gen_data:
                 raise ValueError("No data for the target compound: %s" % formula)
             self.compound_data = gen_data[formula]
-        elif pressure_GPa:
-            print("retrieving pressure-dependent energy. this may take a few minutes...")
-            self.compound_data = FormulaHofP(formula,pressure_GPa,eos = eos).formula_data()
-            self.is_gas = False        
+        elif not solids_data:
+            if self.pressure_GPa:
+                print("retrieving pressure-dependent energy. this may take a few minutes...")
+                self.compound_data = FormulaHofP(formula,pressure_GPa,eos = eos).formula_data()
+                self.is_gas = False
+            else:
+                self.solids_data = mp_data()
+                self.compound_data = solids_data[formula]      
         else:
             self.is_gas = False
             if formula not in solids_data:
@@ -315,6 +317,7 @@ class GibbsSet:
         self.gen_data = gen_data
         self.temperature = temperature
         self.pressure_GPa = pressure_GPa
+        self.eos = None
         if pressure_GPa:
             model = load_fp("MACE")
             self.eos = EOSCalc(calculator=model, fmax=0.01)
