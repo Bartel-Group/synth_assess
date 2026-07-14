@@ -347,7 +347,8 @@ class RxnsAtNewTempEnv():
                  environment: str = "air",
                  gen_data = None,
                  gen_formula = None,
-                 original_temperature = 300
+                 original_temperature = 300,
+                 pressure = None
                 ):
         
         if solids_data:
@@ -363,6 +364,7 @@ class RxnsAtNewTempEnv():
         self.gen_data = gen_data
         self.gen_formula = gen_formula
         self.els = els
+        self.pressure = pressure
         # The default original temperature is 300 K: generally entries will first
         # be generated at 300 and then modified. However, the modification is feasible
         # at other temperatures as well and the function will be modified accordingly
@@ -397,7 +399,7 @@ class RxnsAtNewTempEnv():
         entry_id_dict = self.reaction_entry_ids()
         entries = GibbsSet(chemsys_els= self.els, solids_data=solids_data, 
                             temperature=self.temperature, entry_id_dict= entry_id_dict,
-                            gen_data = self.gen_data, gen_formula = self.gen_formula).entries
+                            gen_data = self.gen_data, gen_formula = self.gen_formula, pressure_GPa = self.pressure).entries
         for entry in entries:
             entry_id = entry.entry_id
             if 'Experimental' in entry_id:
@@ -426,7 +428,8 @@ class AnalyzeReactionSet():
                  reactions: ReactionSet,
                  target: str = None,
                  temperature: float = 300,
-                 environment: str = "air"):
+                 environment: str = "air"
+                 ):
         
         self.reactions = reactions
         self.temperature = temperature
@@ -521,7 +524,8 @@ class GammaFromTarget():
     def __init__(self,
                  target: str = None,
                  temperature: float = 1073,
-                 solids_data: dict = None):
+                 solids_data: dict = None,
+                 pressure: float = None):
         """
         This class implements the entire pipeline from input target/temperature to output metrics.
         Note that by default, the solids data used is MP data.
@@ -533,6 +537,7 @@ class GammaFromTarget():
             self.solids_data = solids_data
         else:
             self.solids_data = mp_data()
+        self.pressure = pressure
         
     
     def get_metrics(self, gen_data = None, is_gen = False, restrict_to_tm = False):
@@ -556,7 +561,7 @@ class GammaFromTarget():
         else:
             gen_formula = None
         r = EnumerateRxns(els = CompTools(target).els,temperature = 300, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula, prec_kwargs={'restrict_to_tm_precursors':restrict_to_tm}).rxns
-        r = RxnsAtNewTempEnv(reaction_set = r, els = CompTools(target).els, new_temperature = temperature, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula).corrected_reactions_at_temp()
+        r = RxnsAtNewTempEnv(reaction_set = r, els = CompTools(target).els, new_temperature = temperature, solids_data = solids_data, gen_data = gen_data, gen_formula = gen_formula, pressure = self.pressure).corrected_reactions_at_temp()
         t = AnalyzeReactionSet(target = target, reactions = r, temperature = temperature)
         return t.metrics_at_temp_env()
     
