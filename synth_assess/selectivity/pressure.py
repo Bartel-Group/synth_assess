@@ -76,6 +76,8 @@ class FormulaHofP:
         mpq = MPQuery(self.api)
         if self.gs_struc_only:
             max_st = 1
+        elif self.P_GPa == 0:
+            max_st = 1
         else:
             max_st = 10
         data = mpq.get_data(search_for = self.formula,
@@ -88,7 +90,9 @@ class FormulaHofP:
         for k in data:
             d_list.append({'structure':data[k]['structure'], 
                             'id':k,
-                            'n_atoms': len(data[k]['structure']['sites'])})
+                            'n_atoms': len(data[k]['structure']['sites']),
+                            'energy_per_atom': data[k]['energy_per_atom'],
+                            'volume': data[k]['volume']})
         return d_list
     
 
@@ -100,6 +104,10 @@ class FormulaHofP:
         if not struc_list:
             return None
         P_GPa = self.P_GPa
+        if P_GPa == 0:
+            return {'H_per_atom':struc_list[0]['energy_per_atom'], 
+                    'volume':struc_list[0]['volume'], 
+                    'nsites':struc_list[0]['n_atoms']}
         eos = self.eos
         for entry in struc_list:
             st = StrucTools(entry['structure']).structure
