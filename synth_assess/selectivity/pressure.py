@@ -57,11 +57,13 @@ class FormulaHofP:
             formula,
             P_GPa,
             api = 'fDY65nUJRZpelqz70f36AHv3cxv2EpkY',
-            eos = None):
+            eos = None,
+            gs_struc_only = True):
         
         self.formula = formula
         self.P_GPa = P_GPa
-        self.api = api 
+        self.api = api
+        self.gs_struc_only = gs_struc_only 
         if not eos:
             os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
             os.environ["TQDM_DISABLE"] = "1"
@@ -72,12 +74,16 @@ class FormulaHofP:
 
     def formula_strucs(self):
         mpq = MPQuery(self.api)
+        if self.gs_struc_only:
+            max_st = 1
+        else:
+            max_st = 10
         data = mpq.get_data(search_for = self.formula,
                         max_Ehull = 0.2,
                         max_polymorph_energy = 0.2,
-                        max_strucs_per_cmpd = 10,
+                        max_strucs_per_cmpd = max_st,
                         max_sites_per_structure= 100,
-                        additional_criteria = {"thermo_types":["GGA_GGA+U"]})
+                        additional_criteria = {"thermo_types":["GGA_GGA+U"], "theoretical":False})
         d_list = []
         for k in data:
             d_list.append({'structure':data[k]['structure'], 
