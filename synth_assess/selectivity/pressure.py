@@ -85,14 +85,15 @@ class FormulaHofP:
                         max_polymorph_energy = 0.2,
                         max_strucs_per_cmpd = max_st,
                         max_sites_per_structure= 100,
+                        properties= ['energy_per_atom'],
                         additional_criteria = {"thermo_types":["GGA_GGA+U"], "theoretical":False})
         d_list = []
         for k in data:
             d_list.append({'structure':data[k]['structure'], 
                             'id':k,
                             'n_atoms': len(data[k]['structure']['sites']),
-                            'energy_per_atom': data[k]['energy_per_atom'],
-                            'volume': data[k]['volume']})
+                            'H_per_atom': data[k]['E_mp'],
+                            'V': data[k]['volume']})
         return d_list
     
 
@@ -105,8 +106,8 @@ class FormulaHofP:
             return None
         P_GPa = self.P_GPa
         if P_GPa == 0:
-            return {'H_per_atom':struc_list[0]['energy_per_atom'], 
-                    'volume':struc_list[0]['volume'], 
+            return {'H_per_atom':struc_list[0]['H_per_atom'], 
+                    'volume':struc_list[0]['V'], 
                     'nsites':struc_list[0]['n_atoms']}
         eos = self.eos
         for entry in struc_list:
