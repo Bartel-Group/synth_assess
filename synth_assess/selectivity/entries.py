@@ -83,9 +83,13 @@ class Gibbs:
                 print("retrieving pressure-dependent energy. this may take a few minutes...")
                 self.compound_data = FormulaHofP(formula,pressure_GPa,eos = eos).formula_data()
                 self.is_gas = False
+            elif self.pressure_GPa == 0:
+                self.compound_data = FormulaHofP(formula,pressure_GPa,eos = eos).formula_data()
+                self.is_gas = False
             else:
                 self.solids_data = mp_data()
                 self.compound_data = solids_data[formula]      
+
         else:
             self.is_gas = False
             if formula not in solids_data:
