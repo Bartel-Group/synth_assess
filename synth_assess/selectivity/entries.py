@@ -156,7 +156,7 @@ class Gibbs:
             return None
         vol_per_at = entry["volume"] /entry["nsites"]
         if self.pressure_GPa != None:
-            E_per_at = entry['H_per_atom']
+            E_per_at = entry['H_per_atom'] + self.carbonate_correction
         else:
             E_per_at = (
                 entry["formation_energy_per_atom"] + self.carbonate_correction
