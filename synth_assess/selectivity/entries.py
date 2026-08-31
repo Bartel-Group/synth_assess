@@ -59,7 +59,7 @@ class Gibbs:
         self.entry_id = entry_id
         self.pressure_GPa = pressure_GPa
         if pressure_GPa:
-            self.gases_data=gas_data_for_pressure()
+            self.gases_data = gas_data_for_pressure()
         else:
             self.gases_data = gas_data()
         if solids_data:
@@ -141,6 +141,8 @@ class Gibbs:
         """
         formula = self.formula
         refs = self.compound_data
+        print(refs)
+        print(self.temperature)
         ExperimentalReferenceEntry.REFERENCES = refs
         exp_entry = ExperimentalReferenceEntry(
             composition=Composition(formula), temperature=self.temperature
