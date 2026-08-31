@@ -64,4 +64,4 @@ def gas_data_for_pressure():
     to DFT total energies, which are used in pressure-dependent selectivity determination.
     This data is of the same format as the standard gas_data
     """
-    return read_json('./data/gases_data_for_pressure.json')
+    return read_json(os.path.join(DATA_PATH,'gases_data_for_pressure.json'))

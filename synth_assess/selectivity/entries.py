@@ -59,9 +59,9 @@ class Gibbs:
         self.entry_id = entry_id
         self.pressure_GPa = pressure_GPa
         if pressure_GPa:
-            self.gases_data=gas_data()
+            self.gases_data=gas_data_for_pressure()
         else:
-            self.gases_data = gas_data_for_pressure()
+            self.gases_data = gas_data()
         if solids_data:
             self.solids_data = solids_data
 
@@ -73,8 +73,6 @@ class Gibbs:
         # if gases_data isn't empty, we have a gas
         if gases_data:
             self.is_gas = True
-            # if self.pressure_GPa:
-            #     gases_data = {f: self.gases_data[f] - for f in gases_data}
             # set the compound data to the gases data for this formula
             self.compound_data = gases_data
         elif is_gen:
