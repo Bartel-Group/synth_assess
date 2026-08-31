@@ -4,10 +4,11 @@ from pydmclab.core.comp import CompTools
 from rxn_network.entries.gibbs import GibbsComputedEntry
 from rxn_network.entries.entry_set import GibbsEntrySet
 from rxn_network.entries.experimental import ExperimentalReferenceEntry
-from synth_assess.data.load import mp_data, gas_data
+from synth_assess.data.load import mp_data, gas_data, gas_data_for_pressure
 from matcalc._eos import EOSCalc
 from matcalc import load_fp
 from synth_assess.selectivity.pressure import FormulaHofP
+from pydmclab.data.thermochem import gas_thermo_data
 
 os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 os.environ["TQDM_DISABLE"] = "1"
@@ -57,7 +58,10 @@ class Gibbs:
         self.use_carbonate_correction = use_carbonate_correction
         self.entry_id = entry_id
         self.pressure_GPa = pressure_GPa
-        self.gases_data=gas_data()
+        if pressure_GPa:
+            self.gases_data=gas_data()
+        else:
+            self.gases_data = gas_data_for_pressure()
         if solids_data:
             self.solids_data = solids_data
 
@@ -69,6 +73,8 @@ class Gibbs:
         # if gases_data isn't empty, we have a gas
         if gases_data:
             self.is_gas = True
+            # if self.pressure_GPa:
+            #     gases_data = {f: self.gases_data[f] - for f in gases_data}
             # set the compound data to the gases data for this formula
             self.compound_data = gases_data
         elif is_gen:

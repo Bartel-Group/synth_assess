@@ -57,3 +57,11 @@ def gas_data():
     }
     # reformatting the gasses dictionary to match the format of the materials project data
     return g_new
+
+def gas_data_for_pressure():
+    """
+    NOTE that this is NOT pressure-dependent gas data. Rather, this is enthalpies comparable
+    to DFT total energies, which are used in pressure-dependent selectivity determination.
+    This data is of the same format as the standard gas_data
+    """
+    return read_json('./data/gases_data_for_pressure.json')
