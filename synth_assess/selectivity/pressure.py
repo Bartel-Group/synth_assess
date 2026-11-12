@@ -90,7 +90,7 @@ class FormulaHofP:
             self,
             formula,
             P_GPa,
-            api = 'fDY65nUJRZpelqz70f36AHv3cxv2EpkY',
+            api,
             eos = None,
             gs_struc_only = True):
         
@@ -98,13 +98,7 @@ class FormulaHofP:
         self.P_GPa = P_GPa
         self.api = api
         self.gs_struc_only = gs_struc_only 
-        if not eos:
-            os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
-            os.environ["TQDM_DISABLE"] = "1"
-            model = load_fp("MACE")
-            self.eos = EOSCalc(calculator=model, fmax=0.01)
-        else:
-            self.eos = eos
+
 
     def formula_strucs(self):
         mpq = MPQuery(self.api)
@@ -139,14 +133,15 @@ class FormulaHofP:
         if not struc_list:
             return None
         P_GPa = self.P_GPa
-        if P_GPa == 0:
-            return {'H_per_atom':struc_list[0]['H_per_atom'], 
-                    'volume':struc_list[0]['V'], 
-                    'nsites':struc_list[0]['n_atoms']}
-        eos = self.eos
+        if type(P_GPa) != list:
+            P_GPa = list(P_GPa)
+        # if P_GPa == 0:
+        #     return {'H_per_atom':struc_list[0]['H_per_atom'], 
+        #             'volume':struc_list[0]['V'], 
+        #             'nsites':struc_list[0]['n_atoms']}
         for entry in struc_list:
             st = StrucTools(entry['structure']).structure
-            V,H = StructureHofP(st, P_GPa = P_GPa, eos = eos).struc_V_H()
+            V,H = StructureHofP(st, P_GPa = P_GPa).struc_V_H()
             if not H:
                 print('no st, continuing')
                 continue
