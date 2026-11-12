@@ -11,44 +11,78 @@ class StructureHofP:
     def __init__(
             self,
             struc,
-            P_GPa,
-            eos):
+            P_GPa_list = [0,1,2,3,4,5,10],
+            strain_list = [0.05,0.075,0.1,0.125]
+            ):
         
         self.struc = struc
-        self.P_GPa = P_GPa
-        self.eos = eos
+        self.P_GPa_list = P_GPa_list
+        GPA_TO_EVA3 = 1 / 160.21766208
+        self.P_list = [pressure*GPA_TO_EVA3 for pressure in P_GPa_list]
+        self.strain_list = strain_list
+
+    def eos_calc(self,max_abs_strain=0.05):
+        os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
+        os.environ["TQDM_DISABLE"] = "1"
+        if self.model is None:
+            self.model = load_fp("MACE")
+        return EOSCalc(calculator=self.model, 
+                       fmax=0.05, 
+                       max_steps = 2000, 
+                       max_abs_strain=max_abs_strain)
+
 
 
     def eos_data(self):
         # EOS fitting with MatCalc (using MACE)
-        eos = self.eos
+        GPA_TO_EVA3 = 1 / 160.21766208
         struc = self.struc
-        try:
-            data = eos.calc(struc)
-        except:
-            return [],[]
-        V = np.array(data["eos"]["volumes"])
-        E = np.array(data["eos"]["energies"])
-        idx = np.argsort(V)
-        V = V[idx]
-        E = E[idx]
-        if data['r2_score_bm']<0.95:
-            print('low r2 score')
-            return [], []
-        return V,E
+        P = [pressure*GPA_TO_EVA3 for pressure in self.strain_list]
+        for strain in [0.05,0.075,0.1,0.125]:
+            eos = self.eos_calc(strain)
+            try:
+                data = eos.calc(struc)
+            except:
+                continue
+            if data['r2_score_bm']<0.95:
+                continue
+            V = np.array(data["eos"]["volumes"])
+            E = np.array(data["eos"]["energies"])
+            idx = np.argsort(V)
+            V, E = V[idx], E[idx]
+            H = E[None, :] + P[:, None] * V[None, :]
+            min_indices = np.argmin(H, axis=1)
+
+            # Require minima to be away from boundaries
+            if np.all(
+                (min_indices > 1) &
+                (min_indices < len(V) - 2)
+            ):
+
+                return V,E
+        return [],[]
     
     def struc_V_H(self):
 
-        GPA_TO_EVA3 = 1 / 160.21766208
         # Enthalpy at a given pressure determined given E(V)
-        P = self.P_GPa * GPA_TO_EVA3  # convert once
+        P = np.array(self.P_list)
+         # convert once
+
         V,E = self.eos_data()
         if len(E) == 0:
-            return None, None
-        H_V = E + P*V
-        # H_V = [E[i] + P * V[i] for i in range(len(E))]          # enthalpy at each sampled volume
-        i_min = np.argmin(H_V)   # equilibrium volume
-        return V[i_min], H_V[i_min]
+            return None,None
+        H = E[None, :] + P[:, None] * V[None, :]
+
+        min_indices = np.argmin(H, axis=1)
+
+        V_min = V[min_indices]
+        H_min = H[np.arange(len(P)), min_indices]
+
+        if len(self.P_list) == 0:
+            return V_min[0], H_min[0]
+
+        return V_min, H_min
+
     
 
 class FormulaHofP:
