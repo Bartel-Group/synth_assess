@@ -20,6 +20,7 @@ class StructureHofP:
         GPA_TO_EVA3 = 1 / 160.21766208
         self.P_list = [pressure*GPA_TO_EVA3 for pressure in P_GPa_list]
         self.strain_list = strain_list
+        self.model = None
 
     def eos_calc(self,max_abs_strain=0.05):
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"

@@ -498,9 +498,12 @@ class AnalyzeReactionSet():
             #In excess inert, O2 is not allowed as a reactant
             if environment == "air":
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]+["O2"]))
-                # print('f',filtered_rxns)
+                if any([k in rxn_prec for k in ['NbS2','BaS']]):
+                    print('f',filtered_rxns)
             else:
                 filtered_rxns = list(rxns.get_rxns_by_reactants([i.reduced_formula for i in rxn_prec]))
+                if any([k in rxn_prec for k in ['NbS2','BaS']]):
+                    print('f',filtered_rxns)
 
             filtered_rxns = [i for i in filtered_rxns if len(i.reactants) > 1]
             #Build the InterfaceReactionHull from the precursors and filtered reactions
