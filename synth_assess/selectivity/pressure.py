@@ -4,6 +4,8 @@ from matcalc import load_fp
 from pydmclab.core.query import MPQuery
 from pydmclab.core.struc import StrucTools
 from pydmclab.core.comp import CompTools
+from pydmclab.core.mlp.mace.dynamics import MACERelaxer
+from ctypes import Structure
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -20,7 +22,16 @@ class StructureHofP:
         GPA_TO_EVA3 = 1 / 160.21766208
         self.P_list = [pressure*GPA_TO_EVA3 for pressure in P_GPa_list]
         self.strain_list = strain_list
-        self.model = None
+        relaxer = MACERelaxer(models="medium",device="cpu")
+        self.model = relaxer.model
+        struc = relaxer.relax(
+            struc,
+            fmax = 0.03,
+            steps = 2500,
+            verbose = True
+        )['final_structure']
+        self.struc = Structure.from_dict(struc)
+        self.relaxer = relaxer
 
     def eos_calc(self,max_abs_strain=0.05):
         os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
@@ -55,11 +66,7 @@ class StructureHofP:
             min_indices = np.argmin(H, axis=1)
 
             # Require minima to be away from boundaries
-            if np.all(
-                (min_indices > 1) &
-                (min_indices < len(V) - 2)
-            ):
-
+            if np.all(1 < min_indices < len(V)-2):
                 return V,E
         return [],[]
     
