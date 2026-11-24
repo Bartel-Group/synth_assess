@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-    "pydmclab[mlp]",
+    "pydmclab[mlp] >= 1.4.0",
     "reaction-network >= 8.3.0", 
     "chemeleon == 0.1.2",
     "matcalc[mace]",
