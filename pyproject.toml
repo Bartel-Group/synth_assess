@@ -3,7 +3,7 @@ name = "synth_assess"
 version = "2.0.0"
 description = "A Python package to parse and characterize text-mined solid-state synthesis reactions."
 authors = [{name = "Jane Schlesinger", email = "schle759@umn.edu"}]
-requires-python = ">=3.6.0"
+requires-python = ">=3.10,<3.15"
 readme = "README.md"
 license = {text = "MIT"}
 classifiers = [
@@ -12,7 +12,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Chemistry",
     "Topic :: Scientific/Engineering :: Physics",
 ]
-dependencies = ["pydmclab","reaction-network >= 8.3.0", "chemeleon == 0.1.2"]
+dependencies = [
+    "pydmclab",
+    "reaction-network >= 8.3.0", 
+    "chemeleon == 0.1.2",
+    "matcalc[mace]",
+]
 
 [project.urls]
 Source = "https://github.com/bartel-group/synth_assess"
