@@ -13,7 +13,7 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 dependencies = [
-    "pydmclab[mlp] @ git+https://github.umn.edu/bartel-group/pydmclab.git@main",
+    "pydmclab[mlp] @ git+https://github.com/bartel-group/pydmclab.git@main",
     "reaction-network >= 8.3.0", 
     "chemeleon == 0.1.2",
     "matcalc[mace]",
