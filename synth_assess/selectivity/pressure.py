@@ -4,7 +4,7 @@ from matcalc import load_fp
 from pydmclab.core.query import MPQuery
 from pydmclab.core.struc import StrucTools
 from pydmclab.core.comp import CompTools
-from pydmclab.core.mlp.mace.dynamics import MACERelaxer
+from pydmclab.mlp.mace.dynamics import MACERelaxer
 from ctypes import Structure
 import numpy as np
 import matplotlib.pyplot as plt
