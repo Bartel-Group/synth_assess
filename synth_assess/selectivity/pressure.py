@@ -5,7 +5,7 @@ from pydmclab.core.query import MPQuery
 from pydmclab.core.struc import StrucTools
 from pydmclab.core.comp import CompTools
 from pydmclab.mlp.mace.dynamics import MACERelaxer
-from ctypes import Structure
+from pymatgen.core import Structure
 import numpy as np
 import matplotlib.pyplot as plt
 
